@@ -63,6 +63,22 @@ function sorty(data, sortings) {
     return result;
 }
 
+export class Pager extends React.Component {
+    render() {
+        let pages = [];
+        for(let i = 0; i < this.props.rowCount / this.props.pageRowCount; i ++)
+            pages.push(i + 1);
+
+        return (
+            <dx-pager>
+                {pages.map((_, pageIndex) =>
+                    <dx-page active={this.props.page === pageIndex} onClick={() => this.props.pageChange(pageIndex)}>
+                        {pageIndex}
+                    </dx-page>)}
+            </dx-pager>
+        );
+    }    
+}
 
 export class GridContainer extends React.Component {
     constructor(props) {
@@ -85,11 +101,12 @@ export class GridContainer extends React.Component {
         }
     }
 
-    shouldComponentUpdate(nextProps, nextState) {  
-        if (nextProps['sortings'] !== undefined) {
-            return nextProps['sortings'] !== this.props['sortings'];
-        }
-        return nextState['sortings'] !== this.state['sortings'];
+    shouldComponentUpdate(nextProps, nextState) {
+        return true;
+        // if (nextProps['sortings'] !== undefined) {
+        //     return nextProps['sortings'] !== this.props['sortings'];
+        // }
+        // return nextState['sortings'] !== this.state['sortings'];
     }
 
     get sortings() {
@@ -143,7 +160,7 @@ export class GridContainer extends React.Component {
                 <Body>
                     {rows.map((r, ri) =>
                         <Row key={ri}>
-                            {this.props.columns.map((c, ci) => cellTemplate({rowIndex: ri, columnIndex: ci, data: rows[ri][c.name]}))}
+                            {this.props.columns.map((c, ci) => cellTemplate({ rowIndex: ri, columnIndex: ci, data: rows[ri][c.name] }))}
                         </Row>
                     )}
                 </Body>

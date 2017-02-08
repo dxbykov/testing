@@ -26,5 +26,5 @@ module.exports = {
     resolve: {
         extensions: [".webpack.js", ".web.js", ".js", ".jsx"]
     },
-    devtool: 'eval'
+    devtool: 'eval-source-map'
 }

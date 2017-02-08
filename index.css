@@ -44,3 +44,20 @@ dx-grid {
 
     border: 1px dashed black;
 }
+
+dx-pager {
+    display: block;
+
+    border: 1px dashed rebeccapurple;
+}
+
+dx-page {
+    display: inline-block;
+    padding: 5px;
+
+    border: 1px dashed gray;
+}
+
+dx-page[active='true'] {
+    border-style: solid;
+}
