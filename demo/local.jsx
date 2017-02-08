@@ -21,8 +21,6 @@ export class Local extends React.Component {
             <GridContainer 
                 columns={this.state.columns} 
                 rows={this.state.rows}
-                sortings={this.state.sortings}
-                sortingsChange={(sortings) => this.setState({ sortings })}
                 cellTemplate={({ rowIndex, columnIndex, data }) => <Cell key={columnIndex}>[{rowIndex},{columnIndex}] {data}</Cell>}
                 />
         );

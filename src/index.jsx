@@ -67,16 +67,53 @@ function sorty(data, sortings) {
 export class GridContainer extends React.Component {
     constructor(props) {
         super(props)
+
+        this.state = {
+            sortings: []
+        }
+    }
+    
+    componentWillReceiveProps(nextProps) {  
+        const controlledValue = nextProps['sortings'];
+
+        if (controlledValue !== undefined &&
+            controlledValue !== this.state['sortings']
+        ) {
+            this.setState({
+                ['sortings']: controlledValue,
+            });
+        }
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {  
+        if (nextProps['sortings'] !== undefined) {
+            return nextProps['sortings'] !== this.props['sortings'];
+        }
+        return nextState['sortings'] !== this.state['sortings'];
+    }
+
+    get sortings() {
+        return this.props['sortings'] !== undefined ? this.props['sortings'] : this.state['sortings'];
+    }
+
+    set sortings(value) {
+        if (value === this.state['sortings']) return;
+
+        this.setState({
+            ['sortings']: value,
+        }, () => {
+            this.props['sortings' + 'Change'] && this.props['sortings' + 'Change'](value);
+        });
     }
 
     calcSortings(columnName) {
-        let sorting = this.props.sortings.filter(s => { return s.column == columnName; })[0];
+        let sorting = this.sortings.filter(s => { return s.column == columnName; })[0];
         return [ { column: columnName, direction: (sorting && sorting.direction == 'desc') ? 'asc' : 'desc' } ]
     }
 
     render() {
         let columnsView = this.props.columns.map(c => {
-                let sorting = this.props.sortings.filter(s => { return s.column == c.name; });
+                let sorting = this.sortings.filter(s => { return s.column == c.name; });
 
                 return {
                     name: c.name,
@@ -85,7 +122,7 @@ export class GridContainer extends React.Component {
             }
         );
 
-        let rows = sorty(this.props.rows, this.props.sortings);
+        let rows = sorty(this.props.rows, this.sortings);
 
         let cellTemplate = this.props.cellTemplate ||
             (({ rowIndex, columnIndex, data }) => <Cell key={`${rowIndex}${columnIndex}`}>{data}</Cell>);
@@ -95,10 +132,11 @@ export class GridContainer extends React.Component {
                 <Header>
                     <Row>
                         {columnsView.map((c, ci) =>
-                            <Cell key={ci}><span onClick={() => {
-                                this.props.onSort && this.props.onSort(c.name);
-                                this.props.sortingsChange && this.props.sortingsChange(this.calcSortings(c.name))
-                            }}>{c.sortDirection ? <b>{c.sortDirection}</b> : null}  {c.name}</span></Cell>
+                            <Cell key={ci}>
+                                <span onClick={() => { this.sortings = this.calcSortings(c.name)}}>
+                                    {c.name} {c.sortDirection ? <b>{c.sortDirection}</b> : null}
+                                </span>
+                            </Cell>
                         )}
                     </Row>
                 </Header>
