@@ -1,57 +1,102 @@
 import React from 'react';
 
-export class Cell extends React.Component {
-    render() {
-        return (
-            <dx-cell>
-                {this.props.children}
-            </dx-cell>
-        );
-    }
+export const Cell = (props) => {
+    return (
+        <dx-cell>
+            {props.children}
+        </dx-cell>
+    );
 }
 
-export class Row extends React.Component {
-    render() {
-        return (
-            <dx-row>
-                {this.props.children}
-            </dx-row>
-        );
-    }
+export const Row = (props) => {
+    return (
+        <dx-row>
+            {props.children}
+        </dx-row>
+    );
 }
 
-export class Body extends React.Component {
-    render() {
-        return (
-            <dx-body>
-                {this.props.children}
-            </dx-body>
-        );
-    }
+export const Body = (props) => {
+    return (
+        <dx-body>
+            {props.children}
+        </dx-body>
+    );
 }
 
-export class Header extends React.Component {
-    render() {
-        return (
-            <dx-header>
-                {this.props.children}
-            </dx-header>
-        );
-    }
+export const Header = (props) => {
+    return (
+        <dx-header>
+            {props.children}
+        </dx-header>
+    );
 }
 
-export class Grid extends React.Component {
-    render() {
-        return (
-            <dx-grid>
-                {this.props.children}
-            </dx-grid>
-        );
-    }
+export const Grid = (props) => {
+    return (
+        <dx-grid>
+            {props.children}
+        </dx-grid>
+    );
 }
 
+export const Pager = (props) => {
+    let pages = [];
+    for(let i = 0; i < props.rowCount / props.pageSize; i ++)
+        pages.push(i + 1);
 
-function sorty(data, sortings) {
+    return (
+        <dx-pager>
+            {pages.map((_, pageIndex) =>
+                <dx-page key={pageIndex} active={props.page === pageIndex} onClick={() => props.pageChange(pageIndex)}>
+                    {pageIndex}
+                </dx-page>)}
+        </dx-pager>
+    );
+}
+
+export const DefaultCellTemplate = (props) => {
+    return <Cell key={`${props.rowIndex}_${props.columnIndex}`}>{props.data}</Cell>;
+};
+
+export const GridView = (props) => {
+    let columnsView = props.columns.map(c => {
+            let sorting = props.sortings.filter(s => { return s.column == c.name; });
+
+            return {
+                name: c.name,
+                sortDirection: sorting.length ? sorting[0].direction : undefined
+            };
+        }
+    );
+
+    let cellTemplate = props.cellTemplate || DefaultCellTemplate;
+
+    return (
+        <Grid>
+            <Header>
+                <Row>
+                    {columnsView.map((c, ci) =>
+                        <Cell key={ci}>
+                            <span onClick={() => { props.onSort(c.name); }}>
+                                {c.name} {c.sortDirection ? <b>{c.sortDirection}</b> : null}
+                            </span>
+                        </Cell>
+                    )}
+                </Row>
+            </Header>
+            <Body>
+                {props.rows.map((r, ri) =>
+                    <Row key={ri}>
+                        {props.columns.map((c, ci) => cellTemplate({ rowIndex: ri, columnIndex: ci, data: props.rows[ri][c.name] }))}
+                    </Row>
+                )}
+            </Body>
+        </Grid>
+    );
+}
+
+export function sorty(data, sortings) {
     if(!sortings.length)
         return data;
 
@@ -63,64 +108,86 @@ function sorty(data, sortings) {
     return result;
 }
 
-export class Pager extends React.Component {
-    render() {
-        let pages = [];
-        for(let i = 0; i < this.props.rowCount / this.props.pageRowCount; i ++)
-            pages.push(i + 1);
-
-        return (
-            <dx-pager>
-                {pages.map((_, pageIndex) =>
-                    <dx-page active={this.props.page === pageIndex} onClick={() => this.props.pageChange(pageIndex)}>
-                        {pageIndex}
-                    </dx-page>)}
-            </dx-pager>
-        );
-    }    
-}
-
 export class GridContainer extends React.Component {
     constructor(props) {
         super(props)
 
         this.state = {
-            sortings: []
+            sortings: [],
+            pageSize: 3,
+            page: 0
         }
+
+        this.onSort = this.onSort.bind(this);
     }
     
-    componentWillReceiveProps(nextProps) {  
-        const controlledValue = nextProps['sortings'];
+    componentWillReceiveProps(nextProps) {
+        Object.keys(this.state).forEach(propName => {
+            const controlledValue = nextProps[propName];
 
-        if (controlledValue !== undefined &&
-            controlledValue !== this.state['sortings']
-        ) {
-            this.setState({
-                ['sortings']: controlledValue,
-            });
-        }
+            if (controlledValue !== undefined &&
+                controlledValue !== this.state[propName]
+            ) {
+                this.setState({
+                    [propName]: controlledValue
+                });
+            }
+        });
     }
 
     shouldComponentUpdate(nextProps, nextState) {
-        return true;
-        // if (nextProps['sortings'] !== undefined) {
-        //     return nextProps['sortings'] !== this.props['sortings'];
-        // }
-        // return nextState['sortings'] !== this.state['sortings'];
+        let result = false;
+
+        Object.keys(this.state).forEach(propName => {
+            if (nextProps[propName] !== undefined) {
+                result = result || nextProps[propName] !== this.props[propName];
+            }
+            else {
+                result = result || nextState[propName] !== this.state[propName];
+            }
+        });
+
+        return result;
+    }
+
+    get(prop) {
+        return this.props[prop] !== undefined ? this.props[prop] : this.state[prop];
+    }
+
+    set(prop, value) {
+        if (value === this.state[prop]) return;
+
+        /*
+            The second parameter is an optional callback function that will be executed once setState is completed and
+            the component is re-rendered. Generally we recommend using componentDidUpdate() for such logic instead.
+        */
+
+        this.setState({
+            [prop]: value,
+        }, () => {
+            this.props[prop + 'Change'] && this.props[prop + 'Change'](value);
+        });
     }
 
     get sortings() {
-        return this.props['sortings'] !== undefined ? this.props['sortings'] : this.state['sortings'];
+        return this.get('sortings');
+    }
+    set sortings(value) {
+        this.set('sortings', value);
     }
 
-    set sortings(value) {
-        if (value === this.state['sortings']) return;
+    get page() {
+        return this.get('page');
+    }
+    set page(value) {
+        this.set('page', value);
+    }
 
-        this.setState({
-            ['sortings']: value,
-        }, () => {
-            this.props['sortings' + 'Change'] && this.props['sortings' + 'Change'](value);
-        });
+    get pageSize() {
+        return this.get('pageSize');
+    }
+    set pageSize(value) {
+        this.set('pageSize', value);
     }
 
     calcSortings(columnName) {
@@ -128,43 +195,35 @@ export class GridContainer extends React.Component {
         return [ { column: columnName, direction: (sorting && sorting.direction == 'desc') ? 'asc' : 'desc' } ]
     }
 
+    onSort(columnName) {
+        this.sortings = this.calcSortings(columnName);
+    }
+
     render() {
-        let columnsView = this.props.columns.map(c => {
-                let sorting = this.sortings.filter(s => { return s.column == c.name; });
+        let rows = this.props.visibleRows;
+        
+        if(rows === undefined) {
+            rows = sorty(this.props.rows, this.sortings)
+                .slice(this.pageSize * this.page, this.pageSize * (this.page + 1));
+        }
 
-                return {
-                    name: c.name,
-                    sortDirection: sorting.length ? sorting[0].direction : undefined
-                };
-            }
-        );
-
-        let rows = sorty(this.props.rows, this.sortings);
-
-        let cellTemplate = this.props.cellTemplate ||
-            (({ rowIndex, columnIndex, data }) => <Cell key={`${rowIndex}${columnIndex}`}>{data}</Cell>);
+        let viewProps = {
+            ...this.props,
+            rows,
+            sortings: this.sortings,
+            onSort: this.onSort,
+        };
 
         return (
-            <Grid>
-                <Header>
-                    <Row>
-                        {columnsView.map((c, ci) =>
-                            <Cell key={ci}>
-                                <span onClick={() => { this.sortings = this.calcSortings(c.name)}}>
-                                    {c.name} {c.sortDirection ? <b>{c.sortDirection}</b> : null}
-                                </span>
-                            </Cell>
-                        )}
-                    </Row>
-                </Header>
-                <Body>
-                    {rows.map((r, ri) =>
-                        <Row key={ri}>
-                            {this.props.columns.map((c, ci) => cellTemplate({ rowIndex: ri, columnIndex: ci, data: rows[ri][c.name] }))}
-                        </Row>
-                    )}
-                </Body>
-            </Grid>
+            <div>
+                <GridView {...viewProps}></GridView>
+                <Pager 
+                    rowCount={this.props.rows.length} 
+                    pageSize={this.pageSize}
+                    page={this.page}
+                    pageChange={(page) => this.page = page}>
+                </Pager>
+            </div>
         );
     }
 }
