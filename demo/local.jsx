@@ -1,5 +1,5 @@
 import React from 'react'
-import { GridContainer } from '../src/index'
+import { GridContainer, Cell } from '../src/index'
 
 export class Local extends React.Component {
     constructor() {
@@ -9,8 +9,8 @@ export class Local extends React.Component {
             columns: [ { name: 'id', allowSorting: false }, { name: 'name' } ],
             sortings: [ { column: 'name', direction: 'desc' } ],
             rows: [
-                { id: 1, name: 'Albert'},
-                { id: 2, name: 'Adel'},
+                { id: 1, name: 'Bob'},
+                { id: 2, name: 'Albert'},
                 { id: 3, name: 'Robert'}
             ]
         }
@@ -23,6 +23,7 @@ export class Local extends React.Component {
                 rows={this.state.rows}
                 sortings={this.state.sortings}
                 sortingsChange={(sortings) => this.setState({ sortings })}
+                cellTemplate={({ rowIndex, columnIndex, data }) => <Cell key={columnIndex}>[{rowIndex},{columnIndex}] {data}</Cell>}
                 />
         );
     }

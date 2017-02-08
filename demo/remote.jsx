@@ -9,8 +9,8 @@ export class Remote extends React.Component {
             columns: [ { name: 'id', allowSorting: false }, { name: 'name' } ],
             sortings: [ { column: 'name', direction: 'desc' } ],
             rows: [
-                { id: 1, name: 'Albert 111'},
-                { id: 2, name: 'Adel'},
+                { id: 1, name: 'Bob'},
+                { id: 2, name: 'Albert'},
                 { id: 3, name: 'Robert'}
             ]
         }
@@ -20,14 +20,14 @@ export class Remote extends React.Component {
 
         this.dataSource = (sortings) => {
             return new Promise((resolve, reject) => {
-                let sortColumn = sortings[0].columnName,
+                let sortColumn = sortings[0].column,
                     result = this.state.rows.slice().sort((a, b) => {
                         let value = a[sortColumn] < b[sortColumn] ^ sortings[0].direction === "asc"
                         return value ? -1 : 1;
                     });
                 setTimeout(() => {
                     resolve(result)
-                }, 1500);
+                }, 300);
             });
         }
     }

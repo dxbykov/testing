@@ -55,9 +55,9 @@ function sorty(data, sortings) {
     if(!sortings.length)
         return data;
 
-    let sortColumn = sortings[0].columnName,
+    let sortColumn = sortings[0].column,
         result = data.slice().sort((a, b) => {
-            let value = a[sortColumn] < b[sortColumn] ^ sortings[0].direction === "asc"
+            let value = (a[sortColumn] < b[sortColumn]) ^ sortings[0].direction === "asc"
             return value ? -1 : 1;
         });
     return result;
@@ -87,6 +87,9 @@ export class GridContainer extends React.Component {
 
         let rows = sorty(this.props.rows, this.props.sortings);
 
+        let cellTemplate = this.props.cellTemplate ||
+            (({ rowIndex, columnIndex, data }) => <Cell key={`${rowIndex}${columnIndex}`}>{data}</Cell>);
+
         return (
             <Grid>
                 <Header>
@@ -102,9 +105,7 @@ export class GridContainer extends React.Component {
                 <Body>
                     {rows.map((r, ri) =>
                         <Row key={ri}>
-                            {this.props.columns.map((c, ci) =>
-                                <Cell key={ci}>{r[c.name]}</Cell>
-                            )}
+                            {this.props.columns.map((c, ci) => cellTemplate({rowIndex: ri, columnIndex: ci, data: rows[ri][c.name]}))}
                         </Row>
                     )}
                 </Body>
