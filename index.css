@@ -1,0 +1,46 @@
+* {
+    box-sizing: border-box;
+}
+
+.container {
+    width: 500px;
+}
+
+dx-cell {
+    display: block;
+    float: left;
+
+    width: 100px;
+
+    border: 1px solid green;
+}
+
+dx-row {
+    display: block;
+
+    border: 1px solid red;
+}
+dx-row:after {
+	visibility: hidden;
+	display: block;
+	font-size: 0;
+	content: " ";
+	clear: both;
+	height: 0;
+}
+
+dx-body {
+    display: block;
+    border: 3px solid blue;
+}
+
+dx-header {
+    display: block;
+    border: 3px solid magenta;
+}
+
+dx-grid {
+    display: block;
+
+    border: 1px dashed black;
+}
