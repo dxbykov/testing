@@ -39,9 +39,8 @@ export class LegoDemo extends React.Component {
                     rows={rows}
                     getRowHeight={({ rowIndex }) => this.state.expandedRows.indexOf(rowIndex) > -1 ? 140 : 40}
                     rowTemplate={
-                        ({ rowIndex, rowData, viewport, columns }) => (
+                        ({ rowIndex, rowData, columns }) => (
                             <DetailRow
-                                viewport={viewport}
                                 columns={columns}
                                 rowIndex={rowIndex}
                                 rowData={rowData}

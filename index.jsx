@@ -2,21 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-import { Local } from './demo/local_store'
+import { Local } from './demo/local'
 import { Remote } from './demo/remote'
 import { LegoDemo } from './demo/lego'
 
 class App extends React.Component {
     constructor() {
         super();
-
-        this.state = {
-            name: 'a'
-        }
-
-        setTimeout(() => {
-            this.setState({ name: 'b' })
-        }, 1000)
     }
 
     render() {

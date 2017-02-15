@@ -9,24 +9,61 @@ function applyTemplate(template, data) {
 };
 
 class WindowedScroller extends React.Component {
-    render() {
-        let scrollListener = (e) => {
-            this.props.onViewportChange({ 
-                top: e.currentTarget.scrollTop, 
-                left: e.currentTarget.scrollLeft, 
-                width: e.currentTarget.offsetWidth,
-                height: e.currentTarget.offsetHeight,
-            });
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            viewport: { top: 0, left: 0, width: 0, height: 0 }
         };
 
+        this.updateViewport = this.updateViewport.bind(this);
+    }
+
+    componentDidMount() {
+        setTimeout(() => {
+            this.updateViewport();
+        });
+    }
+
+    getChildContext() {
+        return {
+            virtualHost: {
+                viewport: this.state.viewport
+            }
+        };
+    }
+
+    updateViewport() {
+        let viewport = { 
+            top: this.root.scrollTop, 
+            left: this.root.scrollLeft, 
+            width: this.root.offsetWidth,
+            height: this.root.offsetHeight,
+        };
+
+        this.setState({ viewport });
+    }
+
+    render() {
         return (
-            <div style={{ border: '1px solid black', overflow: 'auto', width: '100%', height: '100%' }}
-                onScroll={scrollListener} onTouchMove={scrollListener}>
+            <div ref={(ref) => this.root = ref}
+                onScroll={this.updateViewport} onTouchMove={this.updateViewport}
+                style={{ border: '1px solid black', overflow: 'auto', width: '100%', height: '100%', 'WebkitOverflowScrolling': 'touch', 'willChange': 'scroll-position' }}>
                 {this.props.children}
             </div>
         );
     }
 }
+WindowedScroller.childContextTypes = {
+    virtualHost: React.PropTypes.shape({
+        viewport: React.PropTypes.shape({
+            top: React.PropTypes.number,
+            left: React.PropTypes.number,
+            width: React.PropTypes.number,
+            height: React.PropTypes.number,
+        }).isRequired,
+    }).isRequired
+};
 
 class VirtualBox extends React.Component {
     getVisibleItems(options) {
@@ -37,7 +74,7 @@ class VirtualBox extends React.Component {
         while(index < options.dataSize) {
             let itemSize = options.getItemSize(index);
             if(offset + itemSize > options.viewport.start && offset + itemSize < options.viewport.start + options.viewport.size ||
-                offset < options.viewport.start + options.viewport.size && offset > options.viewport.start) {
+               offset < options.viewport.start + options.viewport.size && offset > options.viewport.start) {
                 visibleItemMetas.push({ index, offset, size: itemSize });
             }
             index = index + 1;
@@ -53,7 +90,7 @@ class VirtualBox extends React.Component {
         let crossSizeProp = this.props.direction === 'horizontal' ? 'height' : 'width';
 
         let { visibleItemMetas, fullSize } = this.getVisibleItems({
-            viewport: { start: this.props.viewport[positionProp], size: this.props.viewport[sizeProp] },
+            viewport: { start: this.context.virtualHost.viewport[positionProp], size: this.context.virtualHost.viewport[sizeProp] },
             getItemSize: this.props.getItemSize,
             dataSize: this.props.dataSize
         });
@@ -81,6 +118,16 @@ class VirtualBox extends React.Component {
         );
     }
 }
+VirtualBox.contextTypes = {
+    virtualHost: React.PropTypes.shape({
+        viewport: React.PropTypes.shape({
+            top: React.PropTypes.number,
+            left: React.PropTypes.number,
+            width: React.PropTypes.number,
+            height: React.PropTypes.number,
+        }).isRequired,
+    }).isRequired
+};
 
 // Components
 
@@ -132,7 +179,6 @@ export class Row extends React.Component {
         return (
             <VirtualBox
                 direction="horizontal"
-                viewport={this.props.viewport}
                 dataSize={this.props.columns.length}
                 getItemSize={(index) => this.props.columns[index].width || 200}
                 template={
@@ -146,10 +192,6 @@ export class Row extends React.Component {
     }
 }
 Row.propTypes = {
-    viewport: React.PropTypes.shape({
-        left: React.PropTypes.number,
-        width: React.PropTypes.number,
-    }).isRequired,
     columns: React.PropTypes.array.isRequired,
     rowIndex: React.PropTypes.number.isRequired,
     rowData: React.PropTypes.any.isRequired,
@@ -180,7 +222,6 @@ export class DetailRow extends React.Component {
 
         let rowTemplate = (
             <Row
-                viewport={this.props.viewport}
                 columns={this.props.columns}
                 rowIndex={this.props.rowIndex}
                 rowData={this.props.rowData}
@@ -203,10 +244,6 @@ export class DetailRow extends React.Component {
     }
 }
 DetailRow.propTypes = {
-    viewport: React.PropTypes.shape({
-        left: React.PropTypes.number,
-        width: React.PropTypes.number,
-    }).isRequired,
     columns: React.PropTypes.array.isRequired,
     rowIndex: React.PropTypes.number.isRequired,
     rowData: React.PropTypes.any.isRequired,
@@ -216,14 +253,6 @@ DetailRow.propTypes = {
 };
 
 export class Grid extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            viewport: { left: 0, top: 0, width: 400, height: 200 }
-        }
-    }
-
     render() {
         let cellTemplate = this.props.cellTemplate || (({ rowIndex, columnIndex, data }) => (
             <Cell
@@ -232,9 +261,8 @@ export class Grid extends React.Component {
                 data={data}/>
         ));
 
-        let rowTemplate = this.props.rowTemplate || (({ rowIndex, rowData, columns, viewport }) => (
+        let rowTemplate = this.props.rowTemplate || (({ rowIndex, rowData, columns }) => (
             <Row
-                viewport={viewport}
                 columns={columns}
                 rowIndex={rowIndex}
                 rowData={rowData}
@@ -242,24 +270,20 @@ export class Grid extends React.Component {
         ));
 
         return (
-            <div>
-                <div style={{ width: this.state.viewport.width + 2 + 'px', height: this.state.viewport.height + 2 + 'px', border: '1px dashed black' }}>
-                    <WindowedScroller onViewportChange={(viewport) => this.setState({ viewport })}>
-                        <VirtualBox
-                            direction="vertical"
-                            viewport={this.state.viewport}
-                            dataSize={this.props.rows.length}
-                            getItemSize={(index) => this.props.getRowHeight({ rowIndex: index })}
-                            template={
-                                ({ index, position }) => rowTemplate({
-                                    rowIndex: index,
-                                    rowData: this.props.rows[index],
-                                    columns: this.props.columns,
-                                    viewport: this.state.viewport,
-                                })
-                            }/>
-                    </WindowedScroller>
-                </div>
+            <div style={{ width: '400px', height: '200px', border: '1px dashed black' }}>
+                <WindowedScroller>
+                    <VirtualBox
+                        direction="vertical"
+                        dataSize={this.props.rows.length}
+                        getItemSize={(index) => this.props.getRowHeight({ rowIndex: index })}
+                        template={
+                            ({ index, position }) => rowTemplate({
+                                rowIndex: index,
+                                rowData: this.props.rows[index],
+                                columns: this.props.columns,
+                            })
+                        }/>
+                </WindowedScroller>
             </div>
         );
     }
