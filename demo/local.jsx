@@ -3,84 +3,104 @@ import { GridContainer, GridView, Cell, Pager, Grouper, sorty } from '../src/ind
 
 // state controllers
 
-function sortingStateController({ getState, setState }) {
+function sortingStateController({ getProps, setState }) {
     let calcSortings = (columnName, prevSortings) => {
         let sorting = prevSortings.filter(s => { return s.column == columnName; })[0];
         return [ { column: columnName, direction: (sorting && sorting.direction == 'desc') ? 'asc' : 'desc' } ]
     };
 
     return {
-        onSort: (columnName) => {
-            let { sortings } = getState(),
-                nextSortings = calcSortings(columnName, sortings);
+        props: () => {
+            return {
+                onSort: (columnName) => {
+                    let { sortings } = getProps(),
+                        nextSortings = calcSortings(columnName, sortings);
 
-            setState({ sortings: nextSortings });
+                    setState({ sortings: nextSortings });
+                }
+            };
         }
     };
 }
 
-function groupStateController({ getState, setState }) {
+function groupStateController({ getProps, setState }) {
     return {
-        groupChange: (columnName) => {
-            let grouping = getState().grouping,
-                colGrouping = grouping.filter(g => g.column === columnName)[0];
+        props: () => {
+            return {
+                groupChange: (columnName) => {
+                    let grouping = getProps().grouping,
+                        colGrouping = grouping.filter(g => g.column === columnName)[0];
 
-            grouping = grouping.slice();
-            if(colGrouping) {
-                grouping.splice(grouping.indexOf(colGrouping), 1);
-            }
-            else {
-                grouping.push({
-                    column: columnName
-                });
-            }
-            setState({ grouping: grouping });
+                    grouping = grouping.slice();
+                    if(colGrouping) {
+                        grouping.splice(grouping.indexOf(colGrouping), 1);
+                    }
+                    else {
+                        grouping.push({
+                            column: columnName
+                        });
+                    }
+                    setState({ grouping: grouping });
+                }
+            };
         }
     };
 }
 
-function pagingStateController({ getState, setState }) {
-    return {
-        pageChange: (page) => {
-            setState({ page });
-            setState((state, props) => {
-                setState({ page });
-            });
-        },
-        pageSizeChange: (pageSize) => {
-            setState({ pageSize });
-        },
-        page: () => {
-            let state = getState(),
-                totalPages = Math.ceil(state.totalCount / state.pageSize),
-                lastPageIndex = totalPages - 1;
+function pagingStateController({ getProps, setState }) {
+    let page = ({ totalCount, pageSize, page }) => {
+        let totalPages = Math.ceil(totalCount / pageSize),
+            lastPageIndex = totalPages - 1;
 
-            return (lastPageIndex < state.page) ? lastPageIndex : state.page;
+        return (lastPageIndex < page) ? lastPageIndex : page;
+    };
+
+    return {
+        props: () => {
+            return {
+                pageChange: (page) => {
+                    setState({ page });
+                },
+                pageSizeChange: (pageSize) => {
+                    setState({ pageSize });
+                },
+                page: page(getProps())
+            };
         }
     };
 }
 
 // data processing
 
-function dataSortingController({ getState }) {
-    return () => {
-        let { originalRows, sortings } = getState(),
-            sortedRows = sorty(originalRows, sortings);
+function dataSortingController({ getProps }) {
+    let sort = ({ originalRows, sortings }) => {
+        return sorty(originalRows, sortings);
+    };
 
-        return sortedRows;
+    return {
+        props: () => {
+            return {
+                sortedRows: sort(getProps())
+            };
+        }
     };
 }
 
-function dataPagingController({ getState }) {
-    return () => {
-        let { originalRows, pageSize, page } = getState(),
-            visibleRows = originalRows.slice(pageSize * page, pageSize * (page + 1));
-        
+function dataPagingController({ getProps }) {
+    let paginate = ({ originalRows, pageSize, page }) => {
+        let visibleRows = originalRows.slice(pageSize * page, pageSize * (page + 1));
         return visibleRows;
     };
+    return  {
+        props: () => {
+            return {
+                visibleRows: paginate(getProps())
+            };
+        }
+    };
 }
 
-function groupDataController({ getState }) {
+function groupDataController({ getProps }) {
     let flatten = (rows) => {
         let result = [];
         
@@ -139,9 +159,13 @@ function groupDataController({ getState }) {
         return flatten(groups);
     };
 
-    return () => {
-        let { originalRows, grouping } = getState();
-        return group(originalRows, grouping);
+    return  {
+        props: () => {
+            let props = getProps();
+            return {
+                groupedRows: group(props.originalRows, props.grouping)
+            };
+        }
     };
 }
 
@@ -179,7 +203,7 @@ export class Local extends React.Component {
         // control state
 
         this.sortingState = sortingStateController({
-            getState: () => {
+            getProps: () => {
                 return {
                     sortings: this.state.sortings
                 };
@@ -191,7 +215,7 @@ export class Local extends React.Component {
 
 
         this.groupingState = groupStateController({
-            getState: () => {
+            getProps: () => {
                 return {
                     grouping: this.state.grouping
                 }
@@ -202,22 +226,22 @@ export class Local extends React.Component {
         });
 
         this.pagingState = pagingStateController({
-            getState: () => {
+            getProps: () => {
                 return {
                     pageSize: this.state.pageSize,
                     page: this.state.page,
-                    totalCount: this.group().length
+                    totalCount: this.group.props().groupedRows.length
                 };
             },
-            setState: (nextState, callback) => {
-                this.setState(nextState, callback);
+            setState: (nextState) => {
+                this.setState(nextState);
             }
         });
 
         // process data
 
         this.sort = dataSortingController({
-            getState: () => {
+            getProps: () => {
                 return {
                     originalRows: this.state.originalRows,
                     sortings: this.state.sortings
@@ -226,46 +250,41 @@ export class Local extends React.Component {
         });
 
         this.group = groupDataController({
-            getState: () => {
+            getProps: () => {
                 return {
-                    originalRows: this.sort(),
+                    originalRows: this.sort.props().sortedRows,
                     grouping: this.state.grouping
                 }
             }
         });
 
         this.page = dataPagingController({
-            getState: () => {
+            getProps: () => {
                 return {
-                    originalRows: this.group(),
+                    originalRows: this.group.props().groupedRows,
                     pageSize: this.state.pageSize,
-                    page: this.pagingState.page()
+                    page: this.pagingState.props().page
                 };
             }
         });
-
-        // this.visibleRows = () => this.group();
-        // this.totalCount = () => this.visibleRows().length;
 
     }
 
     render() {
         return (
             <div>
-                <Grouper columns={this.state.columns} grouping={this.state.grouping} groupChange={this.groupingState.groupChange} />
+                <Grouper columns={this.state.columns} grouping={this.state.grouping} {...this.groupingState.props(/*mapper*/)} />
                 <GridView
                     columns={this.state.columns}
-                    rows={this.page()}
+                    rows={this.page.props().visibleRows}
                     sortings={this.state.sortings}
-                    onSort={this.sortingState.onSort}
+                    {...this.sortingState.props(/*mapper*/)}
                     cellTemplate={({ rowIndex, columnIndex, data }) => <Cell key={columnIndex}>[{rowIndex},{columnIndex}] {data}</Cell>}
                     footerTemplate={
                         <Pager 
                             pageSize={this.state.pageSize}
-                            page={this.pagingState.page()}
-                            totalCount={this.group().length}
-                            pageChange={this.pagingState.pageChange}
-                            pageSizeChange={this.pagingState.pageSizeChange}
+                            totalCount={this.group.props().groupedRows.length}
+                            {...this.pagingState.props()}
                         />
                     }
                 />
