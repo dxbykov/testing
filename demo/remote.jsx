@@ -10,7 +10,7 @@ export class Remote extends React.Component {
             sortings: [ { column: 'name', direction: 'desc' } ],
             page: 0,
             pageSize: 2,
-            rows: [
+            originalRows: [
                 { id: 1, name: 'Bob'},
                 { id: 2, name: 'Albert'},
                 { id: 3, name: 'Robert'},
@@ -20,15 +20,18 @@ export class Remote extends React.Component {
                 { id: 7, name: 'Sonay'},
                 { id: 8, name: 'Marry'},
                 { id: 9, name: 'Sherlock'}
-            ]
+            ],
+            visibleRows: []
         }
 
         this.onSort = this.onSort.bind(this);
 
 
         this.dataSource = (params) => {
+            params.page = params.page || 0;
+            params.sortings = params.sortings || [];
             return new Promise((resolve, reject) => {
-                let rows = sorty(this.state.rows, params.sortings)
+                let rows = sorty(this.state.originalRows, params.sortings)
                     .slice(this.state.pageSize * this.state.page, this.state.pageSize * (this.state.page + 1));
                 setTimeout(() => {
                     resolve(rows);
@@ -37,6 +40,13 @@ export class Remote extends React.Component {
         }
     }
     
+    componentDidMount() {
+        this.reload({
+            page: this.state.page,
+            sortings: this.state.sortings
+        });
+    }
+
     onSort(colName) {   
         this.state.sortings.forEach(s => {
             if(s.column == colName) {
@@ -46,33 +56,42 @@ export class Remote extends React.Component {
         this.setState({ sorting: this.state.sortings });
     }
 
-    applySortings(sortings) {
+    reload(params) {
         this.setState({ loading: true });
-        this.dataSource({ sortings, page: this.state.page }).then((rows) => {
-            this.setState({ sortings, rows, loading: false });
+        this.dataSource(params).then((rows) => {
+            this.setState({ visibleRows: rows, loading: false });
         });
     }
 
-    applyPage(page) {
-        this.setState({ loading: true });
-        this.dataSource({ page, sortings: this.state.sortings }).then((rows) => {
-            this.setState({ page, rows, loading: false });
+    applySortings(sortings) {
+        this.reload({
+            page: this.state.page,
+            sortings
         });
+        this.setState({ sortings });
+    }
+
+    applyPage(page) {
+        this.reload({
+            page,
+            sortings: this.state.sortings
+        });
+        this.setState({ page });
     }
 
     render() {
         return (
             <div>
                 {this.state.loading ? "Loading...": null}
-                <GridContainer 
-                    columns={this.state.columns} 
-                    rows={this.state.rows}
+                <GridContainer
+                    columns={this.state.columns}
+                    visibleRows={this.state.visibleRows}
                     sortings={this.state.sortings}
                     sortingsChange={(sortings) => this.applySortings(sortings)}
                     page={this.state.page}
                     pageChange={(page) => this.applyPage(page)}
                     pageSize={this.state.pageSize}
-                    />
+                />
             </div>
         );
     }

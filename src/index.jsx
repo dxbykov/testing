@@ -16,6 +16,14 @@ export const Row = (props) => {
     );
 }
 
+export const GroupRow = (props) => {
+    return (
+        <dx-row class={'dx-group-row'}>
+            {props.children}
+        </dx-row>
+    );
+}
+
 export const Body = (props) => {
     return (
         <dx-body>
@@ -32,6 +40,14 @@ export const Header = (props) => {
     );
 }
 
+export const Footer = (props) => {
+    return (
+        <dx-footer>
+            {props.children}
+        </dx-footer>
+    );
+}
+
 export const Grid = (props) => {
     return (
         <dx-grid>
@@ -42,7 +58,7 @@ export const Grid = (props) => {
 
 export const Pager = (props) => {
     let pages = [];
-    for(let i = 0; i < props.rowCount / props.pageSize; i ++)
+    for(let i = 0; i < props.totalCount / props.pageSize; i ++)
         pages.push(i + 1);
 
     return (
@@ -52,6 +68,24 @@ export const Pager = (props) => {
                     {pageIndex}
                 </dx-page>)}
         </dx-pager>
+    );
+}
+
+export const Grouper = (props) => {
+    let groups = props.columns.map(c => {
+        return {
+            column: c.name,
+            grouped: props.grouping.filter(g => g.column === c.name).length > 0
+        };
+    });
+
+    return (
+        <dx-grouper>
+            {groups.map((group, groupIndex) =>
+                <dx-page key={groupIndex} active={group.grouped} onClick={() => props.groupChange(group.column)}>
+                    {group.column}
+                </dx-page>)}
+        </dx-grouper>
     );
 }
 
@@ -79,19 +113,28 @@ export const GridView = (props) => {
                     {columnsView.map((c, ci) =>
                         <Cell key={ci}>
                             <span onClick={() => { props.onSort(c.name); }}>
-                                {c.name} {c.sortDirection ? <b>{c.sortDirection}</b> : null}
+                                {c.name} {c.sortDirection ? <b>{c.sortDirection === 'asc' ? '↓' : '↑'}</b> : null}
                             </span>
                         </Cell>
                     )}
                 </Row>
             </Header>
             <Body>
-                {props.rows.map((r, ri) =>
-                    <Row key={ri}>
-                        {props.columns.map((c, ci) => cellTemplate({ rowIndex: ri, columnIndex: ci, data: props.rows[ri][c.name] }))}
-                    </Row>
+                {props.rows.map((r, ri) => {
+                        if(r.isGroupRow) {
+                            return <GroupRow key={ri}>{r.column}: {r.key}</GroupRow>
+                        }
+                        else {
+                            return <Row key={ri}>
+                                {props.columns.map((c, ci) => cellTemplate({ rowIndex: ri, columnIndex: ci, data: props.rows[ri][c.name] }))}
+                            </Row>
+                        }
+                    }
                 )}
             </Body>
+            <Footer>
+                {props.footerTemplate}
+            </Footer>
         </Grid>
     );
 }
@@ -102,7 +145,7 @@ export function sorty(data, sortings) {
 
     let sortColumn = sortings[0].column,
         result = data.slice().sort((a, b) => {
-            let value = (a[sortColumn] < b[sortColumn]) ^ sortings[0].direction === "asc"
+            let value = (a[sortColumn] < b[sortColumn]) ^ sortings[0].direction === "desc"
             return value ? -1 : 1;
         });
     return result;
@@ -138,14 +181,22 @@ export class GridContainer extends React.Component {
     shouldComponentUpdate(nextProps, nextState) {
         let result = false;
 
-        Object.keys(this.state).forEach(propName => {
-            if (nextProps[propName] !== undefined) {
+        Object.keys(this.props).forEach(propName => {
+            if(nextProps[propName] !== this.props[propName]) {
                 result = result || nextProps[propName] !== this.props[propName];
             }
-            else {
-                result = result || nextState[propName] !== this.state[propName];
-            }
         });
+
+        if(!result) {
+            Object.keys(this.state).forEach(propName => {
+                if (nextProps[propName] !== undefined) {
+                    result = result || nextProps[propName] !== this.props[propName];
+                }
+                else {
+                    result = result || nextState[propName] !== this.state[propName];
+                }
+            });
+        }
 
         return result;
     }
@@ -211,18 +262,12 @@ export class GridContainer extends React.Component {
             ...this.props,
             rows,
             sortings: this.sortings,
-            onSort: this.onSort,
+            onSort: this.props.onSort || this.onSort
         };
 
         return (
             <div>
                 <GridView {...viewProps}></GridView>
-                <Pager 
-                    rowCount={this.props.rows.length} 
-                    pageSize={this.pageSize}
-                    page={this.page}
-                    pageChange={(page) => this.page = page}>
-                </Pager>
             </div>
         );
     }

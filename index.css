@@ -3,14 +3,14 @@
 }
 
 .container {
-    width: 500px;
+    width: 700px;
 }
 
 dx-cell {
     display: block;
     float: left;
 
-    width: 100px;
+    width: 150px;
 
     border: 1px solid green;
 }
@@ -27,6 +27,13 @@ dx-row:after {
 	content: " ";
 	clear: both;
 	height: 0;
+}
+dx-row.dx-group-row {
+    display: block;
+
+    border: 1px solid red;
+    background-color: #fcc;
+    font-weight: bold;
 }
 
 dx-body {
@@ -60,4 +67,11 @@ dx-page {
 
 dx-page[active='true'] {
     border-style: solid;
+    background-color: #cfc;
+}
+
+dx-grouper {
+    display: block;
+
+    border: 1px dashed rebeccapurple;
 }
