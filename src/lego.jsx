@@ -87,7 +87,6 @@ class VirtualBox extends React.Component {
     render() {
         let positionProp = this.props.direction === 'horizontal' ? 'left' : 'top';
         let sizeProp = this.props.direction === 'horizontal' ? 'width' : 'height';
-        let crossSizeProp = this.props.direction === 'horizontal' ? 'height' : 'width';
 
         let { visibleItemMetas, fullSize } = this.getVisibleItems({
             viewport: { start: this.context.virtualHost.viewport[positionProp], size: this.context.virtualHost.viewport[sizeProp] },
@@ -97,17 +96,18 @@ class VirtualBox extends React.Component {
         
         let visibleItems = visibleItemMetas.map(visibleItemMeta => {
             return (
-                <div key={`${visibleItemMeta.index}`} style={{
-                        position: 'absolute',
-                        [positionProp]: visibleItemMeta.offset + 'px',
-                        [sizeProp]: visibleItemMeta.size + 'px',
-                        [crossSizeProp]: '100%'
-                    }}>{
-                    this.props.template({ 
-                        index: visibleItemMeta.index, 
-                        position: visibleItemMeta.offset 
-                    })
-                }</div>
+                <VirtualItem 
+                    key={`${visibleItemMeta.index}`}
+                    direction={this.props.direction}
+                    position={visibleItemMeta.offset}
+                    size={visibleItemMeta.size}>
+                    {
+                        this.props.template({ 
+                            index: visibleItemMeta.index, 
+                            position: visibleItemMeta.offset 
+                        })
+                    }
+                </VirtualItem>
             );
         })
 
@@ -118,6 +118,12 @@ class VirtualBox extends React.Component {
         );
     }
 }
+VirtualBox.propTypes = {
+    direction: React.PropTypes.oneOf(['vertical', 'horizontal']).isRequired,
+    dataSize: React.PropTypes.number.isRequired,
+    getItemSize: React.PropTypes.func.isRequired,
+    template: React.PropTypes.func.isRequired
+};
 VirtualBox.contextTypes = {
     virtualHost: React.PropTypes.shape({
         viewport: React.PropTypes.shape({
@@ -127,6 +133,24 @@ VirtualBox.contextTypes = {
             height: React.PropTypes.number,
         }).isRequired,
     }).isRequired
+};
+
+class VirtualItem extends React.Component {
+    render() {
+        let positionProp = this.props.direction === 'horizontal' ? 'left' : 'top';
+        let sizeProp = this.props.direction === 'horizontal' ? 'width' : 'height';
+
+        return (
+            <div style={{ position: 'absolute', [positionProp]: this.props.position + 'px', [sizeProp]: this.props.size + 'px' }}>
+                {this.props.children}
+            </div>
+        );
+    }
+}
+VirtualItem.propTypes = {
+    direction: React.PropTypes.oneOf(['vertical', 'horizontal']).isRequired,
+    position: React.PropTypes.number.isRequired,
+    size: React.PropTypes.number.isRequired,
 };
 
 // Components
@@ -234,8 +258,8 @@ export class DetailRow extends React.Component {
         );
 
         return (
-            <div style={{ width: '100%', height: '100%' }}>
-                <div style={{ width: '100%', height: 40 + 'px' }}>
+            <div>
+                <div style={{ height: 40 + 'px' }}>
                     {rowTemplate}
                 </div>
                 {detailTemplate}
@@ -270,7 +294,7 @@ export class Grid extends React.Component {
         ));
 
         return (
-            <div style={{ width: '400px', height: '200px', border: '1px dashed black' }}>
+            <div style={{ height: '200px', border: '1px dashed black' }}>
                 <WindowedScroller>
                     <VirtualBox
                         direction="vertical"
@@ -288,3 +312,10 @@ export class Grid extends React.Component {
         );
     }
 }
+Grid.propTypes = {
+    columns: React.PropTypes.array.isRequired,
+    rows: React.PropTypes.array.isRequired,
+    getRowHeight: React.PropTypes.func.isRequired,
+    cellTemplate: React.PropTypes.func,
+    rowTemplate: React.PropTypes.func,
+};
