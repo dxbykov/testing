@@ -74,7 +74,8 @@ class VirtualBox extends React.Component {
         while(index < options.dataSize) {
             let itemSize = options.getItemSize(index);
             if(offset + itemSize > options.viewport.start && offset + itemSize < options.viewport.start + options.viewport.size ||
-               offset < options.viewport.start + options.viewport.size && offset > options.viewport.start) {
+               offset < options.viewport.start + options.viewport.size && offset > options.viewport.start ||
+               offset <= options.viewport.start && offset + itemSize >= options.viewport.start + options.viewport.size) {
                 visibleItemMetas.push({ index, offset, size: itemSize });
             }
             index = index + 1;
@@ -87,6 +88,7 @@ class VirtualBox extends React.Component {
     render() {
         let positionProp = this.props.direction === 'horizontal' ? 'left' : 'top';
         let sizeProp = this.props.direction === 'horizontal' ? 'width' : 'height';
+        let crossSizeProp = this.props.direction === 'vertical' ? 'width' : 'height';
 
         let { visibleItemMetas, fullSize } = this.getVisibleItems({
             viewport: { start: this.context.virtualHost.viewport[positionProp], size: this.context.virtualHost.viewport[sizeProp] },
@@ -98,6 +100,7 @@ class VirtualBox extends React.Component {
             return (
                 <VirtualItem 
                     key={`${visibleItemMeta.index}`}
+                    viewport={this.context.virtualHost.viewport}
                     direction={this.props.direction}
                     position={visibleItemMeta.offset}
                     size={visibleItemMeta.size}>
@@ -112,7 +115,7 @@ class VirtualBox extends React.Component {
         })
 
         return (
-            <div style={{ position: 'relative', [sizeProp]: fullSize + 'px' }}>
+            <div style={{ position: 'relative', [sizeProp]: fullSize + 'px', [crossSizeProp]: '100%' }}>
                 {visibleItems}
             </div>
         );
@@ -136,12 +139,33 @@ VirtualBox.contextTypes = {
 };
 
 class VirtualItem extends React.Component {
+    getChildContext() {
+        let { direction, position, size, viewport } = this.props;
+        
+        let positionProp = direction === 'horizontal' ? 'left' : 'top';
+        let crossPositionProp = direction === 'horizontal' ? 'top' : 'left';
+        let sizeProp = direction === 'horizontal' ? 'width' : 'height';
+        let crossSizeProp = direction === 'horizontal' ? 'height' : 'width';
+
+        return {
+            virtualHost: {
+                viewport: {
+                    [positionProp]: Math.max(viewport[positionProp] - position, 0),
+                    [crossPositionProp]: viewport[crossPositionProp],
+                    [sizeProp]: Math.min(viewport[positionProp] + viewport[sizeProp] - position, viewport[sizeProp]),
+                    [crossSizeProp]: viewport[crossSizeProp],
+                }
+            }
+        };
+    }
+
     render() {
         let positionProp = this.props.direction === 'horizontal' ? 'left' : 'top';
         let sizeProp = this.props.direction === 'horizontal' ? 'width' : 'height';
+        let crossSizeProp = this.props.direction === 'vertical' ? 'width' : 'height';
 
         return (
-            <div style={{ position: 'absolute', [positionProp]: this.props.position + 'px', [sizeProp]: this.props.size + 'px' }}>
+            <div style={{ position: 'absolute', [positionProp]: this.props.position + 'px', [sizeProp]: this.props.size + 'px', [crossSizeProp]: '100%' }}>
                 {this.props.children}
             </div>
         );
@@ -151,6 +175,22 @@ VirtualItem.propTypes = {
     direction: React.PropTypes.oneOf(['vertical', 'horizontal']).isRequired,
     position: React.PropTypes.number.isRequired,
     size: React.PropTypes.number.isRequired,
+    viewport: React.PropTypes.shape({
+        top: React.PropTypes.number,
+        left: React.PropTypes.number,
+        width: React.PropTypes.number,
+        height: React.PropTypes.number,
+    }).isRequired,
+};
+VirtualItem.childContextTypes = {
+    virtualHost: React.PropTypes.shape({
+        viewport: React.PropTypes.shape({
+            top: React.PropTypes.number,
+            left: React.PropTypes.number,
+            width: React.PropTypes.number,
+            height: React.PropTypes.number,
+        }).isRequired,
+    }).isRequired
 };
 
 // Components
@@ -194,11 +234,16 @@ DetailCell.propTypes = {
     template: React.PropTypes.func,
     expanded: React.PropTypes.bool.isRequired,
     expandedChange: React.PropTypes.func.isRequired,
-};
+}; 
 
 export class Row extends React.Component {
      render() {
-        let cellTemplate = this.props.cellTemplate || (({ rowIndex, columnIndex, data }) => {});
+        let cellTemplate = this.props.cellTemplate || (({ rowIndex, columnIndex, data }) => (
+            <Cell
+                rowIndex={rowIndex}
+                columnIndex={columnIndex}
+                data={data}/>
+        ));
 
         return (
             <VirtualBox
@@ -220,6 +265,17 @@ Row.propTypes = {
     rowIndex: React.PropTypes.number.isRequired,
     rowData: React.PropTypes.any.isRequired,
     cellTemplate: React.PropTypes.func,
+};
+
+export const rowProvider = {
+    getSize: () => 40,
+    template: ({ rowIndex, rowData, columns, cellTemplate }) => (
+        <Row
+            columns={columns}
+            rowIndex={rowIndex}
+            rowData={rowData}
+            cellTemplate={cellTemplate}/>
+    )
 };
 
 export class DetailRow extends React.Component {
@@ -276,8 +332,86 @@ DetailRow.propTypes = {
     expandedChange: React.PropTypes.func.isRequired,
 };
 
+export const detailProvider = (options) => {
+    let { isExpanded, toggleExpanded, collapsedHeight, expandedHeight } = options;
+
+    return {
+        getSize: (index) => isExpanded(index) ? expandedHeight : collapsedHeight,
+        template: ({ rowIndex, rowData, columns }) => {
+            return (
+                <DetailRow
+                    columns={columns}
+                    rowIndex={rowIndex}
+                    rowData={rowData}
+                    expanded={isExpanded(rowIndex)}
+                    expandedChange={(expanded) => toggleExpanded(rowIndex, expanded)}/>
+            );
+        }
+    }
+}
+
+export class GroupRow extends React.Component {
+    render() {
+        let getItemSize = (index) => {
+            if(index === 0) 
+                return 40;
+            return rowProvider.getSize(index);
+        };
+        let itemTemplate = ({ index, position }) => {
+            if(index === 0) {
+                return (
+                    <div onClick={() => this.props.expandedChange(!this.props.expanded)} style={{ width: '100%', height: '100%', border: '1px dashed black' }}>
+                        {`[${this.props.expanded ? '-' : '+'}] Group: ${this.props.rowData.value}`}
+                    </div>
+                );
+            }
+
+            return rowProvider.template({
+                rowIndex: index - 1,
+                rowData: this.props.rowData.items[index - 1],
+                columns: this.props.columns,
+            });
+        };
+
+        return (
+            <VirtualBox
+                direction="vertical"
+                dataSize={(this.props.expanded ? this.props.rowData.items.length : 0) + 1}
+                getItemSize={getItemSize}
+                template={itemTemplate}/>
+        );
+    }
+}
+GroupRow.propTypes = {
+    columns: React.PropTypes.array.isRequired,
+    rowIndex: React.PropTypes.number.isRequired,
+    rowData: React.PropTypes.any.isRequired,
+    rowProvider: React.PropTypes.shape({
+        getSize: React.PropTypes.func.isRequired,
+        template: React.PropTypes.func.isRequired,
+    }).isRequired,
+};
+
+export const groupProvider = (options) => {
+    let { isExpanded, toggleExpanded } = options;
+
+    return {
+        getSize: (index, row) => 40 + (isExpanded(index) ? row.items.length * 40 : 0),
+        template: ({ rowIndex, rowData, columns, cellTemplate }) => (
+            <GroupRow
+                columns={columns}
+                rowIndex={rowIndex}
+                rowData={rowData}
+                rowProvider={rowProvider}
+                expanded={isExpanded(rowIndex)}
+                expandedChange={(expanded) => toggleExpanded(rowIndex, expanded)}/>
+        )
+    };
+};
+
 export class Grid extends React.Component {
     render() {
+        let { rowProvider } = this.props
         let cellTemplate = this.props.cellTemplate || (({ rowIndex, columnIndex, data }) => (
             <Cell
                 rowIndex={rowIndex}
@@ -299,12 +433,13 @@ export class Grid extends React.Component {
                     <VirtualBox
                         direction="vertical"
                         dataSize={this.props.rows.length}
-                        getItemSize={(index) => this.props.getRowHeight({ rowIndex: index })}
+                        getItemSize={(index) => rowProvider.getSize(index, this.props.rows[index])}
                         template={
-                            ({ index, position }) => rowTemplate({
+                            ({ index, position }) => rowProvider.template({
                                 rowIndex: index,
                                 rowData: this.props.rows[index],
                                 columns: this.props.columns,
+                                cellTemplate: cellTemplate,
                             })
                         }/>
                 </WindowedScroller>
@@ -315,7 +450,12 @@ export class Grid extends React.Component {
 Grid.propTypes = {
     columns: React.PropTypes.array.isRequired,
     rows: React.PropTypes.array.isRequired,
-    getRowHeight: React.PropTypes.func.isRequired,
     cellTemplate: React.PropTypes.func,
-    rowTemplate: React.PropTypes.func,
+    rowProvider: React.PropTypes.shape({
+        getSize: React.PropTypes.func.isRequired,
+        template: React.PropTypes.func.isRequired,
+    }).isRequired,
 };
+Grid.defaultProps = {
+    rowProvider: rowProvider
+}
