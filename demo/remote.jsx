@@ -1,96 +1,175 @@
 import React from 'react'
-import { GridContainer, sorty } from '../src/index'
+import { GridContainer, GridView, Cell, Pager, Grouper, sorty } from '../src/index'
+import {
+    sortingStateController,
+    groupStateController,
+    pagingStateController,
+    dataSortingController,
+    dataGroupingController,
+    dataPagingController
+    } from '../src/controllers'
+
+export function fakeRemoteDataSource({ getProps, setState }) {
+    let data = [
+        { id: 1, name: 'Bob', sex: 'Male', city: 'Los Angeles'},
+        { id: 2, name: 'Alberta', sex: 'Female', city: 'New York'},
+        { id: 3, name: 'Robert', sex: 'Male', city: 'Los Angeles'},
+        { id: 4, name: 'Jane', sex: 'Female', city: 'Los Angeles'},
+        { id: 5, name: 'Azbest', sex: 'Male', city: 'New York'},
+        { id: 6, name: 'Vova', sex: 'Male', city: 'New York'},
+        { id: 7, name: 'Sonya', sex: 'Female', city: 'Los Angeles'},
+        { id: 8, name: 'Marry', sex: 'Female', city: 'New York'},
+        { id: 9, name: 'Sherlock', sex: 'Male', city: 'New York'}
+    ];
+
+    let sort = dataSortingController({
+        getProps: () => {
+            return {
+                originalRows: data,
+                sortings: getProps().sortings
+            };
+        }
+    });
+
+    let group = dataGroupingController({
+        getProps: () => {
+            return {
+                originalRows: sort.props().sortedRows,
+                grouping: getProps().grouping
+            }
+        }
+    });
+
+    let paginate = dataPagingController({
+        getProps: () => {
+            return {
+                originalRows: group.props().groupedRows,
+                pageSize: getProps().pageSize,
+                page: getProps().page
+            };
+        }
+    });
+
+    let load = () => {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve({
+                        visibleRows: paginate.props().visibleRows,
+                        totalCount: group.props().groupedRows.length
+                    });
+                }, 500);
+            });
+    };
+
+    return {
+        reload: () => {
+            setState({ loading: true });
+            load(getProps()).then(({visibleRows, totalCount}) => {
+                setState({
+                    visibleRows,
+                    totalCount,
+                    loading: false
+                });
+            });
+        }
+    };
+}
 
 export class Remote extends React.Component {
     constructor() {
         super();
 
         this.state = {
-            columns: [ { name: 'id', allowSorting: false }, { name: 'name' } ],
-            sortings: [ { column: 'name', direction: 'desc' } ],
-            page: 0,
-            pageSize: 2,
-            originalRows: [
-                { id: 1, name: 'Bob'},
-                { id: 2, name: 'Albert'},
-                { id: 3, name: 'Robert'},
-                { id: 4, name: 'Poul'},
-                { id: 5, name: 'Azbest'},
-                { id: 6, name: 'Vova'},
-                { id: 7, name: 'Sonay'},
-                { id: 8, name: 'Marry'},
-                { id: 9, name: 'Sherlock'}
+            columns: [
+                { name: 'id' },
+                { name: 'name' },
+                { name: 'sex' },
+                { name: 'city' },
             ],
-            visibleRows: []
-        }
+            visibleRows: [],
+            totalCount: 0,
+            sortings: [ { column: 'name', direction: 'asc' } ],
+            grouping: [ { column: 'sex' } ],
+            pageSize: 10,
+            page: 0,
+        };
 
-        this.onSort = this.onSort.bind(this);
+        this.dataSource = fakeRemoteDataSource({
+            getProps: () => {
+                return {
+                    sortings: this.state.sortings,
+                    grouping: this.state.grouping,
+                    pageSize: this.state.pageSize,
+                    page: this.pagingState.props().page
+                }
+            },
+            setState: (nextState) => {
+                this.setState(nextState);
+            }
+        });
+
+        // control state
+
+        this.sortingState = sortingStateController({
+            getProps: () => {
+                return {
+                    sortings: this.state.sortings
+                };
+            },
+            setState:({ sortings }) => {
+                this.setState({ sortings }, () => { this.dataSource.reload(); });
+            }
+        });
 
 
-        this.dataSource = (params) => {
-            params.page = params.page || 0;
-            params.sortings = params.sortings || [];
-            return new Promise((resolve, reject) => {
-                let rows = sorty(this.state.originalRows, params.sortings)
-                    .slice(this.state.pageSize * this.state.page, this.state.pageSize * (this.state.page + 1));
-                setTimeout(() => {
-                    resolve(rows);
-                }, 300);
-            });
-        }
+        this.groupingState = groupStateController({
+            getProps: () => {
+                return {
+                    grouping: this.state.grouping
+                }
+            },
+            setState: (nextState) => {
+                this.setState(nextState, () => { this.dataSource.reload(); });
+            }
+        });
+
+        this.pagingState = pagingStateController({
+            getProps: () => {
+                return {
+                    pageSize: this.state.pageSize,
+                    page: this.state.page,
+                    totalCount: this.state.totalCount
+                };
+            },
+            setState: (nextState) => {
+                this.setState(nextState, () => { this.dataSource.reload(); });
+            }
+        });
+
     }
     
     componentDidMount() {
-        this.reload({
-            page: this.state.page,
-            sortings: this.state.sortings
-        });
-    }
-
-    onSort(colName) {   
-        this.state.sortings.forEach(s => {
-            if(s.column == colName) {
-                s.direction = s.direction == 'desc' ? 'asc' : 'desc';
-            }
-        });
-        this.setState({ sorting: this.state.sortings });
-    }
-
-    reload(params) {
-        this.setState({ loading: true });
-        this.dataSource(params).then((rows) => {
-            this.setState({ visibleRows: rows, loading: false });
-        });
-    }
-
-    applySortings(sortings) {
-        this.reload({
-            page: this.state.page,
-            sortings
-        });
-        this.setState({ sortings });
-    }
-
-    applyPage(page) {
-        this.reload({
-            page,
-            sortings: this.state.sortings
-        });
-        this.setState({ page });
+        this.dataSource.reload();
     }
 
     render() {
         return (
             <div>
-                {this.state.loading ? "Loading...": null}
-                <GridContainer
+                {this.state.loading ? "Loading...": "Ready"}
+                <Grouper columns={this.state.columns} grouping={this.state.grouping} {...this.groupingState.props(/*mapper*/)} />
+                <GridView
                     columns={this.state.columns}
-                    visibleRows={this.state.visibleRows}
+                    rows={this.state.visibleRows}
                     sortings={this.state.sortings}
-                    sortingsChange={(sortings) => this.applySortings(sortings)}
-                    page={this.state.page}
-                    pageChange={(page) => this.applyPage(page)}
-                    pageSize={this.state.pageSize}
+                    {...this.sortingState.props(/*mapper*/)}
+                    cellTemplate={({ rowIndex, columnIndex, data }) => <Cell key={columnIndex}>[{rowIndex},{columnIndex}] {data}</Cell>}
+                    footerTemplate={
+                        <Pager 
+                            pageSize={this.state.pageSize}
+                            totalCount={this.state.totalCount}
+                            {...this.pagingState.props()}
+                        />
+                    }
                 />
             </div>
         );
