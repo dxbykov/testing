@@ -2,7 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-import { Local } from './demo/local'
+//import { Local } from './demo/local'
+import { Local } from './demo/local2'
 import { Remote } from './demo/remote'
 
 class App extends React.Component {

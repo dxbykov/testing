@@ -7,9 +7,9 @@ import {
     dataSortingController,
     dataGroupingController,
     dataPagingController
-    } from '../src/controllers'
+    } from '../src/controllers2'
 
-export function fakeRemoteDataSource({ getProps, setState }) {
+export function fakeRemoteDataSource(getProps, setState) {
     let data = [
         { id: 1, name: 'Bob', sex: 'Male', city: 'Los Angeles'},
         { id: 2, name: 'Alberta', sex: 'Female', city: 'New York'},
@@ -22,40 +22,34 @@ export function fakeRemoteDataSource({ getProps, setState }) {
         { id: 9, name: 'Sherlock', sex: 'Male', city: 'New York'}
     ];
 
-    let sort = dataSortingController({
-        getProps: () => {
-            return {
-                originalRows: data,
-                sortings: getProps().sortings
-            };
+    let sort = dataSortingController(() => {
+        return {
+            originalRows: data,
+            sortings: getProps().sortings
+        };
+    });
+
+    let group = dataGroupingController(() => {
+        return {
+            originalRows: sort(),
+            grouping: getProps().grouping
         }
     });
 
-    let group = dataGroupingController({
-        getProps: () => {
-            return {
-                originalRows: sort.props().sortedRows,
-                grouping: getProps().grouping
-            }
-        }
-    });
-
-    let paginate = dataPagingController({
-        getProps: () => {
-            return {
-                originalRows: group.props().groupedRows,
-                pageSize: getProps().pageSize,
-                page: getProps().page
-            };
-        }
+    let paginate = dataPagingController(() => {
+        return {
+            originalRows: group(),
+            pageSize: getProps().pageSize,
+            page: getProps().page
+        };
     });
 
     let load = () => {
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
                     resolve({
-                        visibleRows: paginate.props().visibleRows,
-                        totalCount: group.props().groupedRows.length
+                        visibleRows: paginate(),
+                        totalCount: group().length
                     });
                 }, 500);
             });
@@ -79,6 +73,9 @@ export class Remote extends React.Component {
     constructor() {
         super();
 
+        this.setState = this.setState.bind(this);
+        this.refreshData = this.refreshData.bind(this);
+
         this.state = {
             columns: [
                 { name: 'id' },
@@ -94,80 +91,58 @@ export class Remote extends React.Component {
             page: 0,
         };
 
-        this.dataSource = fakeRemoteDataSource({
-            getProps: () => {
+        this.dataSource = fakeRemoteDataSource(() => {
                 return {
                     sortings: this.state.sortings,
                     grouping: this.state.grouping,
                     pageSize: this.state.pageSize,
-                    page: this.pagingState.props().page
+                    page: this.state.page,
+                    totalCount: this.state.totalCount
                 }
-            },
-            setState: (nextState) => {
-                this.setState(nextState);
-            }
-        });
+            }, 
+            this.setState);
 
         // control state
 
-        this.sortingState = sortingStateController({
-            getProps: () => {
-                return {
-                    sortings: this.state.sortings
-                };
-            },
-            setState:({ sortings }) => {
-                this.setState({ sortings }, () => { this.dataSource.reload(); });
-            }
-        });
+        const getState = () => this.state,
+            setState = (state) => this.setState(state, this.refreshData);
 
-
-        this.groupingState = groupStateController({
-            getProps: () => {
-                return {
-                    grouping: this.state.grouping
-                }
-            },
-            setState: (nextState) => {
-                this.setState(nextState, () => { this.dataSource.reload(); });
-            }
-        });
-
-        this.pagingState = pagingStateController({
-            getProps: () => {
-                return {
-                    pageSize: this.state.pageSize,
-                    page: this.state.page,
-                    totalCount: this.state.totalCount
-                };
-            },
-            setState: (nextState) => {
-                this.setState(nextState, () => { this.dataSource.reload(); });
-            }
-        });
+        this.sortingCtrl = sortingStateController(getState, setState);
+        this.groupingCtrl = groupStateController(getState, setState);
+        this.pagingCtrl = pagingStateController(getState, setState);
 
     }
     
     componentDidMount() {
-        this.dataSource.reload();
+        this.refreshData();
     }
 
+    refreshData() {
+        this.dataSource.reload();
+    }
+    
     render() {
         return (
             <div>
                 {this.state.loading ? "Loading...": "Ready"}
-                <Grouper columns={this.state.columns} grouping={this.state.grouping} {...this.groupingState.props(/*mapper*/)} />
+                <Grouper 
+                    columns={this.state.columns} 
+                    grouping={this.state.grouping}
+                    groupChange={this.groupingCtrl.groupChange}
+                />
                 <GridView
                     columns={this.state.columns}
                     rows={this.state.visibleRows}
                     sortings={this.state.sortings}
-                    {...this.sortingState.props(/*mapper*/)}
+                    onSort={this.sortingCtrl.onSort}
                     cellTemplate={({ rowIndex, columnIndex, data }) => <Cell key={columnIndex}>[{rowIndex},{columnIndex}] {data}</Cell>}
                     footerTemplate={
-                        <Pager 
+                        <Pager
+                            page={this.state.page}
                             pageSize={this.state.pageSize}
                             totalCount={this.state.totalCount}
-                            {...this.pagingState.props()}
+                            pageChange={this.pagingCtrl.pageChange}
+                            pageSizeChange={this.pagingCtrl.pageSizeChange}
                         />
                     }
                 />
