@@ -26,5 +26,9 @@ module.exports = {
     resolve: {
         extensions: [".webpack.js", ".web.js", ".js", ".jsx"]
     },
-    devtool: 'eval-source-map'
+    devtool: 'eval-source-map',
+    devServer: {
+        host: '0.0.0.0',
+        port: 3002,
+    }
 }

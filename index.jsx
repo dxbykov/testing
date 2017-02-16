@@ -5,6 +5,7 @@ import './index.css';
 //import { Local } from './demo/local'
 import { Local } from './demo/local2'
 import { Remote } from './demo/remote'
+import { LegoDemo } from './demo/lego'
 
 class App extends React.Component {
     constructor() {
@@ -13,11 +14,9 @@ class App extends React.Component {
 
     render() {
         return (
-            <div className="container">
-                <h1>Local demo</h1>
-                <Local/>
-                <h1>Remote demo</h1>
-                <Remote/>
+            <div>
+                <h1>Lego</h1>
+                <LegoDemo/>
             </div>
         );
     }
