@@ -4,7 +4,7 @@ import { VirtualBox } from './components'
 
 export class Cells extends React.Component {
      render() {
-        let { columns, rowData, rowIndex } = this.props;
+        let { columns, row, rowIndex } = this.props;
         
         let cellProviderFor = ({ column }) =>
             column.type ? this.context.gridHost.cellProviders[column.type] : this.context.gridHost.cellProviders['*'];
@@ -18,8 +18,8 @@ export class Cells extends React.Component {
                     ({ index }) => cellProviderFor({ column: columns[index] }).template({ 
                         rowIndex: rowIndex,
                         columnIndex: index,
-                        row: rowData,
-                        data: rowData[columns[index].name]
+                        row: row,
+                        data: row[columns[index].name]
                     })
                 }/>
         );
@@ -28,7 +28,7 @@ export class Cells extends React.Component {
 Cells.propTypes = {
     columns: React.PropTypes.array.isRequired,
     rowIndex: React.PropTypes.number.isRequired,
-    rowData: React.PropTypes.any.isRequired,
+    row: React.PropTypes.any.isRequired,
 };
 Cells.contextTypes = {
     gridHost: React.PropTypes.shape({
@@ -52,7 +52,7 @@ export class Rows extends React.Component {
                 template={
                     ({ index, position }) => rowProviderFor({ row: rows[index] }).template({
                         rowIndex: index,
-                        rowData: rows[index],
+                        row: rows[index],
                         columns: columns,
                     })
                 }/>
@@ -72,11 +72,11 @@ Rows.contextTypes = {
 export const rowProvider = () => {
     return {
         getSize: () => 40,
-        template: ({ rowIndex, rowData, columns }) => (
+        template: ({ rowIndex, row, columns }) => (
             <Cells
                 columns={columns}
                 rowIndex={rowIndex}
-                rowData={rowData}/>
+                row={row}/>
         )
     };
 };
@@ -87,7 +87,7 @@ export class DetailRow extends React.Component {
             <Cells
                 columns={this.props.columns}
                 rowIndex={this.props.rowIndex}
-                rowData={this.props.rowData}/>
+                row={this.props.row}/>
         );
         let detailTemplate = this.props.expanded && (
             <div style={{ width: '100%', height: 40 }}>
@@ -108,22 +108,22 @@ export class DetailRow extends React.Component {
 DetailRow.propTypes = {
     columns: React.PropTypes.array.isRequired,
     rowIndex: React.PropTypes.number.isRequired,
-    rowData: React.PropTypes.any.isRequired,
+    row: React.PropTypes.any.isRequired,
     expanded: React.PropTypes.bool.isRequired,
     expandedChange: React.PropTypes.func.isRequired,
 };
 
 export const detailProvider = ({ isExpanded, toggleExpanded, collapsedHeight, expandedHeight }) => {
     return {
-        getSize: (index, row) => isExpanded(index, row) ? expandedHeight : collapsedHeight,
-        template: ({ rowIndex, rowData, columns }) => {
+        getSize: (rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight,
+        template: ({ rowIndex, row, columns }) => {
             return (
                 <DetailRow
                     columns={columns}
                     rowIndex={rowIndex}
-                    rowData={rowData}
-                    expanded={isExpanded(rowIndex, rowData)}
-                    expandedChange={(expanded) => toggleExpanded(rowIndex, rowData, expanded)}/>
+                    row={row}
+                    expanded={isExpanded({ rowIndex, row })}
+                    expandedChange={(expanded) => toggleExpanded({ rowIndex, row, expanded })}/>
             );
         }
     }
@@ -140,8 +140,8 @@ export class GroupRow extends React.Component {
             if(index === 0) 
                 return 40;
             if(this.props.expanded)
-                return this.props.rowData.items.reduce(((accumulator, row, index) =>
-                    accumulator + (rowProviderFor({ row })).getSize(index, row)
+                return this.props.row.items.reduce(((accumulator, row, index) =>
+                    accumulator + (rowProviderFor({ row })).getSize(index, row, rowProviders)
                 ), 0)
             return 0;
         };
@@ -149,7 +149,7 @@ export class GroupRow extends React.Component {
             if(index === 0) {
                 return (
                     <div onClick={() => this.props.expandedChange(!this.props.expanded)} style={{ width: '100%', height: '100%', border: '1px dashed black' }}>
-                        {`[${this.props.expanded ? '-' : '+'}] Group: ${this.props.rowData.value}`}
+                        {`[${this.props.expanded ? '-' : '+'}] Group: ${this.props.row.value}`}
                     </div>
                 );
             }
@@ -157,7 +157,7 @@ export class GroupRow extends React.Component {
             return (
                 <Rows
                     columns={this.props.columns}
-                    rows={this.props.rowData.items}/>
+                    rows={this.props.row.items}/>
             );
         };
 
@@ -173,7 +173,7 @@ export class GroupRow extends React.Component {
 GroupRow.propTypes = {
     columns: React.PropTypes.array.isRequired,
     rowIndex: React.PropTypes.number.isRequired,
-    rowData: React.PropTypes.any.isRequired
+    row: React.PropTypes.any.isRequired
 };
 GroupRow.contextTypes = {
     gridHost: React.PropTypes.shape({
@@ -183,25 +183,25 @@ GroupRow.contextTypes = {
 
 export const groupProvider = ({ isExpanded, toggleExpanded }) => {
     return {
-        getSize: (index, row, rowProviders) => {
+        getSize: (rowIndex, row, rowProviders) => {
             let rowProviderFor = ({ row }) =>
                 row.type ? rowProviders[row.type] : rowProviders['*'];
 
             let result = 40;
-            if(isExpanded(index)) {
+            if(isExpanded({ rowIndex, row })) {
                 result = result + row.items.reduce(((accumulator, row, index) =>
-                    accumulator + (rowProviderFor({ row })).getSize(index, row)
+                    accumulator + (rowProviderFor({ row })).getSize(index, row, rowProviders)
                 ), 0);
             }
             return result;
         },
-        template: ({ rowIndex, rowData, columns }) => (
+        template: ({ rowIndex, row, columns }) => (
             <GroupRow
                 columns={columns}
                 rowIndex={rowIndex}
-                rowData={rowData}
-                expanded={isExpanded(rowIndex)}
-                expandedChange={(expanded) => toggleExpanded(rowIndex, expanded)}/>
+                row={row}
+                expanded={isExpanded({ rowIndex, row })}
+                expandedChange={(expanded) => toggleExpanded({ rowIndex, row, expanded })}/>
         )
     };
 };
