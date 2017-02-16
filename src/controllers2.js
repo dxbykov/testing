@@ -1,14 +1,16 @@
-import { sorty } from './index';
-
 // state controllers
 
-const calcSortings = (columnName, prevSortings) => {
-    let sorting = prevSortings.filter(s => { return s.column == columnName; })[0];
-    return [ { column: columnName, direction: (sorting && sorting.direction == 'desc') ? 'asc' : 'desc' } ]
+const calcSortings = (columnName, prevSorting) => {
+    let sorting = prevSorting.filter(s => { return s.column == columnName; })[0];
+    return [
+        {
+            column: columnName,
+            direction: (sorting && sorting.direction == 'desc') ? 'asc' : 'desc'
+        }
+    ];
 };
 
 export function sortingStateController(getProps, setState) {
-
     return {
         onSort: (columnName) => {
             let { sortings } = getProps(),
@@ -19,22 +21,28 @@ export function sortingStateController(getProps, setState) {
     };
 }
 
+const calcGrouping = (prevGrouping, columnName) => {
+    let grouping = prevGrouping.slice(),
+        colGrouping = grouping.filter(g => g.column === columnName)[0];
+
+    if(colGrouping) {
+        grouping.splice(grouping.indexOf(colGrouping), 1);
+    }
+    else {
+        grouping.push({
+            column: columnName
+        });
+    }
+    return grouping;
+}
+
 export function groupStateController(getProps, setState) {
     return {
         groupChange: (columnName) => {
-            let grouping = getProps().grouping,
-                colGrouping = grouping.filter(g => g.column === columnName)[0];
-
-            grouping = grouping.slice();
-            if(colGrouping) {
-                grouping.splice(grouping.indexOf(colGrouping), 1);
-            }
-            else {
-                grouping.push({
-                    column: columnName
-                });
-            }
-            setState({ grouping: grouping });
+            let { grouping } = getProps(),
+                nextGrouping = calcGrouping(grouping, columnName);
+            
+            setState({ grouping: nextGrouping });
         }
     };
 }
@@ -61,13 +69,22 @@ export function pagingStateController(getProps, setState) {
 
 // data processing
 
-const sort = ({ originalRows, sortings }) => {
-    return sorty(originalRows, sortings);
-};
+export const sort = (rows, sortings) => {
+    if(!sortings.length)
+        return rows;
+
+    let sortColumn = sortings[0].column,
+        result = rows.slice().sort((a, b) => {
+            let value = (a[sortColumn] < b[sortColumn]) ^ sortings[0].direction === "desc"
+            return value ? -1 : 1;
+        });
+    return result;
+}
 
 export function dataSortingController(getProps) {
     return () => {
-        return sort(getProps());
+        let { originalRows, sortings } = getProps();
+        return sort(originalRows, sortings);
     };
 }
 
@@ -118,7 +135,7 @@ const group = (originalRows, grouping, shape) => {
             group = groupHash[groupKey];
         }
         else {
-            groupHash[groupKey] = group = {
+            group = groupHash[groupKey] = {
                 key: groupKey,
                 isGroupRow: true,
                 column: groupColumn,
@@ -141,7 +158,7 @@ const group = (originalRows, grouping, shape) => {
 
 export function dataGroupingController(getProps) {
     return  () => {
-        let props = getProps();
-        return group(props.originalRows, props.grouping, flatten);
+        let { originalRows, grouping } = getProps();
+        return group(originalRows, grouping, flatten);
     };
 }

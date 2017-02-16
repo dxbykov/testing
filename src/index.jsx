@@ -1,4 +1,5 @@
 import React from 'react';
+import { sort } from './controllers2';
 
 export const Cell = (props) => {
     return (
@@ -139,18 +140,6 @@ export const GridView = (props) => {
     );
 }
 
-export function sorty(data, sortings) {
-    if(!sortings.length)
-        return data;
-
-    let sortColumn = sortings[0].column,
-        result = data.slice().sort((a, b) => {
-            let value = (a[sortColumn] < b[sortColumn]) ^ sortings[0].direction === "desc"
-            return value ? -1 : 1;
-        });
-    return result;
-}
-
 export class GridContainer extends React.Component {
     constructor(props) {
         super(props)
@@ -254,7 +243,7 @@ export class GridContainer extends React.Component {
         let rows = this.props.visibleRows;
         
         if(rows === undefined) {
-            rows = sorty(this.props.rows, this.sortings)
+            rows = sort(this.props.rows, this.sortings)
                 .slice(this.pageSize * this.page, this.pageSize * (this.page + 1));
         }
 
