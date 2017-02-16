@@ -110,7 +110,6 @@ DetailRow.propTypes = {
     rowIndex: React.PropTypes.number.isRequired,
     row: React.PropTypes.any.isRequired,
     expanded: React.PropTypes.bool.isRequired,
-    expandedChange: React.PropTypes.func.isRequired,
 };
 
 export const detailProvider = ({ isExpanded, toggleExpanded, collapsedHeight, expandedHeight }) => {
@@ -122,8 +121,7 @@ export const detailProvider = ({ isExpanded, toggleExpanded, collapsedHeight, ex
                     columns={columns}
                     rowIndex={rowIndex}
                     row={row}
-                    expanded={isExpanded({ rowIndex, row })}
-                    expandedChange={(expanded) => toggleExpanded({ rowIndex, row, expanded })}/>
+                    expanded={isExpanded({ rowIndex, row })}/>
             );
         }
     }
@@ -148,7 +146,8 @@ export class GroupRow extends React.Component {
         let itemTemplate = ({ index, position }) => {
             if(index === 0) {
                 return (
-                    <div onClick={() => this.props.expandedChange(!this.props.expanded)} style={{ width: '100%', height: '100%', border: '1px dashed black' }}>
+                    <div onClick={() => this.props.expandedChange(!this.props.expanded)}
+                        style={{ width: '100%', height: '100%', border: '1px dashed black', paddingLeft: this.props.row.level * 20 + 'px' }}>
                         {`[${this.props.expanded ? '-' : '+'}] Group: ${this.props.row.value}`}
                     </div>
                 );

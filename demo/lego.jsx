@@ -1,18 +1,18 @@
 import React from 'react'
 import { Grid, Cell, cellProvider, DetailCell, detailCellProvider, Row, rowProvider, DetailRow, detailProvider, GroupRow, groupProvider } from '../src/lego'
 
+let generateData = (length, names, from = 0) => {
+    let data = [];
+    names = names || ['Bob', 'Albert', 'Robert', 'Poul', 'Azbest', 'Vova', 'Sonya', 'Marry', 'Sherlock'];
+    for(let i = from; i < length + from; i++) {
+        data.push({ id: i + 1, name: names[Math.floor(Math.random() * names.length)] })
+    }
+    return data;
+}
+
 class SimpleDemo extends React.Component {
     constructor(props) {
         super(props);
-
-        let generateData = (length) => {
-            let data = [];
-            let names = ['Bob', 'Albert', 'Robert', 'Poul', 'Azbest', 'Vova', 'Sonya', 'Marry', 'Sherlock'];
-            for(let i = 0; i < length; i++) {
-                data.push({ id: i + 1, name: names[Math.floor(Math.random() * names.length)] })
-            }
-            return data;
-        }
 
         this.state = {
             columns: [{ name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
@@ -35,17 +35,8 @@ class MasterDetailDemo extends React.Component {
     constructor(props) {
         super(props);
 
-        let generateData = (length) => {
-            let data = [];
-            let names = ['Bob', 'Albert', 'Robert', 'Poul', 'Azbest', 'Vova', 'Sonya', 'Marry', 'Sherlock'];
-            for(let i = 0; i < length; i++) {
-                data.push({ id: i + 1, name: names[Math.floor(Math.random() * names.length)] })
-            }
-            return data;
-        }
-
         this.state = {
-            columns: [{ type: 'detail', width: 40 }, { name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
+            columns: [{ type: 'detail' }, { name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
             rows: generateData(1000),
             expandedRows: [3]
         }
@@ -53,8 +44,8 @@ class MasterDetailDemo extends React.Component {
 
     render() {
         let { columns, rows } = this.state;
-        let isExpanded = ({ rowIndex, row }) => this.state.expandedRows.indexOf(row.id) > -1;
-        let toggleExpanded = ({ rowIndex, row, expanded }) => {
+        let isExpanded = ({ row }) => this.state.expandedRows.indexOf(row.id) > -1;
+        let toggleExpanded = ({ row, expanded }) => {
             let expandedRows = this.state.expandedRows;
             if(!expanded && expandedRows.indexOf(row.id) > -1) {
                 expandedRows.splice(expandedRows.indexOf(row.id), 1)
@@ -71,14 +62,13 @@ class MasterDetailDemo extends React.Component {
                 cellProviders={{
                     '*': cellProvider(),
                     'detail': detailCellProvider({
-                        isExpanded: isExpanded,
-                        toggleExpanded: toggleExpanded
+                        isExpanded,
+                        toggleExpanded
                     })
                 }}
                 rowProviders={{
                     '*': detailProvider({
-                        isExpanded: isExpanded,
-                        toggleExpanded: toggleExpanded,
+                        isExpanded,
                         collapsedHeight: 40,
                         expandedHeight: 80
                     })
@@ -96,23 +86,11 @@ class GroupedDemo extends React.Component {
             rows: [
                 {
                     type: 'group', value: 'Male',
-                    items: [
-                        { id: 1, name: 'Bob' },
-                        { id: 2, name: 'Poul' },
-                        { id: 3, name: 'Mark' },
-                        { id: 4, name: 'Tim' },
-                        { id: 5, name: 'Steve' }
-                    ]
+                    items: generateData(80, ['Bob', 'Poul', 'Mark', 'Tim', 'Steve'])
                 },
                 {
                     type: 'group', value: 'Female',
-                    items: [
-                        { id: 1, name: 'Nina' },
-                        { id: 2, name: 'Anna' },
-                        { id: 3, name: 'Marry' },
-                        { id: 4, name: 'Nona' },
-                        { id: 5, name: 'Adel' }
-                    ]
+                    items: generateData(150, ['Nina', 'Anna', 'Marry', 'Nona', 'Adel'], 80)
                 }
             ],
             expandedGroups: ['Female']
@@ -155,42 +133,28 @@ class NestedGroupedDemo extends React.Component {
             columns: [{ name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
             rows: [
                 {
-                    type: 'group', value: 'Male',
+                    type: 'group', level: 0, value: 'Male',
                     items: [
                         {
-                            type: 'group', subvalue: 'Male', value: 'A-M',
-                            items: [
-                                { id: 1, name: 'Bob' },
-                                { id: 3, name: 'Mark' },
-                            ]
+                            type: 'group', level: 1, subvalue: 'Male', value: 'A-M',
+                            items: generateData(20, ['Bob', 'Mark'])
                         },
                         {
-                            type: 'group', subvalue: 'Male', value: 'M-Z',
-                            items: [
-                                { id: 2, name: 'Poul' },
-                                { id: 4, name: 'Tim' },
-                                { id: 5, name: 'Steve' }
-                            ]
+                            type: 'group', level: 1, subvalue: 'Male', value: 'M-Z',
+                            items: generateData(30, ['Poul', 'Tim', 'Steve'], 20)
                         }
                     ]
                 },
                 {
-                    type: 'group', value: 'Female',
+                    type: 'group', level: 0, value: 'Female',
                     items: [
                         {
-                            type: 'group', subvalue: 'Female', value: 'A-M',
-                            items: [
-                                { id: 2, name: 'Anna' },
-                                { id: 3, name: 'Marry' },
-                                { id: 5, name: 'Adel' }
-                            ]
+                            type: 'group', level: 1, subvalue: 'Female', value: 'A-M',
+                            items: generateData(25, ['Anna', 'Marry', 'Adel'], 50)
                         },
                         {
-                            type: 'group', subvalue: 'Female', value: 'M-Z',
-                            items: [
-                                { id: 1, name: 'Nina' },
-                                { id: 4, name: 'Nona' }
-                            ]
+                            type: 'group', level: 1, subvalue: 'Female', value: 'M-Z',
+                            items: generateData(20, ['Nina', 'Nona'], 75)
                         }
                     ]
                 }
@@ -239,23 +203,11 @@ class GroupedMasterDetailDemo extends React.Component {
             rows: [
                 {
                     type: 'group', value: 'Male',
-                    items: [
-                        { id: 1, name: 'Bob' },
-                        { id: 2, name: 'Poul' },
-                        { id: 3, name: 'Mark' },
-                        { id: 4, name: 'Tim' },
-                        { id: 5, name: 'Steve' }
-                    ]
+                    items: generateData(80, ['Bob', 'Poul', 'Mark', 'Tim', 'Steve'])
                 },
                 {
                     type: 'group', value: 'Female',
-                    items: [
-                        { id: 6, name: 'Nina' },
-                        { id: 7, name: 'Anna' },
-                        { id: 8, name: 'Marry' },
-                        { id: 9, name: 'Nona' },
-                        { id: 10, name: 'Adel' }
-                    ]
+                    items: generateData(150, ['Nina', 'Anna', 'Marry', 'Nona', 'Adel'], 80)
                 }
             ],
             expandedGroups: ['Male'],
@@ -300,7 +252,6 @@ class GroupedMasterDetailDemo extends React.Component {
                 rowProviders={{
                     '*': detailProvider({
                         isExpanded: isExpandedRow,
-                        toggleExpanded: toggleExpandedRow,
                         collapsedHeight: 40,
                         expandedHeight: 80
                     }),
