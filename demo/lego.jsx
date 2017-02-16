@@ -1,5 +1,9 @@
 import React from 'react'
-import { Grid, Cell, cellProvider, DetailCell, detailCellProvider, Row, rowProvider, DetailRow, detailRowProvider, GroupRow, groupRowProvider } from '../src/lego'
+import { 
+    Grid,
+    Cell, cellProvider, DetailCell, detailCellProvider,
+    Row, rowProvider, headingRowProvider, DetailRow, detailRowProvider, GroupRow, groupRowProvider
+} from '../src/lego'
 
 import {
     expandedStateController
@@ -20,7 +24,7 @@ class SimpleDemo extends React.Component {
 
         this.state = {
             columns: [{ name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
-            rows: generateData(1000)
+            rows: [{ type: 'heading', id: 'ID', name: 'Name' }].concat(generateData(1000))
         };
     }
 
@@ -30,7 +34,11 @@ class SimpleDemo extends React.Component {
         return (
             <Grid
                 columns={columns}
-                rows={rows}/>
+                rows={rows}
+                rowProviders={{
+                    '*': rowProvider(),
+                    'heading': headingRowProvider()
+                }}/>
         )
     }
 }
@@ -122,6 +130,7 @@ class NestedGroupedDemo extends React.Component {
         this.state = {
             columns: [{ name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
             rows: [
+                { type: 'heading', id: 'ID', name: 'Name' },
                 {
                     type: 'group', level: 0, value: 'Male',
                     items: [
@@ -169,7 +178,8 @@ class NestedGroupedDemo extends React.Component {
                     'group': groupRowProvider({
                         isExpanded,
                         toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(keyGetter(row))
-                    })
+                    }),
+                    'heading': headingRowProvider()
                 }}/>
         )
     }
@@ -253,10 +263,10 @@ export class LegoDemo extends React.Component {
     render() {
         return (
             <div>
-                <Box title="Simple" demo={SimpleDemo}/>
+                <Box title="Simple with Heading" demo={SimpleDemo}/>
                 <Box title="Master Detail" demo={MasterDetailDemo}/>
                 <Box title="Grouped" demo={GroupedDemo}/>
-                <Box title="Nested Grouped" demo={NestedGroupedDemo}/>
+                <Box title="Nested Grouped with Heading" demo={NestedGroupedDemo}/>
                 <Box title="Grouped Master Detail" demo={GroupedMasterDetailDemo}/>
             </div>
         )
