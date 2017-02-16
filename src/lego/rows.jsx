@@ -12,8 +12,8 @@ export class Cells extends React.Component {
         return (
             <VirtualBox
                 direction="horizontal"
-                dataSize={columns.length}
-                getItemSize={(index) => cellProviderFor({ column: columns[index] }).getSize({ column: columns[index] })}
+                itemCount={columns.length}
+                itemSize={(index) => cellProviderFor({ column: columns[index] }).size({ column: columns[index] })}
                 template={
                     ({ index }) => cellProviderFor({ column: columns[index] }).template({ 
                         rowIndex: rowIndex,
@@ -21,7 +21,8 @@ export class Cells extends React.Component {
                         row: row,
                         data: row[columns[index].name]
                     })
-                }/>
+                }
+                style={this.props.style}/>
         );
     }
 }
@@ -47,8 +48,12 @@ export class Rows extends React.Component {
         return (
             <VirtualBox
                 direction="vertical"
-                dataSize={rows.length}
-                getItemSize={(index) => rowProviderFor({ row: rows[index] }).getSize(index, rows[index], rowProviders)}
+                itemCount={rows.length}
+                itemSize={(index) => rowProviderFor({ row: rows[index] }).size(index, rows[index], rowProviders)}
+                itemStick={(index) => {
+                    let stick = rowProviderFor({ row: rows[index] }).stick
+                    return stick ? stick(index, rows[index], rowProviders) : false;
+                }}
                 template={
                     ({ index, position }) => rowProviderFor({ row: rows[index] }).template({
                         rowIndex: index,
@@ -71,12 +76,28 @@ Rows.contextTypes = {
 
 export const rowProvider = () => {
     return {
-        getSize: () => 40,
+        size: () => 40,
         template: ({ rowIndex, row, columns }) => (
             <Cells
                 columns={columns}
                 rowIndex={rowIndex}
                 row={row}/>
+        )
+    };
+};
+
+
+
+export const headingRowProvider = () => {
+    return {
+        stick: () => 'before',
+        size: () => 40,
+        template: ({ rowIndex, row, columns }) => (
+            <Cells
+                columns={columns}
+                rowIndex={rowIndex}
+                row={row}
+                style={{ background: 'white' }}/>
         )
     };
 };
@@ -114,7 +135,7 @@ DetailRow.propTypes = {
 
 export const detailRowProvider = ({ isExpanded, toggleExpanded, collapsedHeight, expandedHeight }) => {
     return {
-        getSize: (rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight,
+        size: (rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight,
         template: ({ rowIndex, row, columns }) => {
             return (
                 <DetailRow
@@ -134,12 +155,12 @@ export class GroupRow extends React.Component {
         let rowProviderFor = ({ row }) =>
             row.type ? rowProviders[row.type] : rowProviders['*'];
 
-        let getItemSize = (index) => {
+        let itemSize = (index) => {
             if(index === 0) 
                 return 40;
             if(this.props.expanded)
                 return this.props.row.items.reduce(((accumulator, row, index) =>
-                    accumulator + (rowProviderFor({ row })).getSize(index, row, rowProviders)
+                    accumulator + (rowProviderFor({ row })).size(index, row, rowProviders)
                 ), 0)
             return 0;
         };
@@ -163,8 +184,8 @@ export class GroupRow extends React.Component {
         return (
             <VirtualBox
                 direction="vertical"
-                dataSize={2}
-                getItemSize={getItemSize}
+                itemCount={2}
+                itemSize={itemSize}
                 template={itemTemplate}/>
         );
     }
@@ -182,14 +203,14 @@ GroupRow.contextTypes = {
 
 export const groupRowProvider = ({ isExpanded, toggleExpanded }) => {
     return {
-        getSize: (rowIndex, row, rowProviders) => {
+        size: (rowIndex, row, rowProviders) => {
             let rowProviderFor = ({ row }) =>
                 row.type ? rowProviders[row.type] : rowProviders['*'];
 
             let result = 40;
             if(isExpanded({ rowIndex, row })) {
                 result = result + row.items.reduce(((accumulator, row, index) =>
-                    accumulator + (rowProviderFor({ row })).getSize(index, row, rowProviders)
+                    accumulator + (rowProviderFor({ row })).size(index, row, rowProviders)
                 ), 0);
             }
             return result;

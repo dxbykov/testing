@@ -3,9 +3,7 @@ import React from 'react'
 export class Cell extends React.Component {
     render() {
         let { rowIndex, columnIndex, data } = this.props;
-        let template = this.props.template || (({ rowIndex, columnIndex, data }) => 
-            `{${rowIndex}:${columnIndex}} ${data}`
-        );
+        let template = this.props.template || (({ rowIndex, columnIndex, data }) => data);
 
         return (
             <div style={{ padding: '10px', border: '1px dotted black' }}>
@@ -23,7 +21,7 @@ Cell.propTypes = {
 
 export const cellProvider = () => {
     return {
-        getSize: ({ column }) => column.width || 200,
+        size: ({ column }) => column.width || 200,
         template: ({ rowIndex, columnIndex, data, template }) => (
             <Cell
                 rowIndex={rowIndex}
@@ -56,7 +54,7 @@ DetailCell.propTypes = {
 
 export const detailCellProvider = ({ isExpanded, toggleExpanded }) => {
     return {
-        getSize: ({ column }) => column.width || 40,
+        size: ({ column }) => column.width || 40,
         template: ({ rowIndex, row, columnIndex, template }) => (
             <DetailCell
                 rowIndex={rowIndex}
