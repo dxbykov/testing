@@ -1,17 +1,24 @@
 import React from 'react'
 import { GridContainer, GridView, Cell, Pager, Grouper } from '../src/index'
+
 import {
     sortingStateController,
     groupStateController,
     pagingStateController,
+} from '../src/data/controllers'
+
+import {
     dataSortingController,
     dataGroupingController,
-    dataPagingController
-    } from '../src/controllers'
+    dataPagingController,
+    pagingHelper
+} from '../src/data/processors'
 
 export class Local extends React.Component {
     constructor() {
         super();
+        
+        this.setState = this.setState.bind(this);
 
         this.state = {
             columns: [
@@ -39,70 +46,38 @@ export class Local extends React.Component {
 
         // control state
 
-        this.sortingState = sortingStateController({
-            getProps: () => {
-                return {
-                    sortings: this.state.sortings
-                };
-            },
-            setState:({ sortings }) => {
-                this.setState({ sortings });
-            }
-        });
+        const getState = () => this.state;
 
-
-        this.groupingState = groupStateController({
-            getProps: () => {
-                return {
-                    grouping: this.state.grouping
-                }
-            },
-            setState: (nextState) => {
-                this.setState(nextState);
-            }
-        });
-
-        this.pagingState = pagingStateController({
-            getProps: () => {
-                return {
-                    pageSize: this.state.pageSize,
-                    page: this.state.page,
-                    totalCount: this.group.props().groupedRows.length
-                };
-            },
-            setState: (nextState) => {
-                this.setState(nextState);
-            }
-        });
+        this.sortingCtrl = sortingStateController(getState, this.setState);
+        this.groupingCtrl = groupStateController(getState, this.setState);
+        this.pagingCtrl = pagingStateController(getState, this.setState);
 
         // process data
 
-        this.sort = dataSortingController({
-            getProps: () => {
-                return {
-                    originalRows: this.state.originalRows,
-                    sortings: this.state.sortings
-                };
-            }
+        this.currentPage = () => {
+            return pagingHelper.getCurrentPage(this.groupedRows().length,this.state.pageSize, this.state.page);
+        };
+
+        const sortedRows = dataSortingController(() => {
+            return {
+                originalRows: this.state.originalRows,
+                sortings: this.state.sortings
+            };
         });
 
-        this.group = dataGroupingController({
-            getProps: () => {
-                return {
-                    originalRows: this.sort.props().sortedRows,
-                    grouping: this.state.grouping
-                }
-            }
+        this.groupedRows = dataGroupingController(() => {
+            return {
+                originalRows: sortedRows(),
+                grouping: this.state.grouping
+            };
         });
 
-        this.page = dataPagingController({
-            getProps: () => {
-                return {
-                    originalRows: this.group.props().groupedRows,
-                    pageSize: this.state.pageSize,
-                    page: this.pagingState.props().page
-                };
-            }
+        this.visibleRows = dataPagingController(() => {
+            return {
+                originalRows: this.groupedRows(),
+                pageSize: this.state.pageSize,
+                page: this.currentPage()
+            };
         });
 
     }
@@ -110,18 +85,24 @@ export class Local extends React.Component {
     render() {
         return (
             <div>
-                <Grouper columns={this.state.columns} grouping={this.state.grouping} {...this.groupingState.props(/*mapper*/)} />
+               <Grouper 
+                    columns={this.state.columns} 
+                    grouping={this.state.grouping}
+                    groupChange={this.groupingCtrl.groupChange}
+                />
                 <GridView
                     columns={this.state.columns}
-                    rows={this.page.props().visibleRows}
+                    rows={this.visibleRows()}
                     sortings={this.state.sortings}
-                    {...this.sortingState.props(/*mapper*/)}
+                    onSort={this.sortingCtrl.onSort}
                     cellTemplate={({ rowIndex, columnIndex, data }) => <Cell key={columnIndex}>[{rowIndex},{columnIndex}] {data}</Cell>}
                     footerTemplate={
-                        <Pager 
+                        <Pager
+                            page={this.currentPage()}
                             pageSize={this.state.pageSize}
-                            totalCount={this.group.props().groupedRows.length}
-                            {...this.pagingState.props()}
+                            totalCount={this.groupedRows().length}
+                            pageChange={this.pagingCtrl.pageChange}
+                            pageSizeChange={this.pagingCtrl.pageSizeChange}
                         />
                     }
                 />

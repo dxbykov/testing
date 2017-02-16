@@ -1,51 +1,4 @@
-// state controllers
-
-const calcSortings = (columnName, prevSorting) => {
-    let sorting = prevSorting.filter(s => { return s.column == columnName; })[0];
-    return [
-        {
-            column: columnName,
-            direction: (sorting && sorting.direction == 'desc') ? 'asc' : 'desc'
-        }
-    ];
-};
-
-export function sortingStateController(getProps, setState) {
-    return {
-        onSort: (columnName) => {
-            let { sortings } = getProps(),
-                nextSortings = calcSortings(columnName, sortings);
-
-            setState({ sortings: nextSortings });
-        }
-    };
-}
-
-const calcGrouping = (prevGrouping, columnName) => {
-    let grouping = prevGrouping.slice(),
-        colGrouping = grouping.filter(g => g.column === columnName)[0];
-
-    if(colGrouping) {
-        grouping.splice(grouping.indexOf(colGrouping), 1);
-    }
-    else {
-        grouping.push({
-            column: columnName
-        });
-    }
-    return grouping;
-}
-
-export function groupStateController(getProps, setState) {
-    return {
-        groupChange: (columnName) => {
-            let { grouping } = getProps(),
-                nextGrouping = calcGrouping(grouping, columnName);
-            
-            setState({ grouping: nextGrouping });
-        }
-    };
-}
+// data processing
 
 export const pagingHelper = {
     getCurrentPage: (totalCount, pageSize, currentPage) => {
@@ -55,19 +8,6 @@ export const pagingHelper = {
         return Math.min(lastPageIndex, currentPage);
     }
 };
-
-export function pagingStateController(getProps, setState) {
-    return {
-        pageChange: (page) => {
-            setState({ page });
-        },
-        pageSizeChange: (pageSize) => {
-            setState({ pageSize });
-        }
-    };
-}
-
-// data processing
 
 export const sort = (rows, sortings) => {
     if(!sortings.length)

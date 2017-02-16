@@ -1,13 +1,18 @@
 import React from 'react'
 import { GridContainer, GridView, Cell, Pager, Grouper, sorty } from '../src/index'
+
 import {
     sortingStateController,
     groupStateController,
     pagingStateController,
+} from '../src/data/controllers'
+
+import {
     dataSortingController,
     dataGroupingController,
-    dataPagingController
-    } from '../src/controllers2'
+    dataPagingController,
+    pagingHelper
+} from '../src/data/processors'
 
 export function fakeRemoteDataSource(getProps, setState) {
     let data = [

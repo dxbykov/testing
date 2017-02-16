@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 //import { Local } from './demo/local'
-import { Local } from './demo/local2'
+import { Local } from './demo/local'
 import { Remote } from './demo/remote'
 import { LegoDemo } from './demo/lego'
 

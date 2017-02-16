@@ -1,6 +1,10 @@
 import React from 'react'
 import { Grid, Cell, cellProvider, DetailCell, detailCellProvider, Row, rowProvider, DetailRow, detailRowProvider, GroupRow, groupRowProvider } from '../src/lego'
 
+import {
+    expandedStateController
+} from '../src/data/controllers'
+
 let generateData = (length, names, from = 0) => {
     let data = [];
     names = names || ['Bob', 'Albert', 'Robert', 'Poul', 'Azbest', 'Vova', 'Sonya', 'Marry', 'Sherlock'];
@@ -17,7 +21,7 @@ class SimpleDemo extends React.Component {
         this.state = {
             columns: [{ name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
             rows: generateData(1000)
-        }
+        };
     }
 
     render() {
@@ -39,22 +43,15 @@ class MasterDetailDemo extends React.Component {
             columns: [{ type: 'detail' }, { name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
             rows: generateData(1000),
             expandedRows: [3]
-        }
+        };
+
+        this.setState = this.setState.bind(this);
+        this.expandedCtrl = expandedStateController(() => this.state, this.setState);
     }
 
     render() {
         let { columns, rows } = this.state;
         let isExpanded = ({ row }) => this.state.expandedRows.indexOf(row.id) > -1;
-        let toggleExpanded = ({ row, expanded }) => {
-            let expandedRows = this.state.expandedRows;
-            if(!expanded && expandedRows.indexOf(row.id) > -1) {
-                expandedRows.splice(expandedRows.indexOf(row.id), 1)
-            } else if (expandedRows.indexOf(row.id) === -1) {
-                expandedRows.push(row.id)
-            }
-            this.setState({ expandedRows });
-        };
-
         return (
             <Grid
                 columns={columns}
@@ -63,7 +60,7 @@ class MasterDetailDemo extends React.Component {
                     '*': cellProvider(),
                     'detail': detailCellProvider({
                         isExpanded,
-                        toggleExpanded
+                        toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(row.id)
                     })
                 }}
                 rowProviders={{
@@ -93,23 +90,16 @@ class GroupedDemo extends React.Component {
                     items: generateData(150, ['Nina', 'Anna', 'Marry', 'Nona', 'Adel'], 80)
                 }
             ],
-            expandedGroups: ['Female']
+            expandedRows: ['Female']
         }
+
+        this.setState = this.setState.bind(this);
+        this.expandedCtrl = expandedStateController(() => this.state, this.setState);
     }
 
     render() {
         let { columns, rows } = this.state;
-        let isExpanded = ({ row }) => this.state.expandedGroups.indexOf(row.value) > -1;
-        let toggleExpanded = ({ row, expanded }) => {
-            let expandedGroups = this.state.expandedGroups;
-            if(!expanded && expandedGroups.indexOf(row.value) > -1) {
-                expandedGroups.splice(expandedGroups.indexOf(row.value), 1)
-            } else if (expandedGroups.indexOf(row.value) === -1) {
-                expandedGroups.push(row.value)
-            }
-            this.setState({ expandedGroups });
-        };
-
+        let isExpanded = ({ row }) => this.state.expandedRows.indexOf(row.value) > -1;
         return (
             <Grid
                 columns={columns}
@@ -118,7 +108,7 @@ class GroupedDemo extends React.Component {
                     '*': rowProvider(),
                     'group': groupRowProvider({
                         isExpanded,
-                        toggleExpanded,
+                        toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(row.value)
                     })
                 }}/>
         )
@@ -159,26 +149,17 @@ class NestedGroupedDemo extends React.Component {
                     ]
                 }
             ],
-            expandedGroups: ['Female', 'FemaleA-M']
+            expandedRows: ['Female', 'FemaleA-M']
         }
+
+        this.setState = this.setState.bind(this);
+        this.expandedCtrl = expandedStateController(() => this.state, this.setState);
     }
 
     render() {
         let { columns, rows } = this.state;
-
         let keyGetter = (row) => (row.subvalue || '') + row.value;
-
-        let isExpanded = ({ row }) => this.state.expandedGroups.indexOf(keyGetter(row)) > -1;
-        let toggleExpanded = ({ row, expanded }) => {
-            let expandedGroups = this.state.expandedGroups;
-            if(!expanded && expandedGroups.indexOf(keyGetter(row)) > -1) {
-                expandedGroups.splice(expandedGroups.indexOf(keyGetter(row)), 1)
-            } else if (expandedGroups.indexOf(keyGetter(row)) === -1) {
-                expandedGroups.push(keyGetter(row))
-            }
-            this.setState({ expandedGroups });
-        };
-
+        let isExpanded = ({ row }) => this.state.expandedRows.indexOf(keyGetter(row)) > -1;
         return (
             <Grid
                 columns={columns}
@@ -187,7 +168,7 @@ class NestedGroupedDemo extends React.Component {
                     '*': rowProvider(),
                     'group': groupRowProvider({
                         isExpanded,
-                        toggleExpanded,
+                        toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(keyGetter(row))
                     })
                 }}/>
         )
@@ -213,31 +194,23 @@ class GroupedMasterDetailDemo extends React.Component {
             expandedGroups: ['Male'],
             expandedRows: [3]
         }
+
+        this.setState = this.setState.bind(this);
+        this.expandedRowsCtrl = expandedStateController(() => this.state, this.setState);
+        this.expandedGroupsCtrl = expandedStateController(
+            () => {
+                return { expandedRows: this.state.expandedGroups };
+            },
+            (state) => {
+                this.setState({ expandedGroups: state.expandedRows });
+            }
+        );
     }
 
     render() {
         let { columns, rows } = this.state;
         let isExpanded = ({ row }) => this.state.expandedGroups.indexOf(row.value) > -1;
-        let toggleExpanded = ({ row, expanded }) => {
-            let expandedGroups = this.state.expandedGroups;
-            if(!expanded && expandedGroups.indexOf(row.value) > -1) {
-                expandedGroups.splice(expandedGroups.indexOf(row.value), 1)
-            } else if (expandedGroups.indexOf(row.value) === -1) {
-                expandedGroups.push(row.value)
-            }
-            this.setState({ expandedGroups });
-        };
         let isExpandedRow = ({ row }) => this.state.expandedRows.indexOf(row.id) > -1;
-        let toggleExpandedRow = ({ row, expanded }) => {
-            let expandedRows = this.state.expandedRows;
-            if(!expanded && expandedRows.indexOf(row.id) > -1) {
-                expandedRows.splice(expandedRows.indexOf(row.id), 1)
-            } else if (expandedRows.indexOf(row.id) === -1) {
-                expandedRows.push(row.id)
-            }
-            this.setState({ expandedRows });
-        };
-
         return (
             <Grid
                 columns={columns}
@@ -246,7 +219,7 @@ class GroupedMasterDetailDemo extends React.Component {
                     '*': cellProvider(),
                     'detail': detailCellProvider({
                         isExpanded: isExpandedRow,
-                        toggleExpanded: toggleExpandedRow,
+                        toggleExpanded: ({ row }) => this.expandedRowsCtrl.toggleExpanded(row.id)
                     })
                 }}
                 rowProviders={{
@@ -257,7 +230,7 @@ class GroupedMasterDetailDemo extends React.Component {
                     }),
                     'group': groupRowProvider({
                         isExpanded,
-                        toggleExpanded,
+                        toggleExpanded: ({ row }) => this.expandedGroupsCtrl.toggleExpanded(row.value)
                     })
                 }}/>
         )

@@ -1,5 +1,5 @@
 import React from 'react';
-import { sort } from './controllers2';
+import { sort } from './data/processors';
 
 export const Cell = (props) => {
     return (
