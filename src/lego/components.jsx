@@ -71,9 +71,10 @@ export class VirtualBox extends React.Component {
         let offset = 0;
         while(index < options.dataSize) {
             let itemSize = options.getItemSize(index);
-            if(offset + itemSize > options.viewport.start && offset + itemSize < options.viewport.start + options.viewport.size ||
-               offset < options.viewport.start + options.viewport.size && offset > options.viewport.start ||
-               offset <= options.viewport.start && offset + itemSize >= options.viewport.start + options.viewport.size) {
+            if((offset + itemSize > options.viewport.start && offset + itemSize < options.viewport.start + options.viewport.size ||
+                offset < options.viewport.start + options.viewport.size && offset > options.viewport.start ||
+                offset <= options.viewport.start && offset + itemSize >= options.viewport.start + options.viewport.size) &&
+                itemSize > 0) {
                 visibleItemMetas.push({ index, offset, size: itemSize });
             }
             index = index + 1;

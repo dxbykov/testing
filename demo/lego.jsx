@@ -1,5 +1,5 @@
 import React from 'react'
-import { Grid, Cell, DetailCell, Row, DetailRow, GroupRow, groupProvider, detailProvider } from '../src/lego'
+import { Grid, Cell, cellProvider, DetailCell, detailCellProvider, Row, rowProvider, DetailRow, detailProvider, GroupRow, groupProvider } from '../src/lego'
 
 class SimpleDemo extends React.Component {
     constructor(props) {
@@ -53,8 +53,8 @@ class MasterDetailDemo extends React.Component {
 
     render() {
         let { columns, rows } = this.state;
-        let isExpanded = (rowIndex, row) => this.state.expandedRows.indexOf(row.id) > -1;
-        let toggleExpanded = (rowIndex, row, expanded) => {
+        let isExpanded = ({ rowIndex, row }) => this.state.expandedRows.indexOf(row.id) > -1;
+        let toggleExpanded = ({ rowIndex, row, expanded }) => {
             let expandedRows = this.state.expandedRows;
             if(!expanded && expandedRows.indexOf(row.id) > -1) {
                 expandedRows.splice(expandedRows.indexOf(row.id), 1)
@@ -68,12 +68,21 @@ class MasterDetailDemo extends React.Component {
             <Grid
                 columns={columns}
                 rows={rows}
-                rowProvider={detailProvider({
-                    isExpanded,
-                    toggleExpanded,
-                    collapsedHeight: 40,
-                    expandedHeight: 80
-                })}/>
+                cellProviders={{
+                    '*': cellProvider(),
+                    'detail': detailCellProvider({
+                        isExpanded: isExpanded,
+                        toggleExpanded: toggleExpanded
+                    })
+                }}
+                rowProviders={{
+                    '*': detailProvider({
+                        isExpanded: (rowIndex, row) => isExpanded({ rowIndex, row }),
+                        toggleExpanded: (rowIndex, row, expanded) => toggleExpanded({ rowIndex, row, expanded }),
+                        collapsedHeight: 40,
+                        expandedHeight: 80
+                    })
+                }}/>
         )
     }
 }
@@ -127,10 +136,13 @@ class GroupedDemo extends React.Component {
             <Grid
                 columns={columns}
                 rows={rows}
-                rowProvider={groupProvider({
-                    isExpanded,
-                    toggleExpanded
-                })}/>
+                rowProviders={{
+                    '*': rowProvider(),
+                    'group': groupProvider({
+                        isExpanded,
+                        toggleExpanded,
+                    })
+                }}/>
         )
     }
 }
@@ -180,8 +192,8 @@ class GroupedMasterDetailDemo extends React.Component {
             }
             this.setState({ expandedGroups });
         };
-        let isExpandedRow = (rowIndex, row) => this.state.expandedRows.indexOf(row.id) > -1;
-        let toggleExpandedRow = (rowIndex, row, expanded) => {
+        let isExpandedRow = ({ rowIndex, row }) => this.state.expandedRows.indexOf(row.id) > -1;
+        let toggleExpandedRow = ({ rowIndex, row, expanded }) => {
             let expandedRows = this.state.expandedRows;
             if(!expanded && expandedRows.indexOf(row.id) > -1) {
                 expandedRows.splice(expandedRows.indexOf(row.id), 1)
@@ -195,16 +207,25 @@ class GroupedMasterDetailDemo extends React.Component {
             <Grid
                 columns={columns}
                 rows={rows}
-                rowProvider={groupProvider({
-                    isExpanded,
-                    toggleExpanded,
-                    rowProvider: detailProvider({
+                cellProviders={{
+                    '*': cellProvider(),
+                    'detail': detailCellProvider({
                         isExpanded: isExpandedRow,
                         toggleExpanded: toggleExpandedRow,
+                    })
+                }}
+                rowProviders={{
+                    '*': detailProvider({
+                        isExpanded: (rowIndex, row) => isExpandedRow({ rowIndex, row }),
+                        toggleExpanded: (rowIndex, row, expanded) => toggleExpandedRow({ rowIndex, row, expanded }),
                         collapsedHeight: 40,
                         expandedHeight: 80
+                    }),
+                    'group': groupProvider({
+                        isExpanded,
+                        toggleExpanded,
                     })
-                })}/>
+                }}/>
         )
     }
 }
