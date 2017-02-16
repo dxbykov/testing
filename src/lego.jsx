@@ -48,7 +48,7 @@ class WindowedScroller extends React.Component {
         return (
             <div ref={(ref) => this.root = ref}
                 onScroll={this.updateViewport} onTouchMove={this.updateViewport}
-                style={{ border: '1px solid black', overflow: 'auto', width: '100%', height: '100%', 'WebkitOverflowScrolling': 'touch', 'willChange': 'scroll-position' }}>
+                style={{ overflow: 'auto', width: '100%', height: '100%', 'WebkitOverflowScrolling': 'touch', 'willChange': 'scroll-position' }}>
                 {this.props.children}
             </div>
         );
@@ -281,7 +281,7 @@ export const rowProvider = {
 export class DetailRow extends React.Component {
     render() {
         let cellTemplate = this.props.cellTemplate || (({ rowIndex, columnIndex, data }) => {
-            if(this.props.columns[columnIndex].name === 'expand') {
+            if(this.props.columns[columnIndex].type === 'detail') {
                 return (
                     <DetailCell
                         rowIndex={rowIndex}
@@ -308,7 +308,7 @@ export class DetailRow extends React.Component {
                 cellTemplate={cellTemplate}/>
         );
         let detailTemplate = this.props.expanded && (
-            <div style={{ width: '100%', height: 100 }}>
+            <div style={{ width: '100%', height: 40 }}>
                 This is detail view
             </div>
         );
@@ -336,15 +336,15 @@ export const detailProvider = (options) => {
     let { isExpanded, toggleExpanded, collapsedHeight, expandedHeight } = options;
 
     return {
-        getSize: (index) => isExpanded(index) ? expandedHeight : collapsedHeight,
+        getSize: (index, row) => isExpanded(index, row) ? expandedHeight : collapsedHeight,
         template: ({ rowIndex, rowData, columns }) => {
             return (
                 <DetailRow
                     columns={columns}
                     rowIndex={rowIndex}
                     rowData={rowData}
-                    expanded={isExpanded(rowIndex)}
-                    expandedChange={(expanded) => toggleExpanded(rowIndex, expanded)}/>
+                    expanded={isExpanded(rowIndex, rowData)}
+                    expandedChange={(expanded) => toggleExpanded(rowIndex, rowData, expanded)}/>
             );
         }
     }
@@ -355,7 +355,7 @@ export class GroupRow extends React.Component {
         let getItemSize = (index) => {
             if(index === 0) 
                 return 40;
-            return rowProvider.getSize(index);
+            return this.props.rowProvider.getSize(index - 1, this.props.rowData.items[index - 1]);
         };
         let itemTemplate = ({ index, position }) => {
             if(index === 0) {
@@ -366,7 +366,7 @@ export class GroupRow extends React.Component {
                 );
             }
 
-            return rowProvider.template({
+            return this.props.rowProvider.template({
                 rowIndex: index - 1,
                 rowData: this.props.rowData.items[index - 1],
                 columns: this.props.columns,
@@ -394,15 +394,16 @@ GroupRow.propTypes = {
 
 export const groupProvider = (options) => {
     let { isExpanded, toggleExpanded } = options;
+    let _rowProvider = options.rowProvider || rowProvider;
 
     return {
-        getSize: (index, row) => 40 + (isExpanded(index) ? row.items.length * 40 : 0),
+        getSize: (index, row) => 40 + (isExpanded(index) ? row.items.reduce((accumulator, row, index) => accumulator + _rowProvider.getSize(index, row), 0) : 0),
         template: ({ rowIndex, rowData, columns, cellTemplate }) => (
             <GroupRow
                 columns={columns}
                 rowIndex={rowIndex}
                 rowData={rowData}
-                rowProvider={rowProvider}
+                rowProvider={_rowProvider}
                 expanded={isExpanded(rowIndex)}
                 expandedChange={(expanded) => toggleExpanded(rowIndex, expanded)}/>
         )
@@ -428,7 +429,7 @@ export class Grid extends React.Component {
         ));
 
         return (
-            <div style={{ height: '200px', border: '1px dashed black' }}>
+            <div style={{ height: '260px', border: '1px solid black' }}>
                 <WindowedScroller>
                     <VirtualBox
                         direction="vertical"

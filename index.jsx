@@ -13,7 +13,7 @@ class App extends React.Component {
 
     render() {
         return (
-            <div className="container">
+            <div>
                 <h1>Lego</h1>
                 <LegoDemo/>
             </div>
