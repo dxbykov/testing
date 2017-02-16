@@ -112,7 +112,7 @@ DetailRow.propTypes = {
     expanded: React.PropTypes.bool.isRequired,
 };
 
-export const detailProvider = ({ isExpanded, toggleExpanded, collapsedHeight, expandedHeight }) => {
+export const detailRowProvider = ({ isExpanded, toggleExpanded, collapsedHeight, expandedHeight }) => {
     return {
         getSize: (rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight,
         template: ({ rowIndex, row, columns }) => {
@@ -180,7 +180,7 @@ GroupRow.contextTypes = {
     }).isRequired
 };
 
-export const groupProvider = ({ isExpanded, toggleExpanded }) => {
+export const groupRowProvider = ({ isExpanded, toggleExpanded }) => {
     return {
         getSize: (rowIndex, row, rowProviders) => {
             let rowProviderFor = ({ row }) =>

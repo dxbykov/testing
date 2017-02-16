@@ -1,5 +1,5 @@
 import React from 'react'
-import { Grid, Cell, cellProvider, DetailCell, detailCellProvider, Row, rowProvider, DetailRow, detailProvider, GroupRow, groupProvider } from '../src/lego'
+import { Grid, Cell, cellProvider, DetailCell, detailCellProvider, Row, rowProvider, DetailRow, detailRowProvider, GroupRow, groupRowProvider } from '../src/lego'
 
 let generateData = (length, names, from = 0) => {
     let data = [];
@@ -67,7 +67,7 @@ class MasterDetailDemo extends React.Component {
                     })
                 }}
                 rowProviders={{
-                    '*': detailProvider({
+                    '*': detailRowProvider({
                         isExpanded,
                         collapsedHeight: 40,
                         expandedHeight: 80
@@ -116,7 +116,7 @@ class GroupedDemo extends React.Component {
                 rows={rows}
                 rowProviders={{
                     '*': rowProvider(),
-                    'group': groupProvider({
+                    'group': groupRowProvider({
                         isExpanded,
                         toggleExpanded,
                     })
@@ -185,7 +185,7 @@ class NestedGroupedDemo extends React.Component {
                 rows={rows}
                 rowProviders={{
                     '*': rowProvider(),
-                    'group': groupProvider({
+                    'group': groupRowProvider({
                         isExpanded,
                         toggleExpanded,
                     })
@@ -250,12 +250,12 @@ class GroupedMasterDetailDemo extends React.Component {
                     })
                 }}
                 rowProviders={{
-                    '*': detailProvider({
+                    '*': detailRowProvider({
                         isExpanded: isExpandedRow,
                         collapsedHeight: 40,
                         expandedHeight: 80
                     }),
-                    'group': groupProvider({
+                    'group': groupRowProvider({
                         isExpanded,
                         toggleExpanded,
                     })
