@@ -57,7 +57,7 @@ const flatten = (rows) => {
     return result;
 };
 
-const group = (originalRows, grouping) => {
+export const group = (originalRows, grouping) => {
     if(!grouping.length) return originalRows;
 
     let rows = originalRows.slice(),
@@ -149,7 +149,7 @@ rows: [
 ],
 */
 
-const toViewModel = (rows, level = 0, subvalue) => {
+export const gridGroupShaper = (rows, level = 0, subvalue) => {
     let result = rows.map(row => {
         if(row.isGroupRow) {
             return {
@@ -157,7 +157,7 @@ const toViewModel = (rows, level = 0, subvalue) => {
                 value: row.key,
                 level: level,
                 subvalue: subvalue,
-                items: toViewModel(row.rows, level + 1, row.key),
+                items: gridGroupShaper(row.rows, level + 1, row.key),
             };
         }
         else {
@@ -172,6 +172,6 @@ const toViewModel = (rows, level = 0, subvalue) => {
 export function dataGroupingController(getProps) {
     return  () => {
         let { originalRows, grouping } = getProps();
-        return toViewModel(group(originalRows, grouping));
+        return gridGroupShaper(group(originalRows, grouping));
     };
 }

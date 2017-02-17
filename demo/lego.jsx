@@ -15,10 +15,9 @@ import {
 } from '../src/data/controllers'
 
 import {
-    dataSortingController,
-    dataGroupingController,
-    dataPagingController,
-    pagingHelper
+    sort,
+    group,
+    gridGroupShaper
 } from '../src/data/processors'
 
 import { generateColumns, generateHeaderRow, generateRows } from './demoData';
@@ -65,14 +64,6 @@ class HeadingSortingDemo extends React.Component {
 
         this.setState = this.setState.bind(this);
         this.sortingCtrl = sortingStateController(() => this.state, this.setState);
-
-        this.sort = dataSortingController(() => {
-            return {
-                originalRows: this.state.rows,
-                sortings: this.state.sortings
-            };
-        });
-
     }
 
     render() {
@@ -81,7 +72,7 @@ class HeadingSortingDemo extends React.Component {
         return (
             <Grid
                 columns={columns}
-                rows={[generateHeaderRow()].concat(this.sort())}
+                rows={[generateHeaderRow()].concat(sort(rows, sortings))}
                 cellProviders={[
                     cellProvider({
                         predicate: ({ row }) => row.type === 'heading',
@@ -146,24 +137,18 @@ class GroupedDemo extends React.Component {
         this.state = {
             columns: generateColumns(),
             rows: generateRows(200),
-            expandedRows: ['Male'],
+            expandedRows: ['Male', 'Female'],
             grouping: [{column: 'sex'}]
         }
 
         this.setState = this.setState.bind(this);
         this.expandedCtrl = expandedStateController(() => this.state, this.setState);
         this.groupingCtrl = groupStateController(() => this.state, this.setState);
-
-        this.group = dataGroupingController(() => {
-            return {
-                originalRows: this.state.rows,
-                grouping: this.state.grouping
-            };
-        });
     }
 
     render() {
-        let { columns } = this.state;
+        let { columns, rows, grouping } = this.state;
+        let keyGetter = (row) => (row.subvalue ? (row.subvalue + '_') : '') + row.value;
         return (
             <div>
                <Grouper 
@@ -173,11 +158,11 @@ class GroupedDemo extends React.Component {
                 />
                 <Grid
                     columns={columns}
-                    rows={this.group()}
+                    rows={gridGroupShaper(group(rows, grouping))}
                     rowProviders={[
                         groupRowProvider({
-                            isExpanded: ({ row }) => this.expandedCtrl.isExpanded(row.value),
-                            toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(row.value)
+                            isExpanded: ({ row }) => this.expandedCtrl.isExpanded(keyGetter(row)),
+                            toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(keyGetter(row))
                         })
                     ]}
                 />
@@ -200,17 +185,10 @@ class NestedGroupedDemo extends React.Component {
         this.setState = this.setState.bind(this);
         this.expandedCtrl = expandedStateController(() => this.state, this.setState);
         this.groupingCtrl = groupStateController(() => this.state, this.setState);
-
-        this.group = dataGroupingController(() => {
-            return {
-                originalRows: this.state.rows,
-                grouping: this.state.grouping
-            };
-        });
     }
 
     render() {
-        let { columns } = this.state;
+        let { columns, rows, grouping } = this.state;
         let keyGetter = (row) => (row.subvalue ? (row.subvalue + '_') : '') + row.value;
         return (
             <div>
@@ -221,7 +199,7 @@ class NestedGroupedDemo extends React.Component {
                 />
                 <Grid
                     columns={columns}
-                    rows={[generateHeaderRow(), ...this.group()]}
+                    rows={[generateHeaderRow(), ...gridGroupShaper(group(rows, grouping))]}
                     rowProviders={[
                         groupRowProvider({
                             isExpanded: ({ row }) => this.expandedCtrl.isExpanded(keyGetter(row)),
@@ -258,17 +236,10 @@ class GroupedMasterDetailDemo extends React.Component {
             }
         );
         this.groupingCtrl = groupStateController(() => this.state, this.setState);
-
-        this.group = dataGroupingController(() => {
-            return {
-                originalRows: this.state.rows,
-                grouping: this.state.grouping
-            };
-        });
     }
 
     render() {
-        let { columns, rows } = this.state;
+        let { columns, rows, grouping } = this.state;
         let isExpanded = ({ row }) => this.expandedGroupsCtrl.isExpanded(row.value);
         let isExpandedRow = ({ row }) => this.expandedRowsCtrl.isExpanded(row.id);
         return (
@@ -280,7 +251,7 @@ class GroupedMasterDetailDemo extends React.Component {
                 />
                 <Grid
                     columns={columns}
-                    rows={[generateHeaderRow(), ...this.group()]}
+                    rows={[generateHeaderRow(), ...gridGroupShaper(group(rows, grouping))]}
                     cellProviders={[
                         detailCellProvider({
                             isExpanded: isExpandedRow,
