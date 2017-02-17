@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { VirtualBox } from './components'
+import { VirtualBox, stickySupported } from './components'
 
 export class Cells extends React.Component {
      render() {
@@ -97,7 +97,10 @@ export const headingRowProvider = () => {
                 columns={columns}
                 rowIndex={rowIndex}
                 row={row}
-                style={{ background: 'white' }}/>
+                style={{ 
+                    background: 'white',
+                    borderBottom: '2px solid black'
+                }}/>
         )
     };
 };
@@ -111,7 +114,7 @@ export class DetailRow extends React.Component {
                 row={this.props.row}/>
         );
         let detailTemplate = this.props.expanded && (
-            <div style={{ width: '100%', height: 40 }}>
+            <div style={{ width: '100%', height: 40, borderBottom: '1px dashed black' }}>
                 This is detail view
             </div>
         );
@@ -168,7 +171,13 @@ export class GroupRow extends React.Component {
             if(index === 0) {
                 return (
                     <div onClick={() => this.props.expandedChange(!this.props.expanded)}
-                        style={{ width: '100%', height: '100%', border: '1px dashed black', paddingLeft: this.props.row.level * 20 + 'px' }}>
+                        style={{ 
+                            width: '100%',
+                            height: '100%',
+                            borderBottom: '1px solid black',
+                            paddingLeft: this.props.row.level * 20 + 'px',
+                            background: 'white'
+                        }}>
                         {`[${this.props.expanded ? '-' : '+'}] Group: ${this.props.row.value}`}
                     </div>
                 );
@@ -185,6 +194,7 @@ export class GroupRow extends React.Component {
             <VirtualBox
                 direction="vertical"
                 itemCount={2}
+                itemStick={(index) => index === 0 && stickySupported ? 'before' : false}
                 itemSize={itemSize}
                 template={itemTemplate}/>
         );
