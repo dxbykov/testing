@@ -28,17 +28,18 @@ export function dataSortingController(getProps) {
     };
 }
 
-const paginate = ({ originalRows, pageSize, page }) => {
+export const paginate = (originalRows, pageSize, page) => {
     return originalRows.slice(pageSize * page, pageSize * (page + 1));
 };
 
 export function dataPagingController(getProps) {
     return  () => {
-        return paginate(getProps());
+        let { originalRows, pageSize, page } = getProps();
+        return paginate(originalRows, pageSize, page);
     }
 }
 
-const flatten = (rows) => {
+export const flatten = (rows) => {
     let result = [];
     
     rows.forEach(r => {

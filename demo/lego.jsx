@@ -5,19 +5,19 @@ import {
     Row, rowProvider, headingRowProvider, DetailRow, detailRowProvider, GroupRow, groupRowProvider
 } from '../src/lego';
 
-import { Grouper } from '../src';
+import { Grouper, Pager } from '../src';
 
 import {
     sortingStateController,
     groupStateController,
-    pagingStateController,
     expandedStateController
 } from '../src/data/controllers'
 
 import {
     sort,
     group,
-    gridGroupShaper
+    gridGroupShaper,
+    paginate
 } from '../src/data/processors'
 
 import { generateColumns, generateHeaderRow, generateRows } from './demoData';
@@ -79,6 +79,37 @@ class HeadingSortingDemo extends React.Component {
                 rowProviders={[
                     headingRowProvider()
                 ]}/>
+        )
+    }
+}
+
+class PagingDemo extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            columns: generateColumns(),
+            rows: generateRows(100),
+            pageSize: 20,
+            currentPage: 0
+        };
+    }
+
+    render() {
+        let { columns, rows, pageSize, currentPage } = this.state;
+
+        return (
+            <div>
+                <Grid
+                    columns={columns}
+                    rows={paginate(rows, pageSize, currentPage)}/>
+                <Pager
+                    page={this.state.currentPage}
+                    pageSize={this.state.pageSize}
+                    totalCount={rows.length}
+                    pageChange={currentPage => this.setState({ currentPage })}
+                />                    
+            </div>
         )
     }
 }
@@ -213,7 +244,9 @@ class GroupedMasterDetailDemo extends React.Component {
             rows: generateRows(200),
             grouping: [{column: 'name'}],
             expandedRows: [],
-            expandedGroups: ['Marry']
+            expandedGroups: ['Marry'],
+            pageSize: 20,
+            currentPage: 0
         }
 
         this.setState = this.setState.bind(this);
@@ -233,6 +266,8 @@ class GroupedMasterDetailDemo extends React.Component {
         let { columns, rows, grouping } = this.state;
         let isExpanded = ({ row }) => this.expandedGroupsCtrl.isExpanded(row.value);
         let isExpandedRow = ({ row }) => this.expandedRowsCtrl.isExpanded(row.id);
+        let visibleRows = gridGroupShaper(group(rows, grouping));
+
         return (
             <div>
                <Grouper 
@@ -242,7 +277,7 @@ class GroupedMasterDetailDemo extends React.Component {
                 />
                 <Grid
                     columns={columns}
-                    rows={[generateHeaderRow(), ...gridGroupShaper(group(rows, grouping))]}
+                    rows={[generateHeaderRow(), ...visibleRows]}
                     cellProviders={[
                         detailCellProvider({
                             isExpanded: isExpandedRow,
@@ -262,7 +297,13 @@ class GroupedMasterDetailDemo extends React.Component {
                         headingRowProvider()
                     ]}
                 />
-            </div>
+                {/*<Pager
+                    page={this.state.currentPage}
+                    pageSize={this.state.pageSize}
+                    totalCount={rows.length}
+                    pageChange={currentPage => this.setState({ currentPage })}
+                />*/}                   
+           </div>
         )
     }
 }
@@ -271,7 +312,7 @@ class Box extends React.Component {
     render() {
         let Demo = this.props.demo;
         return (
-            <div style={{ width: '500px', height: '480px', float: 'left', marginLeft: '20px' }}>
+            <div style={{ width: '500px', height: '440px', float: 'left', marginLeft: '20px' }}>
                 <h2>{this.props.title}</h2>
                 <Demo/>
             </div>
@@ -285,6 +326,7 @@ export class LegoDemo extends React.Component {
             <div>
                 <Box title="Simple" demo={SimpleDemo}/>
                 <Box title="Simple w/ Heading, Sorting" demo={HeadingSortingDemo}/>
+                <Box title="Simple w/ Paging" demo={PagingDemo}/>
                 <Box title="Master Detail" demo={MasterDetailDemo}/>
                 <Box title="Grouped" demo={GroupedDemo}/>
                 <Box title="Nested Grouped with Heading" demo={NestedGroupedDemo}/>
