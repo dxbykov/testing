@@ -22,15 +22,6 @@ import {
 
 import { generateColumns, generateHeaderRow, generateRows } from './demoData';
 
-let generateData = (length, names, from = 0) => {
-    let data = [];
-    names = names || ['Bob', 'Albert', 'Robert', 'Poul', 'Azbest', 'Vova', 'Sonya', 'Marry', 'Sherlock'];
-    for(let i = from; i < length + from; i++) {
-        data.push({ id: i + 1, name: names[Math.floor(Math.random() * names.length)] })
-    }
-    return data;
-}
-
 class SimpleDemo extends React.Component {
     constructor(props) {
         super(props);
