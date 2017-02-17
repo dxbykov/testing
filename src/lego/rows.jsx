@@ -1,81 +1,12 @@
 import React from 'react';
 
-import { VirtualBox, stickySupported } from './components'
+import { VirtualBox, stickySupported } from './components';
+import { Cells, Rows, rowProviderFor } from './grid';
 
-export class Cells extends React.Component {
-     render() {
-        let { columns, row, rowIndex } = this.props;
-        
-        let cellProviderFor = ({ column }) =>
-            column.type ? this.context.gridHost.cellProviders[column.type] : this.context.gridHost.cellProviders['*'];
-
-        return (
-            <VirtualBox
-                direction="horizontal"
-                itemCount={columns.length}
-                itemSize={(index) => cellProviderFor({ column: columns[index] }).size({ column: columns[index] })}
-                template={
-                    ({ index }) => cellProviderFor({ column: columns[index] }).template({ 
-                        rowIndex: rowIndex,
-                        columnIndex: index,
-                        row: row,
-                        data: row[columns[index].name]
-                    })
-                }
-                style={this.props.style}/>
-        );
-    }
-}
-Cells.propTypes = {
-    columns: React.PropTypes.array.isRequired,
-    rowIndex: React.PropTypes.number.isRequired,
-    row: React.PropTypes.any.isRequired,
-};
-Cells.contextTypes = {
-    gridHost: React.PropTypes.shape({
-        cellProviders: React.PropTypes.object.isRequired,
-    }).isRequired
-};
-
-export class Rows extends React.Component {
-    render() {
-        let { rows, columns } = this.props;
-        let { rowProviders } = this.context.gridHost;
-
-        let rowProviderFor = ({ row }) =>
-            row.type ? rowProviders[row.type] : rowProviders['*'];
-
-        return (
-            <VirtualBox
-                direction="vertical"
-                itemCount={rows.length}
-                itemSize={(index) => rowProviderFor({ row: rows[index] }).size(index, rows[index], rowProviders)}
-                itemStick={(index) => {
-                    let stick = rowProviderFor({ row: rows[index] }).stick
-                    return stick ? stick(index, rows[index], rowProviders) : false;
-                }}
-                template={
-                    ({ index, position }) => rowProviderFor({ row: rows[index] }).template({
-                        rowIndex: index,
-                        row: rows[index],
-                        columns: columns,
-                    })
-                }/>
-        )
-    }
-}
-Rows.propTypes = {
-    columns: React.PropTypes.array.isRequired,
-    rows: React.PropTypes.array.isRequired,
-};
-Rows.contextTypes = {
-    gridHost: React.PropTypes.shape({
-        rowProviders: React.PropTypes.object.isRequired,
-    }).isRequired
-};
 
 export const rowProvider = () => {
     return {
+        predicate: () => true,
         size: () => 40,
         template: ({ rowIndex, row, columns }) => (
             <Cells
@@ -87,9 +18,9 @@ export const rowProvider = () => {
 };
 
 
-
 export const headingRowProvider = () => {
     return {
+        predicate: ({ row }) => row.type === 'heading',
         stick: () => 'before',
         size: () => 40,
         template: ({ rowIndex, row, columns }) => (
@@ -138,6 +69,7 @@ DetailRow.propTypes = {
 
 export const detailRowProvider = ({ isExpanded, toggleExpanded, collapsedHeight, expandedHeight }) => {
     return {
+        predicate: () => true,
         size: (rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight,
         template: ({ rowIndex, row, columns }) => {
             return (
@@ -155,19 +87,16 @@ export class GroupRow extends React.Component {
     render() {
         let { rowProviders } = this.context.gridHost;
 
-        let rowProviderFor = ({ row }) =>
-            row.type ? rowProviders[row.type] : rowProviders['*'];
-
         let itemSize = (index) => {
             if(index === 0) 
                 return 40;
             if(this.props.expanded)
                 return this.props.row.items.reduce(((accumulator, row, index) =>
-                    accumulator + (rowProviderFor({ row })).size(index, row, rowProviders)
+                    accumulator + (rowProviderFor({ row, rowProviders })).size(index, row, rowProviders)
                 ), 0)
             return 0;
         };
-        let itemTemplate = ({ index, position }) => {
+        let itemTemplate = (index) => {
             if(index === 0) {
                 return (
                     <div onClick={() => this.props.expandedChange(!this.props.expanded)}
@@ -207,20 +136,18 @@ GroupRow.propTypes = {
 };
 GroupRow.contextTypes = {
     gridHost: React.PropTypes.shape({
-        rowProviders: React.PropTypes.object.isRequired,
+        rowProviders: React.PropTypes.array.isRequired,
     }).isRequired
 };
 
 export const groupRowProvider = ({ isExpanded, toggleExpanded }) => {
     return {
+        predicate: ({ row }) => row.type === 'group',
         size: (rowIndex, row, rowProviders) => {
-            let rowProviderFor = ({ row }) =>
-                row.type ? rowProviders[row.type] : rowProviders['*'];
-
             let result = 40;
             if(isExpanded({ rowIndex, row })) {
                 result = result + row.items.reduce(((accumulator, row, index) =>
-                    accumulator + (rowProviderFor({ row })).size(index, row, rowProviders)
+                    accumulator + (rowProviderFor({ row, rowProviders })).size(index, row, rowProviders)
                 ), 0);
             }
             return result;
