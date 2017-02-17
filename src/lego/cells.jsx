@@ -33,7 +33,7 @@ export class SortableCell extends React.Component {
 
         return (
             <Cell onClick={directionChange}>
-                { children } [{ direction ? (direction === 'desc' ? 'U' : 'D') : '#'}]
+                { children } [{ direction ? (direction === 'desc' ? '↑' : '↓') : '#'}]
             </Cell>
         );
     }

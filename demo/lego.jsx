@@ -70,8 +70,8 @@ class HeadingSortingDemo extends React.Component {
         super(props);
 
         this.state = {
-            columns: [{ name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
-            rows: generateData(1000),
+            columns: generateColumns(),
+            rows: generateRows(1000),
             sortings: [{ column: 'id', direction: 'desc' }]
         }
     }
@@ -92,7 +92,7 @@ class HeadingSortingDemo extends React.Component {
         return (
             <Grid
                 columns={columns}
-                rows={[{ type: 'heading', id: 'ID', name: 'Name' }].concat(sorty(rows, sortings))}
+                rows={[generateHeaderRow()].concat(sorty(rows, sortings))}
                 cellProviders={[
                     cellProvider({
                         predicate: ({ row }) => row.type === 'heading',
