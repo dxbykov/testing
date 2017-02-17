@@ -59,7 +59,7 @@ class MasterDetailDemo extends React.Component {
 
     render() {
         let { columns, rows } = this.state;
-        let isExpanded = ({ row }) => this.state.expandedRows.indexOf(row.id) > -1;
+        let isExpanded = ({ row }) => this.expandedCtrl.isExpanded(row.id);
         return (
             <Grid
                 columns={columns}
@@ -107,7 +107,6 @@ class GroupedDemo extends React.Component {
 
     render() {
         let { columns, rows } = this.state;
-        let isExpanded = ({ row }) => this.state.expandedRows.indexOf(row.value) > -1;
         return (
             <Grid
                 columns={columns}
@@ -115,7 +114,7 @@ class GroupedDemo extends React.Component {
                 rowProviders={{
                     '*': rowProvider(),
                     'group': groupRowProvider({
-                        isExpanded,
+                        isExpanded: ({ row }) => this.expandedCtrl.isExpanded(row.value),
                         toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(row.value)
                     })
                 }}/>
@@ -168,7 +167,6 @@ class NestedGroupedDemo extends React.Component {
     render() {
         let { columns, rows } = this.state;
         let keyGetter = (row) => (row.subvalue || '') + row.value;
-        let isExpanded = ({ row }) => this.state.expandedRows.indexOf(keyGetter(row)) > -1;
         return (
             <Grid
                 columns={columns}
@@ -176,7 +174,7 @@ class NestedGroupedDemo extends React.Component {
                 rowProviders={{
                     '*': rowProvider(),
                     'group': groupRowProvider({
-                        isExpanded,
+                        isExpanded: ({ row }) => this.expandedCtrl.isExpanded(keyGetter(row)),
                         toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(keyGetter(row))
                     }),
                     'heading': headingRowProvider()
@@ -219,8 +217,8 @@ class GroupedMasterDetailDemo extends React.Component {
 
     render() {
         let { columns, rows } = this.state;
-        let isExpanded = ({ row }) => this.state.expandedGroups.indexOf(row.value) > -1;
-        let isExpandedRow = ({ row }) => this.state.expandedRows.indexOf(row.id) > -1;
+        let isExpanded = ({ row }) => this.expandedGroupsCtrl.isExpanded(row.value);
+        let isExpandedRow = ({ row }) => this.expandedRowsCtrl.isExpanded(row.id);
         return (
             <Grid
                 columns={columns}

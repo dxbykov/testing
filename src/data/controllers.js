@@ -79,6 +79,10 @@ const toggleExpanded = (prevExpandedRows, rowId) => {
 
 export function expandedStateController(getProps, setState) {
     return {
+        isExpanded: (rowId) => {
+            let { expandedRows } = getProps();
+            return expandedRows.indexOf(rowId) > -1
+        },
         toggleExpanded: (rowId) => {
             let { expandedRows } = getProps(),
                 nextExpandedRows = toggleExpanded(expandedRows, rowId);
