@@ -6,7 +6,12 @@ export class Cell extends React.Component {
         let template = this.props.template || (({ rowIndex, columnIndex, data }) => data);
 
         return (
-            <div style={{ padding: '10px', border: '1px dotted black' }}>
+            <div
+                style={{ 
+                    padding: '10px',
+                    borderBottom: '1px dotted black',
+                    borderRight: '1px dotted black'
+                }}>
                 {template({ rowIndex, columnIndex, data })}
             </div>
         );
@@ -38,7 +43,13 @@ export class DetailCell extends React.Component {
         let template = this.props.template || (() => this.props.expanded ? '-' : '+');
 
         return (
-            <div style={{ padding: '10px', border: '1px dotted black' }} onClick={() => this.props.expandedChange(!this.props.expanded)}>
+            <div 
+                style={{ 
+                    padding: '10px',
+                    borderBottom: '1px dotted black',
+                    borderRight: '1px dotted black'
+                }} 
+                onClick={() => this.props.expandedChange(!this.props.expanded)}>
                 {template({ rowIndex, columnIndex, data })}
             </div>
         );

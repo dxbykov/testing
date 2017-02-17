@@ -65,6 +65,9 @@ WindowedScroller.childContextTypes = {
 
 export class VirtualBox extends React.Component {
     getVisibleItems(options) {
+        let viewportStart = options.viewport.start;
+        let viewportSize = options.viewport.size;
+
         let visibleItemMetas = [];
         let stickyItemsMetas = [];
 
@@ -73,32 +76,39 @@ export class VirtualBox extends React.Component {
         while(index < options.itemCount) {
             let itemSize = options.itemSize(index);
             let itemStick = options.itemStick ? options.itemStick(index) : false;
+            
+            if(itemStick === 'before' && offset <= viewportStart) {
+                stickyItemsMetas.push({ index, offset, size: itemSize, stick: itemStick });
+                viewportStart = viewportStart + itemSize;
+            }
 
-            if((offset + itemSize > options.viewport.start && offset + itemSize < options.viewport.start + options.viewport.size ||
-                offset < options.viewport.start + options.viewport.size && offset > options.viewport.start ||
-                offset <= options.viewport.start && offset + itemSize >= options.viewport.start + options.viewport.size) &&
+            if((offset + itemSize > viewportStart && offset + itemSize < viewportStart + viewportSize ||
+                offset < viewportStart + viewportSize && offset > viewportStart ||
+                offset <= viewportStart && offset + itemSize >= viewportStart + viewportSize) &&
                 itemSize > 0 && itemStick === false) {
                 visibleItemMetas.push({ index, offset, size: itemSize, stick: false });
-            }
-            
-            if(itemStick) {
-                stickyItemsMetas.push({ index, offset, size: itemSize, stick: itemStick });
             }
 
             index = index + 1;
             offset = offset + itemSize;
         }
 
-        return { visibleItemMetas: visibleItemMetas.concat(stickyItemsMetas), fullSize: offset };
+        return { 
+            visibleItemMetas: visibleItemMetas.concat(stickyItemsMetas),
+            fullSize: offset,
+            stickyBeforeSize: stickyItemsMetas.reduce((accumulator, meta) => accumulator + meta.size, 0)
+        };
     }
 
     render() {
+        let viewport = this.context.virtualHost.viewport;
+
         let positionProp = this.props.direction === 'horizontal' ? 'left' : 'top';
         let sizeProp = this.props.direction === 'horizontal' ? 'width' : 'height';
         let crossSizeProp = this.props.direction === 'vertical' ? 'width' : 'height';
 
-        let { visibleItemMetas, fullSize } = this.getVisibleItems({
-            viewport: { start: this.context.virtualHost.viewport[positionProp], size: this.context.virtualHost.viewport[sizeProp] },
+        let { visibleItemMetas, fullSize, stickyBeforeSize } = this.getVisibleItems({
+            viewport: { start: viewport[positionProp], size: viewport[sizeProp] },
             itemSize: this.props.itemSize,
             itemCount: this.props.itemCount,
             itemStick: this.props.itemStick
@@ -108,7 +118,13 @@ export class VirtualBox extends React.Component {
             return (
                 <VirtualItem 
                     key={`${visibleItemMeta.index}`}
-                    viewport={this.context.virtualHost.viewport}
+                    viewport={{ 
+                        ...viewport,
+                        [positionProp]: viewport[positionProp] + stickyBeforeSize,
+                        
+                        [positionProp + 'Stick']: viewport[positionProp + 'Stick'],
+                        [positionProp + 'ChildStick']: (viewport[positionProp + 'Stick'] || 0) + stickyBeforeSize
+                    }}
                     direction={this.props.direction}
                     position={visibleItemMeta.offset}
                     size={visibleItemMeta.size}
@@ -151,8 +167,8 @@ VirtualBox.contextTypes = {
 let isFireFox = /FireFox/.test(navigator.userAgent);
 let isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
 let isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
-let stickySupported = isChrome || isSafari || isFireFox;
-export class VirtualItem extends React.Component {
+export let stickySupported = isChrome || isSafari || isFireFox;
+class VirtualItem extends React.Component {
     getChildContext() {
         let { direction, position, size, viewport } = this.props;
         
@@ -168,6 +184,8 @@ export class VirtualItem extends React.Component {
                     [crossPositionProp]: viewport[crossPositionProp],
                     [sizeProp]: Math.min(viewport[positionProp] + viewport[sizeProp] - position, viewport[sizeProp]),
                     [crossSizeProp]: viewport[crossSizeProp],
+
+                    [positionProp + 'Stick']: viewport[positionProp + 'ChildStick'],
                 }
             }
         };
@@ -188,7 +206,12 @@ export class VirtualItem extends React.Component {
         };
 
         if(stick) {
-            additionalStyles.position = isSafari ? '-webkit-sticky' : 'sticky';
+            additionalStyles = {
+                ...additionalStyles,
+
+                position: isSafari ? '-webkit-sticky' : 'sticky',
+                [positionProp]: position + (viewport[positionProp + 'Stick'] || 0) + 'px',
+            }
         }
 
         if(stick && !stickySupported && direction === 'vertical') {
@@ -196,6 +219,8 @@ export class VirtualItem extends React.Component {
                 position: 'fixed',
                 [crossSizeProp]: viewport[crossSizeProp] + 'px',
                 overflow: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                backfaceVisibility: 'hidden'
             }
             children = (
                 <div style={{ marginLeft: -viewport[crossPositionProp] + 'px', width: '100%', height: '100%' }}>
