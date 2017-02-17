@@ -57,7 +57,7 @@ const flatten = (rows) => {
     return result;
 };
 
-const group = (originalRows, grouping, shape) => {
+const group = (originalRows, grouping) => {
     if(!grouping.length) return originalRows;
 
     let rows = originalRows.slice(),
@@ -89,16 +89,89 @@ const group = (originalRows, grouping, shape) => {
 
     if(nextGrouping.length) {
         groups.forEach(g => {
-            g.rows = group(g.rows, nextGrouping, shape);
+            g.rows = group(g.rows, nextGrouping);
         });
     }
 
-    return shape(groups);
+    return groups;
 };
+
+/*
+//Source
+
+"rows: [
+    {
+        "key": "Male",
+        "isGroupRow": true,
+        "column": "sex",
+        "rows": [
+            {
+                "id": 0,
+                "name": "Sherlock",
+                "sex": "Male",
+                "city": "Tula",
+                "car": "BMW"
+            },
+        ]
+    }
+]"
+
+//Target
+
+rows: [
+    { type: 'heading', id: 'ID', name: 'Name' },
+    {
+        type: 'group', level: 0, value: 'Male',
+        items: [
+            {
+                type: 'group', level: 1, subvalue: 'Male', value: 'A-M',
+                items: generateData(20, ['Bob', 'Mark'])
+            },
+            {
+                type: 'group', level: 1, subvalue: 'Male', value: 'M-Z',
+                items: generateData(30, ['Poul', 'Tim', 'Steve'], 20)
+            }
+        ]
+    },
+    {
+        type: 'group', level: 0, value: 'Female',
+        items: [
+            {
+                type: 'group', level: 1, subvalue: 'Female', value: 'A-M',
+                items: generateData(25, ['Anna', 'Marry', 'Adel'], 50)
+            },
+            {
+                type: 'group', level: 1, subvalue: 'Female', value: 'M-Z',
+                items: generateData(20, ['Nina', 'Nona'], 75)
+            }
+        ]
+    }
+],
+*/
+
+const toViewModel = (rows, level = 0, subvalue) => {
+    let result = rows.map(row => {
+        if(row.isGroupRow) {
+            return {
+                type: 'group',
+                value: row.key,
+                level: level,
+                subvalue: subvalue,
+                items: toViewModel(row.rows, level + 1, row.key),
+            };
+        }
+        else {
+            return row;
+        }
+    });
+
+    return result;
+};
+
 
 export function dataGroupingController(getProps) {
     return  () => {
         let { originalRows, grouping } = getProps();
-        return group(originalRows, grouping, flatten);
+        return toViewModel(group(originalRows, grouping));
     };
 }

@@ -17,7 +17,7 @@ export class Grid extends React.Component {
         let { rows, columns } = this.props
 
         return (
-            <div style={{ height: '260px', border: '1px solid black' }}>
+            <div style={{ height: '360px', border: '1px solid black' }}>
                 <WindowedScroller>
                     <Rows
                         rows={rows}
