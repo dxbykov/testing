@@ -129,12 +129,7 @@ export class VirtualBox extends React.Component {
                     position={visibleItemMeta.offset}
                     size={visibleItemMeta.size}
                     stick={visibleItemMeta.stick}>
-                    {
-                        this.props.template({ 
-                            index: visibleItemMeta.index, 
-                            position: visibleItemMeta.offset 
-                        })
-                    }
+                    {this.props.template(visibleItemMeta.index)}
                 </VirtualItem>
             );
         })

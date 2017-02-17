@@ -1,9 +1,9 @@
-import React from 'react'
+import React from 'react';
 import { 
     Grid,
-    Cell, cellProvider, DetailCell, detailCellProvider,
+    Cell, cellProvider, SortableCell, DetailCell, detailCellProvider,
     Row, rowProvider, headingRowProvider, DetailRow, detailRowProvider, GroupRow, groupRowProvider
-} from '../src/lego'
+} from '../src/lego';
 
 let generateData = (length, names, from = 0) => {
     let data = [];
@@ -14,13 +14,25 @@ let generateData = (length, names, from = 0) => {
     return data;
 }
 
+let sorty = (data, sortings) => {
+    if(!sortings.length)
+        return data;
+
+    let sortColumn = sortings[0].column,
+        result = data.slice().sort((a, b) => {
+            let value = (a[sortColumn] < b[sortColumn]) ^ sortings[0].direction === "asc"
+            return value ? -1 : 1;
+        });
+    return result;
+}
+
 class SimpleDemo extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
             columns: [{ name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
-            rows: [{ type: 'heading', id: 'ID', name: 'Name' }].concat(generateData(1000))
+            rows: generateData(1000)
         }
     }
 
@@ -30,11 +42,54 @@ class SimpleDemo extends React.Component {
         return (
             <Grid
                 columns={columns}
-                rows={rows}
-                rowProviders={{
-                    '*': rowProvider(),
-                    'heading': headingRowProvider()
-                }}/>
+                rows={rows}/>
+        )
+    }
+}
+
+class HeadingSortingDemo extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            columns: [{ name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
+            rows: generateData(1000),
+            sortings: [{ column: 'id', direction: 'desc' }]
+        }
+    }
+
+    render() {
+        let { columns, rows, sortings } = this.state;
+
+        let directionFor = (column) => {
+            let sorting = sortings.filter(s => s.column === column)[0]
+            return sorting ? sorting.direction : false;
+        };
+        let sortingsChange = (column, direction) => {
+            this.setState({
+                sortings: [ { column: column, direction: direction === 'desc' ? 'asc' : 'desc' } ]
+            });
+        };
+
+        return (
+            <Grid
+                columns={columns}
+                rows={[{ type: 'heading', id: 'ID', name: 'Name' }].concat(sorty(rows, sortings))}
+                cellProviders={[
+                    cellProvider({
+                        predicate: ({ row }) => row.type === 'heading',
+                        template: ({ column, data }) => (
+                            <SortableCell
+                                direction={directionFor(column.name)}
+                                directionChange={() => sortingsChange(column.name, directionFor(column.name))}>
+                                { data }
+                            </SortableCell>
+                        )
+                    })
+                ]}
+                rowProviders={[
+                    headingRowProvider()
+                ]}/>
         )
     }
 }
@@ -67,20 +122,19 @@ class MasterDetailDemo extends React.Component {
             <Grid
                 columns={columns}
                 rows={rows}
-                cellProviders={{
-                    '*': cellProvider(),
-                    'detail': detailCellProvider({
+                cellProviders={[
+                    detailCellProvider({
                         isExpanded,
                         toggleExpanded
                     })
-                }}
-                rowProviders={{
-                    '*': detailRowProvider({
+                ]}
+                rowProviders={[
+                    detailRowProvider({
                         isExpanded,
                         collapsedHeight: 40,
                         expandedHeight: 80
                     })
-                }}/>
+                ]}/>
         )
     }
 }
@@ -122,13 +176,12 @@ class GroupedDemo extends React.Component {
             <Grid
                 columns={columns}
                 rows={rows}
-                rowProviders={{
-                    '*': rowProvider(),
-                    'group': groupRowProvider({
+                rowProviders={[
+                    groupRowProvider({
                         isExpanded,
                         toggleExpanded,
                     })
-                }}/>
+                ]}/>
         )
     }
 }
@@ -149,7 +202,7 @@ class NestedGroupedDemo extends React.Component {
                             items: generateData(20, ['Bob', 'Mark'])
                         },
                         {
-                            type: 'group', level: 1, subvalue: 'Male', value: 'M-Z',
+                            type: 'group', level: 1, subvalue: 'Male', value: 'N-Z',
                             items: generateData(30, ['Poul', 'Tim', 'Steve'], 20)
                         }
                     ]
@@ -162,7 +215,7 @@ class NestedGroupedDemo extends React.Component {
                             items: generateData(25, ['Anna', 'Marry', 'Adel'], 50)
                         },
                         {
-                            type: 'group', level: 1, subvalue: 'Female', value: 'M-Z',
+                            type: 'group', level: 1, subvalue: 'Female', value: 'N-Z',
                             items: generateData(20, ['Nina', 'Nona'], 75)
                         }
                     ]
@@ -192,14 +245,13 @@ class NestedGroupedDemo extends React.Component {
             <Grid
                 columns={columns}
                 rows={rows}
-                rowProviders={{
-                    '*': rowProvider(),
-                    'group': groupRowProvider({
+                rowProviders={[
+                    groupRowProvider({
                         isExpanded,
                         toggleExpanded,
                     }),
-                    'heading': headingRowProvider()
-                }}/>
+                    headingRowProvider()
+                ]}/>
         )
     }
 }
@@ -252,24 +304,23 @@ class GroupedMasterDetailDemo extends React.Component {
             <Grid
                 columns={columns}
                 rows={rows}
-                cellProviders={{
-                    '*': cellProvider(),
-                    'detail': detailCellProvider({
+                cellProviders={[
+                    detailCellProvider({
                         isExpanded: isExpandedRow,
                         toggleExpanded: toggleExpandedRow,
                     })
-                }}
-                rowProviders={{
-                    '*': detailRowProvider({
+                ]}
+                rowProviders={[
+                    detailRowProvider({
                         isExpanded: isExpandedRow,
                         collapsedHeight: 40,
                         expandedHeight: 80
                     }),
-                    'group': groupRowProvider({
+                    groupRowProvider({
                         isExpanded,
                         toggleExpanded,
                     })
-                }}/>
+                ]}/>
         )
     }
 }
@@ -290,7 +341,8 @@ export class LegoDemo extends React.Component {
     render() {
         return (
             <div>
-                <Box title="Simple with Heading" demo={SimpleDemo}/>
+                <Box title="Simple" demo={SimpleDemo}/>
+                <Box title="Simple w/ Heading, Sorting" demo={HeadingSortingDemo}/>
                 <Box title="Master Detail" demo={MasterDetailDemo}/>
                 <Box title="Grouped" demo={GroupedDemo}/>
                 <Box title="Nested Grouped with Heading" demo={NestedGroupedDemo}/>

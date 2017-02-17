@@ -2,8 +2,7 @@ import React from 'react'
 
 export class Cell extends React.Component {
     render() {
-        let { rowIndex, columnIndex, data } = this.props;
-        let template = this.props.template || (({ rowIndex, columnIndex, data }) => data);
+        let { children, ...other } = this.props;
 
         return (
             <div
@@ -11,37 +10,41 @@ export class Cell extends React.Component {
                     padding: '10px',
                     borderBottom: '1px dotted black',
                     borderRight: '1px dotted black'
-                }}>
-                {template({ rowIndex, columnIndex, data })}
+                }} {...other}>
+                {children}
             </div>
         );
     }
 }
-Cell.propTypes = {
-    rowIndex: React.PropTypes.number.isRequired,
-    columnIndex: React.PropTypes.number.isRequired,
-    data: React.PropTypes.any.isRequired,
-    template: React.PropTypes.func
+
+export const cellProvider = ({ predicate, template } = {}) => {
+    return {
+        predicate: predicate || (() => true),
+        size: ({ column }) => column.width || 200,
+        template: template || (({ data }) => (
+            <Cell>{data}</Cell>
+        ))
+    };
 };
 
-export const cellProvider = () => {
-    return {
-        size: ({ column }) => column.width || 200,
-        template: ({ rowIndex, columnIndex, data, template }) => (
-            <Cell
-                rowIndex={rowIndex}
-                columnIndex={columnIndex}
-                data={data}
-                template={template}/>
-        )
-    };
+export class SortableCell extends React.Component {
+    render() {
+        let { direction, directionChange, children } = this.props;
+
+        return (
+            <Cell onClick={directionChange}>
+                { children } [{ direction ? (direction === 'desc' ? 'U' : 'D') : '#'}]
+            </Cell>
+        );
+    }
+}
+SortableCell.propTypes = {
+    direction: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool]).isRequired,
+    directionChange: React.PropTypes.func.isRequired,
 };
 
 export class DetailCell extends React.Component {
     render() {
-        let { rowIndex, columnIndex, data } = this.props;
-        let template = this.props.template || (() => this.props.expanded ? '-' : '+');
-
         return (
             <div 
                 style={{ 
@@ -50,27 +53,22 @@ export class DetailCell extends React.Component {
                     borderRight: '1px dotted black'
                 }} 
                 onClick={() => this.props.expandedChange(!this.props.expanded)}>
-                {template({ rowIndex, columnIndex, data })}
+                {this.props.expanded ? '-' : '+'}
             </div>
         );
     }
 }
 DetailCell.propTypes = {
-    rowIndex: React.PropTypes.number.isRequired,
-    columnIndex: React.PropTypes.number.isRequired,
-    template: React.PropTypes.func,
     expanded: React.PropTypes.bool.isRequired,
     expandedChange: React.PropTypes.func.isRequired,
 };
 
 export const detailCellProvider = ({ isExpanded, toggleExpanded }) => {
     return {
+        predicate: ({ column }) => column.type === 'detail',
         size: ({ column }) => column.width || 40,
-        template: ({ rowIndex, row, columnIndex, template }) => (
+        template: ({ rowIndex, row, columnIndex }) => (
             <DetailCell
-                rowIndex={rowIndex}
-                columnIndex={columnIndex}
-                template={template}
                 expanded={isExpanded({ rowIndex, row })}
                 expandedChange={() => toggleExpanded({ rowIndex, row })}/>
         )
