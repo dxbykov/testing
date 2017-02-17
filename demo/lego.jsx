@@ -74,32 +74,33 @@ class HeadingSortingDemo extends React.Component {
             rows: generateRows(1000),
             sortings: [{ column: 'id', direction: 'desc' }]
         }
+
+        this.setState = this.setState.bind(this);
+        this.sortingCtrl = sortingStateController(() => this.state, this.setState);
+
+        this.sort = dataSortingController(() => {
+            return {
+                originalRows: this.state.rows,
+                sortings: this.state.sortings
+            };
+        });
+
     }
 
     render() {
         let { columns, rows, sortings } = this.state;
 
-        let directionFor = (column) => {
-            let sorting = sortings.filter(s => s.column === column)[0]
-            return sorting ? sorting.direction : false;
-        };
-        let sortingsChange = (column, direction) => {
-            this.setState({
-                sortings: [ { column: column, direction: direction === 'desc' ? 'asc' : 'desc' } ]
-            });
-        };
-
         return (
             <Grid
                 columns={columns}
-                rows={[generateHeaderRow()].concat(sorty(rows, sortings))}
+                rows={[generateHeaderRow()].concat(this.sort())}
                 cellProviders={[
                     cellProvider({
                         predicate: ({ row }) => row.type === 'heading',
                         template: ({ column, data }) => (
                             <SortableCell
-                                direction={directionFor(column.name)}
-                                directionChange={() => sortingsChange(column.name, directionFor(column.name))}>
+                                direction={this.sortingCtrl.directionFor(column.name)}
+                                directionChange={() => this.sortingCtrl.onSort(column.name)}>
                                 { data }
                             </SortableCell>
                         )
@@ -157,8 +158,8 @@ class GroupedDemo extends React.Component {
         this.state = {
             columns: generateColumns(),
             rows: generateRows(200),
-            expandedRows: [],
-            grouping: []
+            expandedRows: ['Male'],
+            grouping: [{column: 'sex'}]
         }
 
         this.setState = this.setState.bind(this);
@@ -184,13 +185,12 @@ class GroupedDemo extends React.Component {
                 />
                 <Grid
                     columns={columns}
-                    rows={[generateHeaderRow(), ...this.group()]}
+                    rows={this.group()}
                     rowProviders={[
                         groupRowProvider({
                             isExpanded: ({ row }) => this.expandedCtrl.isExpanded(row.value),
                             toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(row.value)
-                        }),
-                        headingRowProvider()
+                        })
                     ]}
                 />
             </div>
@@ -205,8 +205,8 @@ class NestedGroupedDemo extends React.Component {
         this.state = {
             columns: generateColumns(),
             rows: generateRows(200),
-            expandedRows: [],
-            grouping: []
+            expandedRows: ['Los Angeles', 'Moscow', 'Moscow_BMW'],
+            grouping: [{column: 'city'}, {column: 'car'}]
         }
 
         this.setState = this.setState.bind(this);
@@ -223,7 +223,7 @@ class NestedGroupedDemo extends React.Component {
 
     render() {
         let { columns } = this.state;
-        let keyGetter = (row) => (row.subvalue || '') + row.value;
+        let keyGetter = (row) => (row.subvalue ? (row.subvalue + '_') : '') + row.value;
         return (
             <div>
                <Grouper 
@@ -254,9 +254,9 @@ class GroupedMasterDetailDemo extends React.Component {
         this.state = {
             columns: [{ type: 'detail', width: 40 }, ...generateColumns()],
             rows: generateRows(200),
-            grouping: [],
-            expandedGroups: ['Male'],
-            expandedRows: [3]
+            grouping: [{column: 'name'}],
+            expandedRows: [],
+            expandedGroups: ['Marry']
         }
 
         this.setState = this.setState.bind(this);
@@ -321,7 +321,7 @@ class Box extends React.Component {
     render() {
         let Demo = this.props.demo;
         return (
-            <div style={{ width: '500px', height: '460px', float: 'left', marginLeft: '20px' }}>
+            <div style={{ width: '500px', height: '480px', float: 'left', marginLeft: '20px' }}>
                 <h2>{this.props.title}</h2>
                 <Demo/>
             </div>

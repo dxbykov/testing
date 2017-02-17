@@ -10,8 +10,17 @@ const calcSortings = (columnName, prevSorting) => {
     ];
 };
 
+const directionFor = (columnName, sortings) => {
+    let sorting = sortings.filter(s => s.column === columnName)[0];
+    return sorting ? sorting.direction : false;
+};
+
 export function sortingStateController(getProps, setState) {
     return {
+        directionFor: (columnName) => {
+            let { sortings } = getProps();
+            return directionFor(columnName, sortings);
+        },
         onSort: (columnName) => {
             let { sortings } = getProps(),
                 nextSortings = calcSortings(columnName, sortings);
