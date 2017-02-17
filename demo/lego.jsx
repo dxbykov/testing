@@ -32,18 +32,6 @@ let generateData = (length, names, from = 0) => {
     return data;
 }
 
-let sorty = (data, sortings) => {
-    if(!sortings.length)
-        return data;
-
-    let sortColumn = sortings[0].column,
-        result = data.slice().sort((a, b) => {
-            let value = (a[sortColumn] < b[sortColumn]) ^ sortings[0].direction === "asc"
-            return value ? -1 : 1;
-        });
-    return result;
-}
-
 class SimpleDemo extends React.Component {
     constructor(props) {
         super(props);
