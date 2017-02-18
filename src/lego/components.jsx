@@ -32,6 +32,11 @@ export class WindowedScroller extends React.Component {
     }
 
     updateViewport() {
+        requestAnimationFrame(this._updateViewport.bind(this))
+    }
+
+    _updateViewport() {
+        let oldViewport = this.state.viewport;
         let viewport = { 
             top: this.root.scrollTop, 
             left: this.root.scrollLeft, 
@@ -39,14 +44,28 @@ export class WindowedScroller extends React.Component {
             height: this.root.clientHeight,
         };
 
-        this.setState({ viewport });
+        // Prevent iOS to flicker in bounces =(
+        if(viewport.top < 0 || viewport.left < 0 || viewport.left + viewport.width > this.root.scrollWidth || viewport.top + viewport.height > this.root.scrollHeight) {
+            return;
+        }
+
+        // Optimize performance
+        if(oldViewport.top !== viewport.top || oldViewport.left !== viewport.left || oldViewport.width !== viewport.width || oldViewport.height !== viewport.height) {
+            this.setState({ viewport });
+        }
     }
 
     render() {
         return (
             <div ref={(ref) => this.root = ref}
-                onScroll={this.updateViewport} onTouchMove={this.updateViewport}
-                style={{ overflow: 'auto', width: '100%', height: '100%', 'WebkitOverflowScrolling': 'touch', 'willChange': 'scroll-position' }}>
+                onScroll={this.updateViewport}
+                style={{ 
+                    overflow: 'auto',
+                    width: '100%',
+                    height: '100%',
+                    WebkitOverflowScrolling: 'touch',
+                    willChange: 'scroll-position',
+                }}>
                 {this.props.children}
             </div>
         );
@@ -135,7 +154,12 @@ export class VirtualBox extends React.Component {
         })
 
         return (
-            <div style={{ ...this.props.style, position: 'relative', [sizeProp]: fullSize + 'px', [crossSizeProp]: '100%' }}>
+            <div style={{ 
+                ...this.props.style,
+                position: 'relative',
+                [sizeProp]: fullSize + 'px',
+                [crossSizeProp]: '100%'
+            }}>
                 {visibleItems}
             </div>
         );
