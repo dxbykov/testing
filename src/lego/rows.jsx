@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { VirtualBox, stickySupported } from './components';
+import { VirtualBox, stickyProp } from './components';
 import { Cells, Rows, rowProviderFor } from './grid';
 
 
@@ -103,9 +103,10 @@ export class GroupRow extends React.Component {
                         style={{ 
                             width: '100%',
                             height: '100%',
+                            padding: '10px',
                             borderBottom: '1px solid black',
-                            paddingLeft: this.props.row.level * 20 + 'px',
-                            background: 'white'
+                            paddingLeft: this.props.row.level * 20 + 10 + 'px',
+                            background: '#f8f8f8'
                         }}>
                         {`[${this.props.expanded ? '-' : '+'}] Group: ${this.props.row.value}`}
                     </div>
@@ -123,7 +124,7 @@ export class GroupRow extends React.Component {
             <VirtualBox
                 direction="vertical"
                 itemCount={2}
-                itemStick={(index) => index === 0 && stickySupported ? 'before' : false}
+                itemStick={(index) => index === 0 && stickyProp ? 'before' : false}
                 itemSize={itemSize}
                 template={itemTemplate}/>
         );
