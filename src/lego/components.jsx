@@ -6,6 +6,22 @@ export function applyTemplate(template, data) {
     return template(data);
 };
 
+function testCSSProp(property, value, noPrefixes) {
+  let prop = property + ':';
+  let el = document.createElement('test');
+  let mStyle = el.style;
+  
+  if(!noPrefixes) {
+      mStyle.cssText = prop + ['-webkit-', '-moz-', '-ms-', '-o-', ''].join(value + ';' + prop) + value + ';';
+  } else {
+      mStyle.cssText = prop + value;
+  }    
+  return mStyle[property];
+}
+
+let isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
+export let stickyProp = testCSSProp('position', 'sticky');
+
 export class WindowedScroller extends React.Component {
     constructor(props) {
         super(props);
@@ -32,7 +48,11 @@ export class WindowedScroller extends React.Component {
     }
 
     updateViewport() {
-        requestAnimationFrame(this._updateViewport.bind(this))
+        if(isSafari) {
+            requestAnimationFrame(this._updateViewport.bind(this))
+        } else {
+            this._updateViewport();
+        }
     }
 
     _updateViewport() {
@@ -183,10 +203,6 @@ VirtualBox.contextTypes = {
     }).isRequired,
 };
 
-let isFireFox = /FireFox/.test(navigator.userAgent);
-let isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-let isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
-export let stickySupported = isChrome || isSafari || isFireFox;
 class VirtualItem extends React.Component {
     getChildContext() {
         let { direction, position, size, viewport } = this.props;
@@ -224,28 +240,41 @@ class VirtualItem extends React.Component {
             [crossSizeProp]: '100%',
         };
 
+        
+
         if(stick) {
-            additionalStyles = {
-                ...additionalStyles,
+            if(stickyProp) {
+                additionalStyles = {
+                    ...additionalStyles,
 
-                position: isSafari ? '-webkit-sticky' : 'sticky',
-                [positionProp]: position + (viewport[positionProp + 'Stick'] || 0) + 'px',
-            }
-        }
+                    position: stickyProp,
+                    [positionProp]: position + (viewport[positionProp + 'Stick'] || 0) + 'px',
+                }
+            } else {
+                if(direction === 'vertical') {
+                    additionalStyles = {
+                        position: 'fixed',
+                        [crossSizeProp]: viewport[crossSizeProp] + 'px',
+                        overflow: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        backfaceVisibility: 'hidden'
+                    }
+                    children = (
+                        <div style={{ marginLeft: -viewport[crossPositionProp] + 'px', width: '100%', height: '100%' }}>
+                            {children}
+                        </div>
+                    );
+                } else {
+                    additionalStyles = {
+                        ...additionalStyles,
 
-        if(stick && !stickySupported && direction === 'vertical') {
-            additionalStyles = {
-                position: 'fixed',
-                [crossSizeProp]: viewport[crossSizeProp] + 'px',
-                overflow: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                backfaceVisibility: 'hidden'
+                        [positionProp]: 
+                            viewport[positionProp] + 
+                            ((viewport[positionProp + 'Stick'] || 0) - (viewport[positionProp + 'ChildStick'] || 0)) + 
+                            position + 'px',
+                    }
+                }
             }
-            children = (
-                <div style={{ marginLeft: -viewport[crossPositionProp] + 'px', width: '100%', height: '100%' }}>
-                    {children}
-                </div>
-            );
         }
 
         return (

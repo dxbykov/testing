@@ -2,24 +2,27 @@ import React from 'react'
 
 export class Cell extends React.Component {
     render() {
-        let { children, ...other } = this.props;
+        let { children, style, ...other } = this.props;
 
         return (
             <div
                 style={{ 
                     padding: '10px',
                     borderBottom: '1px dotted black',
-                    borderRight: '1px dotted black'
-                }} {...other}>
+                    borderRight: '1px dotted black',
+                    ...style
+                }}
+                {...other}>
                 {children}
             </div>
         );
     }
 }
 
-export const cellProvider = ({ predicate, template } = {}) => {
+export const cellProvider = ({ stick, predicate, template } = {}) => {
     return {
         predicate: predicate || (() => true),
+        stick: stick || (() => false),
         size: ({ column }) => column.width || 200,
         template: template || (({ data }) => (
             <Cell>{data}</Cell>
@@ -41,6 +44,38 @@ export class SortableCell extends React.Component {
 SortableCell.propTypes = {
     direction: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool]).isRequired,
     directionChange: React.PropTypes.func.isRequired,
+};
+
+export class SelectableCell extends React.Component {
+    render() {
+        let { selected, indeterminate, selectedChange, style } = this.props;
+
+        return (
+            <Cell style={{
+                background: 'white',
+                display: 'flex',
+                width: '100%',
+                height: '100%',
+                alignItems: 'center',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                padding: 0,
+                ...style
+            }}>
+                <input
+                    type='checkbox'
+                    checked={selected}
+                    ref={(ref) => { ref && (ref.indeterminate = indeterminate)}}
+                    onClick={selectedChange}
+                    style={{ margin: '0' }}/>
+            </Cell>
+        );
+    }
+}
+SelectableCell.propTypes = {
+    selected: React.PropTypes.bool.isRequired,
+    indeterminate: React.PropTypes.bool,
+    selectedChange: React.PropTypes.func.isRequired,
 };
 
 export class DetailCell extends React.Component {

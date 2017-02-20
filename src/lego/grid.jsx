@@ -3,6 +3,18 @@ import { WindowedScroller, VirtualBox, VirtualItem } from './components';
 import { cellProvider } from './cells';
 import { rowProvider } from './rows';
 
+let memorized = () => {
+    let map = new WeakMap();
+    return (obj, getter) => {
+        let cached = map.get(obj);
+        if(!cached) {
+            cached = getter(obj);
+            map.set(obj, cached);
+        }
+        return cached;
+    }
+};
+
 export let cellProviderFor = ({ row, column, cellProviders }) => {
     return cellProviders.filter((p) => p.predicate({ row, column })).pop();
 };
@@ -12,19 +24,29 @@ export class Cells extends React.Component {
         let { columns, row, rowIndex } = this.props;
         let { cellProviders } = this.context.gridHost;
 
+        let cellProvider = memorized();
+
         return (
             <VirtualBox
                 direction="horizontal"
                 itemCount={columns.length}
-                itemSize={(index) => cellProviderFor({ row: row, column: columns[index], cellProviders }).size({ column: columns[index], cellProviders })}
+                itemSize={(index) =>
+                    cellProvider(columns[index], column => cellProviderFor({ row, column, cellProviders }))
+                        .size({ column: columns[index], cellProviders })
+                }
+                itemStick={(index) => {
+                    let stick = cellProvider(columns[index], column => cellProviderFor({ row, column, cellProviders })).stick
+                    return stick ? stick(index, row, cellProviders) : false;
+                }}
                 template={(index) =>
-                    cellProviderFor({ row: row, column: columns[index], cellProviders }).template({ 
-                        rowIndex: rowIndex,
-                        columnIndex: index,
-                        row: row,
-                        column: columns[index],
-                        data: row[columns[index].name]
-                    })
+                    cellProvider(columns[index], column => cellProviderFor({ row, column, cellProviders }))
+                        .template({ 
+                            rowIndex: rowIndex,
+                            columnIndex: index,
+                            row: row,
+                            column: columns[index],
+                            data: row[columns[index].name]
+                        })
                 }
                 style={this.props.style}/>
         );
@@ -51,23 +73,27 @@ export class Rows extends React.Component {
         let { rows, columns } = this.props;
         let { rowProviders } = this.context.gridHost;
 
+        let rowProvider = memorized();
+
         return (
             <VirtualBox
                 direction="vertical"
                 itemCount={rows.length}
                 itemSize={(index) => 
-                    rowProviderFor({ row: rows[index], rowProviders }).size(index, rows[index], rowProviders)
+                    rowProvider(rows[index], row => rowProviderFor({ row, rowProviders }))
+                        .size(index, rows[index], rowProviders)
                 }
                 itemStick={(index) => {
-                    let stick = rowProviderFor({ row: rows[index], rowProviders }).stick
+                    let stick = rowProvider(rows[index], row => rowProviderFor({ row, rowProviders })).stick
                     return stick ? stick(index, rows[index], rowProviders) : false;
                 }}
                 template={(index) => 
-                    rowProviderFor({ row: rows[index], rowProviders }).template({
-                        rowIndex: index,
-                        row: rows[index],
-                        columns: columns,
-                    })
+                    rowProvider(rows[index], row => rowProviderFor({ row, rowProviders }))
+                        .template({
+                            rowIndex: index,
+                            row: rows[index],
+                            columns: columns,
+                        })
                 }/>
         )
     }

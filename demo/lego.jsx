@@ -1,7 +1,7 @@
 import React from 'react';
-import { 
+import {
     Grid,
-    Cell, cellProvider, SortableCell, DetailCell, detailCellProvider,
+    Cell, cellProvider, SortableCell, SelectableCell, DetailCell, detailCellProvider,
     Row, rowProvider, headingRowProvider, DetailRow, detailRowProvider, GroupRow, groupRowProvider
 } from '../src/lego';
 
@@ -47,19 +47,20 @@ class SimpleDemo extends React.Component {
     }
 }
 
-class HeadingSortingDemo extends React.Component {
+class HeadingSortingSelectingDemo extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
             columns: [{ name: 'id', width: 120 }, { name: 'name' }, { name: 'name' }, { name: 'name' }],
             rows: generateData(1000),
-            sortings: [{ column: 'id', direction: 'desc' }]
+            sortings: [{ column: 'id', direction: 'desc' }],
+            selection: [2, 5, 300, 455, 998]
         }
     }
 
     render() {
-        let { columns, rows, sortings } = this.state;
+        let { columns, rows, sortings, selection } = this.state;
 
         let directionFor = (column) => {
             let sorting = sortings.filter(s => s.column === column)[0]
@@ -71,9 +72,26 @@ class HeadingSortingDemo extends React.Component {
             });
         };
 
+        let isSelected = (rowId) => selection.indexOf(rowId) > -1;
+        let changeSelected = (rowId) => {
+            if(selection.indexOf(rowId) > -1) {
+                selection.splice(selection.indexOf(rowId), 1);
+            } else {
+                selection.push(rowId);
+            }
+            this.setState({ selection });
+        }
+        let changeAllSelection = () => {
+            if(selection.length === rows.length) {
+                this.setState({ selection: [] })
+            } else {
+                this.setState({ selection: rows.map(r => r.id) })
+            }
+        }
+
         return (
             <Grid
-                columns={columns}
+                columns={[{ type: 'select', width: 40 }].concat(columns)}
                 rows={[{ type: 'heading', id: 'ID', name: 'Name' }].concat(sorty(rows, sortings))}
                 cellProviders={[
                     cellProvider({
@@ -84,6 +102,27 @@ class HeadingSortingDemo extends React.Component {
                                 directionChange={() => sortingsChange(column.name, directionFor(column.name))}>
                                 { data }
                             </SortableCell>
+                        )
+                    }),
+                    cellProvider({
+                        predicate: ({ column }) => column.type === 'select',
+                        stick: () => 'before',
+                        template: ({ row, column, data }) => (
+                            <SelectableCell
+                                selected={isSelected(row.id)}
+                                selectedChange={() => changeSelected(row.id)}
+                                style={{ borderBottom: '1px dotted black' }}/>
+                        )
+                    }),
+                    cellProvider({
+                        predicate: ({ row, column }) => row.type === 'heading' && column.type === 'select',
+                        stick: () => 'before',
+                        template: ({ row, column, data }) => (
+                            <SelectableCell
+                                selected={selection.length === rows.length}
+                                indeterminate={selection.length !== 0 && selection.length !== rows.length}
+                                selectedChange={changeAllSelection}
+                                style={{ borderBottom: '1px dotted black' }}/>
                         )
                     })
                 ]}
@@ -342,7 +381,7 @@ export class LegoDemo extends React.Component {
         return (
             <div>
                 <Box title="Simple" demo={SimpleDemo}/>
-                <Box title="Simple w/ Heading, Sorting" demo={HeadingSortingDemo}/>
+                <Box title="Simple w/ Heading, Sorting, Selection" demo={HeadingSortingSelectingDemo}/>
                 <Box title="Master Detail" demo={MasterDetailDemo}/>
                 <Box title="Grouped" demo={GroupedDemo}/>
                 <Box title="Nested Grouped with Heading" demo={NestedGroupedDemo}/>
