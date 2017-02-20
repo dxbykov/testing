@@ -30,24 +30,28 @@ export class Cells extends React.Component {
             <VirtualBox
                 direction="horizontal"
                 itemCount={columns.length}
-                itemSize={(index) =>
-                    cellProvider(columns[index], column => cellProviderFor({ row, column, cellProviders }))
-                        .size({ column: columns[index], cellProviders })
-                }
-                itemStick={(index) => {
-                    let stick = cellProvider(columns[index], column => cellProviderFor({ row, column, cellProviders })).stick
-                    return stick ? stick(index, row, cellProviders) : false;
+                itemInfo={(index) => {
+                    let column = columns[index];
+                    let cellProvider = cellProviderFor({ row, column, cellProviders });
+                    
+                    return {
+                        size: cellProvider.size({ column: columns[index], cellProviders }),
+                        stick: cellProvider.stick ? cellProvider.stick(index, row, cellProviders) : false,
+                    }
                 }}
-                template={(index) =>
-                    cellProvider(columns[index], column => cellProviderFor({ row, column, cellProviders }))
+                itemTemplate={(index) => {
+                    let column = columns[index];
+                    let cellProvider = cellProviderFor({ row, column, cellProviders });
+
+                    return cellProvider
                         .template({ 
                             rowIndex: rowIndex,
                             columnIndex: index,
                             row: row,
-                            column: columns[index],
-                            data: row[columns[index].name]
+                            column: column,
+                            data: row[column.name]
                         })
-                }
+                }}
                 style={this.props.style}/>
         );
     }
@@ -79,22 +83,26 @@ export class Rows extends React.Component {
             <VirtualBox
                 direction="vertical"
                 itemCount={rows.length}
-                itemSize={(index) => 
-                    rowProvider(rows[index], row => rowProviderFor({ row, rowProviders }))
-                        .size(index, rows[index], rowProviders)
-                }
-                itemStick={(index) => {
-                    let stick = rowProvider(rows[index], row => rowProviderFor({ row, rowProviders })).stick
-                    return stick ? stick(index, rows[index], rowProviders) : false;
+                itemInfo={(index) => {
+                    let row = rows[index];
+                    let rowProvider = rowProviderFor({ row, rowProviders });
+                    
+                    return {
+                        size: rowProvider.size(index, rows[index], rowProviders),
+                        stick: rowProvider.stick ? rowProvider.stick(index, rows[index], rowProviders) : false,
+                    }
                 }}
-                template={(index) => 
-                    rowProvider(rows[index], row => rowProviderFor({ row, rowProviders }))
+                itemTemplate={(index) => {
+                    let row = rows[index];
+                    let rowProvider = rowProviderFor({ row, rowProviders });
+                    
+                    return rowProvider
                         .template({
                             rowIndex: index,
                             row: rows[index],
                             columns: columns,
                         })
-                }/>
+                }}/>
         )
     }
 }

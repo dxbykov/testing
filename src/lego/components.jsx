@@ -113,8 +113,9 @@ export class VirtualBox extends React.Component {
         let index = 0;
         let offset = 0;
         while(index < options.itemCount) {
-            let itemSize = options.itemSize(index);
-            let itemStick = options.itemStick ? options.itemStick(index) : false;
+            let itemInfo = options.itemInfo(index);
+            let itemSize = itemInfo.size;
+            let itemStick = itemInfo.stick;
             
             if(itemStick === 'before' && offset <= viewportStart) {
                 stickyItemsMetas.push({ index, offset, size: itemSize, stick: itemStick });
@@ -148,9 +149,8 @@ export class VirtualBox extends React.Component {
 
         let { visibleItemMetas, fullSize, stickyBeforeSize } = this.getVisibleItems({
             viewport: { start: viewport[positionProp], size: viewport[sizeProp] },
-            itemSize: this.props.itemSize,
             itemCount: this.props.itemCount,
-            itemStick: this.props.itemStick
+            itemInfo: this.props.itemInfo,
         });
         
         let visibleItems = visibleItemMetas.map(visibleItemMeta => {
@@ -168,7 +168,7 @@ export class VirtualBox extends React.Component {
                     position={visibleItemMeta.offset}
                     size={visibleItemMeta.size}
                     stick={visibleItemMeta.stick}>
-                    {this.props.template(visibleItemMeta.index)}
+                    {this.props.itemTemplate(visibleItemMeta.index)}
                 </VirtualItem>
             );
         })
@@ -188,9 +188,8 @@ export class VirtualBox extends React.Component {
 VirtualBox.propTypes = {
     direction: React.PropTypes.oneOf(['vertical', 'horizontal']).isRequired,
     itemCount: React.PropTypes.number.isRequired,
-    itemSize: React.PropTypes.func.isRequired,
-    itemStick: React.PropTypes.func,
-    template: React.PropTypes.func.isRequired,
+    itemInfo: React.PropTypes.func.isRequired,
+    itemTemplate: React.PropTypes.func.isRequired,
 };
 VirtualBox.contextTypes = {
     virtualHost: React.PropTypes.shape({
