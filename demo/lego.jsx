@@ -10,7 +10,8 @@ import { Grouper, Pager } from '../src';
 import {
     sortingStateController,
     groupStateController,
-    expandedStateController
+    expandedStateController,
+    selectionStateController
 } from '../src/data/controllers'
 
 import {
@@ -56,28 +57,11 @@ class HeadingSortingSelectingDemo extends React.Component {
 
         this.setState = this.setState.bind(this);
         this.sortingCtrl = sortingStateController(() => this.state, this.setState);
+        this.selectionCtrl = selectionStateController(() => this.state, this.setState);
     }
 
     render() {
         let { columns, rows, sortings, selection } = this.state;
-
-        let isSelected = (rowId) => selection.indexOf(rowId) > -1;
-        let changeSelected = (rowId) => {
-            if(selection.indexOf(rowId) > -1) {
-                selection.splice(selection.indexOf(rowId), 1);
-            } else {
-                selection.push(rowId);
-            }
-            this.setState({ selection });
-        }
-        let changeAllSelection = () => {
-            if(selection.length === rows.length) {
-                this.setState({ selection: [] })
-            } else {
-                this.setState({ selection: rows.map(r => r.id) })
-            }
-        }
-
         return (
             <Grid
                 columns={[{ type: 'select', width: 40 }].concat(columns)}
@@ -98,8 +82,8 @@ class HeadingSortingSelectingDemo extends React.Component {
                         stick: () => 'before',
                         template: ({ row, column, data }) => (
                             <SelectableCell
-                                selected={isSelected(row.id)}
-                                selectedChange={() => changeSelected(row.id)}
+                                selected={this.selectionCtrl.isSelected(row.id)}
+                                selectedChange={() => this.selectionCtrl.selectedChange(row.id)}
                                 style={{ borderBottom: '1px dotted black' }}/>
                         )
                     }),
@@ -110,7 +94,7 @@ class HeadingSortingSelectingDemo extends React.Component {
                             <SelectableCell
                                 selected={selection.length === rows.length}
                                 indeterminate={selection.length !== 0 && selection.length !== rows.length}
-                                selectedChange={changeAllSelection}
+                                selectedChange={() => this.selectionCtrl.selectedAllChange(rows, row => row.id)}
                                 style={{ borderBottom: '1px dotted black' }}/>
                         )
                     })

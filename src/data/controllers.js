@@ -100,3 +100,50 @@ export function expandedStateController(getProps, setState) {
         }
     };
 }
+
+// selection state controller
+
+const calcSelection = (prevSelection, rowId) => {
+    let selectedRows = prevSelection.slice(),
+        selectedIndex = selectedRows.indexOf(rowId);
+    
+    if(selectedIndex > -1) {
+        selectedRows.splice(selectedIndex, 1);
+    } else if (selectedIndex === -1) {
+        selectedRows.push(rowId)
+    }
+
+    return selectedRows;
+};
+
+const toggleSelectAll = (prevSelection, rows, getRowId) => {
+    if(prevSelection.length === rows.length) {
+        return [];
+    } else {
+        return rows.map(getRowId);
+    }
+};
+
+//TODO it's similar to expanded state
+export function selectionStateController(getProps, setState) {
+    return {
+        selectedChange: (rowId) => {
+            let { selection } = getProps(),
+                nextSelection = calcSelection(selection, rowId);
+
+            setState({ selection: nextSelection });
+        },
+        //TODO should we recieve an array of keys instad? Why is it not passed via the props? 
+        selectedAllChange: (rows, getRowId) => {
+            let { selection } = getProps(),
+                nextSelection = toggleSelectAll(selection, rows, getRowId);
+
+            setState({ selection: nextSelection });
+        },
+        isSelected: (rowId) => {
+            let { selection } = getProps();
+            return selection.indexOf(rowId) > -1;
+        }
+    };
+}
+
