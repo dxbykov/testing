@@ -124,9 +124,13 @@ export class GroupRow extends React.Component {
             <VirtualBox
                 direction="vertical"
                 itemCount={2}
-                itemStick={(index) => index === 0 && stickyProp ? 'before' : false}
-                itemSize={itemSize}
-                template={itemTemplate}/>
+                itemInfo={(index) => {
+                    return {
+                        stick: index === 0 && stickyProp ? 'before' : false,
+                        size: itemSize(index)
+                    }
+                }}
+                itemTemplate={itemTemplate}/>
         );
     }
 }
