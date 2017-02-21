@@ -5,7 +5,7 @@ const calcSortings = (columnName, prevSorting) => {
     return [
         {
             column: columnName,
-            direction: (sorting && sorting.direction == 'desc') ? 'asc' : 'desc'
+            direction: (sorting && sorting.direction == 'asc') ? 'desc' : 'asc'
         }
     ];
 };
@@ -139,6 +139,9 @@ export function selectionStateController(getProps, setState) {
                 nextSelection = toggleSelectAll(selection, rows, getRowId);
 
             setState({ selection: nextSelection });
+        },
+        isAllSelected: () => {
+
         },
         isSelected: (rowId) => {
             let { selection } = getProps();

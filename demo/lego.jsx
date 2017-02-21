@@ -51,7 +51,7 @@ class HeadingSortingSelectingDemo extends React.Component {
         this.state = {
             columns: generateColumns(),
             rows: generateRows(1000),
-            sortings: [{ column: 'id', direction: 'desc' }],
+            sortings: [{ column: 'id', direction: 'asc' }],
             selection: [2, 5, 300, 455, 998]
         }
 
