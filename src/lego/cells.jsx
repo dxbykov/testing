@@ -92,6 +92,7 @@ let clearSelection = function() {
         selection.removeAllRanges();
     }
 };
+let clamp = (value, min, max) => Math.min(Math.max(min, value), max);
 export class ResizableCell extends React.Component {
     render() {
         let { minWidth, maxWidth, onResize } = this.props;
@@ -102,7 +103,7 @@ export class ResizableCell extends React.Component {
             clearSelection();
         };
         let handlePanMove = (e) => {
-            onResize(Math.min(Math.max(minWidth || 0, this.startWidth + e.deltaX), maxWidth || Number.POSITIVE_INFINITY));
+            onResize(clamp(this.startWidth + e.deltaX, minWidth || 0, maxWidth || Number.POSITIVE_INFINITY));
         };
 
         return (

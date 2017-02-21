@@ -35,7 +35,7 @@ export class Cells extends React.Component {
                     let cellProvider = cellProviderFor({ row, column, cellProviders });
                     
                     return {
-                        size: cellProvider.size({ column: columns[index], cellProviders }),
+                        size: cellProvider.size({ column: column, cellProviders }),
                         stick: cellProvider.stick ? cellProvider.stick(index, row, cellProviders) : false,
                     }
                 }}
@@ -146,6 +146,7 @@ Grid.propTypes = {
     columns: React.PropTypes.array.isRequired,
     rows: React.PropTypes.array.isRequired,
     cellProviders: React.PropTypes.array,
+    rowProviders: React.PropTypes.array,
 };
 Grid.childContextTypes = {
     gridHost: React.PropTypes.shape({

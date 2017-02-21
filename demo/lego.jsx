@@ -86,7 +86,8 @@ class HeadingSortingSelectingDemo extends React.Component {
                                         directionChange={() => this.sortingCtrl.onSort(column.name)}
                                         style={{
                                             height: '100%',
-                                            borderRight: 'none'
+                                            borderBottom: 'none',
+                                            borderRight: 'none',
                                         }}>
                                         {data}
                                     </SortableCell>
@@ -122,7 +123,9 @@ class HeadingSortingSelectingDemo extends React.Component {
                                 selected={selection.length === rows.length}
                                 indeterminate={selection.length !== 0 && selection.length !== rows.length}
                                 selectedChange={() => this.selectionCtrl.selectedAllChange(rows, row => row.id)}
-                                style={{ borderBottom: '1px dotted black' }}/>
+                                style={{ 
+                                    borderBottom: 'none'
+                                }}/>
                         )
                     })
                 ]}
