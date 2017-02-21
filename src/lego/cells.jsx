@@ -1,5 +1,8 @@
 import React from 'react'
 
+import ReactHammer from 'react-hammerjs';
+import Hammer from 'hammerjs';
+
 export class Cell extends React.Component {
     render() {
         let { children, style, ...other } = this.props;
@@ -32,10 +35,10 @@ export const cellProvider = ({ stick, predicate, template } = {}) => {
 
 export class SortableCell extends React.Component {
     render() {
-        let { direction, directionChange, children } = this.props;
+        let { direction, directionChange, children, style } = this.props;
 
         return (
-            <Cell onClick={directionChange}>
+            <Cell onClick={directionChange} style={style}>
                 { children } [{ direction ? (direction === 'desc' ? '↑' : '↓') : '#'}]
             </Cell>
         );
@@ -76,6 +79,67 @@ SelectableCell.propTypes = {
     selected: React.PropTypes.bool.isRequired,
     indeterminate: React.PropTypes.bool,
     selectedChange: React.PropTypes.func.isRequired,
+};
+
+let clearSelection = function() {
+    let selection = getSelection();
+    if(!selection) return;
+    if(selection.type === "Caret") return;
+
+    if(selection.empty) {
+        selection.empty();
+    } else if(selection.removeAllRanges) {
+        selection.removeAllRanges();
+    }
+};
+export class ResizableCell extends React.Component {
+    render() {
+        let { minWidth, maxWidth, onResize } = this.props;
+
+        let root;
+        let handlePanStart = (e) => {
+            this.startWidth = root.getBoundingClientRect().width;
+            clearSelection();
+        };
+        let handlePanMove = (e) => {
+            onResize(Math.min(Math.max(minWidth || 0, this.startWidth + e.deltaX), maxWidth || Number.POSITIVE_INFINITY));
+        };
+
+        return (
+            <div 
+                ref={ref => root = ref}
+                style={{
+                    height: '100%',
+                    borderRight: '1px dotted black',
+                }}>
+                <div
+                    style={{
+                        width: 'calc(100% - 4px)',
+                        float: 'left',
+                        height: '100%',
+                    }}>
+                    {this.props.children}
+                </div>
+                <ReactHammer
+                    onPanStart={handlePanStart}
+                    onPan={handlePanMove}
+                    options={{ direction: Hammer.DIRECTION_HORIZONTAL }}>
+                    <div
+                        style={{
+                            width: '4px',
+                            height: '100%',
+                            float: 'right',
+                            cursor: 'col-resize',
+                            WebkitUserSelect: 'none',
+                            userSelect: 'none',
+                        }}/>
+                </ReactHammer>
+            </div>
+        )
+    }
+}
+ResizableCell.propTypes = {
+    onResize: React.PropTypes.func.isRequired,
 };
 
 export class DetailCell extends React.Component {

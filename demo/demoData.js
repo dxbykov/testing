@@ -6,10 +6,10 @@ const columnValues = {
 };
 
 export function generateColumns() {
-    let columns = [ { name: 'id', width: 120 } ];
+    let columns = [ { name: 'id', width: 120, resizable: false } ];
 
     Object.keys(columnValues).forEach(column => {
-        columns.push({ name: column });
+        columns.push({ name: column, minWidth: 80, maxWidth: 250 });
     });
 
     return columns;

@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Grid,
-    Cell, cellProvider, SortableCell, SelectableCell, DetailCell, detailCellProvider,
+    Cell, cellProvider, SortableCell, SelectableCell, ResizableCell, DetailCell, detailCellProvider,
     Row, rowProvider, headingRowProvider, DetailRow, detailRowProvider, GroupRow, groupRowProvider
 } from '../src/lego';
 
@@ -62,6 +62,7 @@ class HeadingSortingSelectingDemo extends React.Component {
 
     render() {
         let { columns, rows, sortings, selection } = this.state;
+
         return (
             <Grid
                 columns={[{ type: 'select', width: 40 }].concat(columns)}
@@ -69,11 +70,37 @@ class HeadingSortingSelectingDemo extends React.Component {
                 cellProviders={[
                     cellProvider({
                         predicate: ({ row }) => row.type === 'heading',
+                        template: ({ column, data }) => {
+                            let onResize = (width) => {
+                                columns[columns.indexOf(column)].width = width;
+                                this.setState({ columns })
+                            };
+
+                            return (
+                                <ResizableCell
+                                    minWidth={column.minWidth}
+                                    maxWidth={column.maxWidth}
+                                    onResize={onResize}>
+                                    <SortableCell
+                                        direction={this.sortingCtrl.directionFor(column.name)}
+                                        directionChange={() => this.sortingCtrl.onSort(column.name)}
+                                        style={{
+                                            height: '100%',
+                                            borderRight: 'none'
+                                        }}>
+                                        {data}
+                                    </SortableCell>
+                                </ResizableCell>
+                            )
+                        }
+                    }),
+                    cellProvider({
+                        predicate: ({ row, column }) => row.type === 'heading' && column.resizable === false,
                         template: ({ column, data }) => (
                             <SortableCell
                                 direction={this.sortingCtrl.directionFor(column.name)}
                                 directionChange={() => this.sortingCtrl.onSort(column.name)}>
-                                { data }
+                                {data}
                             </SortableCell>
                         )
                     }),
@@ -348,7 +375,7 @@ export class LegoDemo extends React.Component {
         return (
             <div>
                 <Box title="Simple" demo={SimpleDemo}/>
-                <Box title="Simple w/ Heading, Sorting, Selection" demo={HeadingSortingSelectingDemo}/>
+                <Box title="Simple w/ Heading, Sorting, Selection, Column Resizing" demo={HeadingSortingSelectingDemo}/>
                 <Box title="Simple w/ Paging" demo={PagingDemo}/>
                 <Box title="Master Detail" demo={MasterDetailDemo}/>
                 <Box title="Grouped" demo={GroupedDemo}/>
