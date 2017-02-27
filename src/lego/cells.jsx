@@ -2,6 +2,7 @@ import React from 'react'
 
 import ReactHammer from 'react-hammerjs';
 import Hammer from 'hammerjs';
+import { gestureCover, clearSelection, clamp } from './utils'
 
 export class Cell extends React.Component {
     render() {
@@ -81,18 +82,6 @@ SelectableCell.propTypes = {
     selectedChange: React.PropTypes.func.isRequired,
 };
 
-let clearSelection = function() {
-    let selection = getSelection();
-    if(!selection) return;
-    if(selection.type === "Caret") return;
-
-    if(selection.empty) {
-        selection.empty();
-    } else if(selection.removeAllRanges) {
-        selection.removeAllRanges();
-    }
-};
-let clamp = (value, min, max) => Math.min(Math.max(min, value), max);
 export class ResizableCell extends React.Component {
     render() {
         let { minWidth, maxWidth, onResize } = this.props;
@@ -101,9 +90,14 @@ export class ResizableCell extends React.Component {
         let handlePanStart = (e) => {
             this.startWidth = root.getBoundingClientRect().width;
             clearSelection();
+            gestureCover(true, 'col-resize');
         };
         let handlePanMove = (e) => {
+            clearSelection();
             onResize(clamp(this.startWidth + e.deltaX, minWidth || 0, maxWidth || Number.POSITIVE_INFINITY));
+        };
+        let handlePanEnd = (e) => {
+            gestureCover(false, 'col-resize');
         };
 
         return (
@@ -124,6 +118,7 @@ export class ResizableCell extends React.Component {
                 <ReactHammer
                     onPanStart={handlePanStart}
                     onPan={handlePanMove}
+                    onPanEnd={handlePanEnd}
                     options={{ direction: Hammer.DIRECTION_HORIZONTAL }}>
                     <div
                         style={{
@@ -140,6 +135,44 @@ export class ResizableCell extends React.Component {
     }
 }
 ResizableCell.propTypes = {
+    onResize: React.PropTypes.func.isRequired,
+};
+
+export class DraggableCell extends React.Component {
+    render() {
+        let { minWidth, maxWidth, onResize } = this.props;
+
+        let root;
+        let handlePanStart = (e) => {
+            this.startWidth = root.getBoundingClientRect().width;
+            clearSelection();
+        };
+        let handlePanMove = (e) => {
+            //onResize(clamp(this.startWidth + e.deltaX, minWidth || 0, maxWidth || Number.POSITIVE_INFINITY));
+        };
+
+        return (
+            /*<ReactHammer
+                onPanStart={handlePanStart}
+                onPan={handlePanMove}
+                options={{ direction: Hammer.DIRECTION_HORIZONTAL }}>*/
+                <div
+                    ref={ref => root = ref}
+                    style={{
+                        height: '100%',
+                        cursor: 'move',
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none',
+                        borderRight: '1px dotted black',
+                    }}
+                    draggable="true">
+                    {this.props.children}
+                </div>
+            // </ReactHammer>
+        )
+    }
+}
+DraggableCell.propTypes = {
     onResize: React.PropTypes.func.isRequired,
 };
 

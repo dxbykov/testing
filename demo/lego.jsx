@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Grid,
-    Cell, cellProvider, SortableCell, SelectableCell, ResizableCell, DetailCell, detailCellProvider,
+    Cell, cellProvider, SortableCell, SelectableCell, ResizableCell, DraggableCell, DetailCell, detailCellProvider,
     Row, rowProvider, headingRowProvider, DetailRow, detailRowProvider, GroupRow, groupRowProvider
 } from '../src/lego';
 
@@ -98,11 +98,18 @@ class HeadingSortingSelectingDemo extends React.Component {
                     cellProvider({
                         predicate: ({ row, column }) => row.type === 'heading' && column.resizable === false,
                         template: ({ column, data }) => (
-                            <SortableCell
-                                direction={this.sortingCtrl.directionFor(column.name)}
-                                directionChange={() => this.sortingCtrl.onSort(column.name)}>
-                                {data}
-                            </SortableCell>
+                            <DraggableCell>
+                                <SortableCell
+                                    direction={this.sortingCtrl.directionFor(column.name)}
+                                    directionChange={() => this.sortingCtrl.onSort(column.name)}
+                                    style={{
+                                        height: '100%',
+                                        borderBottom: 'none',
+                                        borderRight: 'none',
+                                    }}>
+                                    {data}
+                                </SortableCell>
+                            </DraggableCell>
                         )
                     }),
                     cellProvider({
@@ -377,13 +384,13 @@ export class LegoDemo extends React.Component {
     render() {
         return (
             <div>
-                <Box title="Simple" demo={SimpleDemo}/>
+                {/*<Box title="Simple" demo={SimpleDemo}/>*/}
                 <Box title="Simple w/ Heading, Sorting, Selection, Column Resizing" demo={HeadingSortingSelectingDemo}/>
-                <Box title="Simple w/ Paging" demo={PagingDemo}/>
+                {/*<Box title="Simple w/ Paging" demo={PagingDemo}/>
                 <Box title="Master Detail" demo={MasterDetailDemo}/>
                 <Box title="Grouped" demo={GroupedDemo}/>
                 <Box title="Nested Grouped with Heading" demo={NestedGroupedDemo}/>
-                <Box title="Grouped Master Detail" demo={GroupedMasterDetailDemo}/>
+                <Box title="Grouped Master Detail" demo={GroupedMasterDetailDemo}/>*/}
             </div>
         )
     }
