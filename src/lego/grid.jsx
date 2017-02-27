@@ -92,7 +92,7 @@ export class Rows extends React.Component {
                         stick: rowProvider.stick ? rowProvider.stick(index, rows[index], rowProviders) : false,
                     }
                 }}
-                itemTemplate={(index) => {
+                itemTemplate={(index, itemSizeChange) => {
                     let row = rows[index];
                     let rowProvider = rowProviderFor({ row, rowProviders });
                     
@@ -101,6 +101,7 @@ export class Rows extends React.Component {
                             rowIndex: index,
                             row: rows[index],
                             columns: columns,
+                            sizeChange: itemSizeChange
                         })
                 }}/>
         )

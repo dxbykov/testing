@@ -2,6 +2,7 @@ import React from 'react';
 
 import { VirtualBox, stickyProp } from './components';
 import { Cells, Rows, rowProviderFor } from './grid';
+import { Transition } from './animation';
 
 
 export const rowProvider = () => {
@@ -44,8 +45,8 @@ export class DetailRow extends React.Component {
                 rowIndex={this.props.rowIndex}
                 row={this.props.row}/>
         );
-        let detailTemplate = this.props.expanded && (
-            <div style={{ width: '100%', height: 40, borderBottom: '1px dashed black' }}>
+        let detailTemplate = (this.props.expanded || this.props.detailStyles.height !== 0) && (
+            <div style={{ width: '100%', borderBottom: '1px dashed black', ...this.props.detailStyles }}>
                 This is detail view
             </div>
         );
@@ -65,18 +66,71 @@ DetailRow.propTypes = {
     rowIndex: React.PropTypes.number.isRequired,
     row: React.PropTypes.any.isRequired,
     expanded: React.PropTypes.bool.isRequired,
+    detailStyles: React.PropTypes.object.isRequired
 };
+DetailRow.defaultProps = {
+  detailStyles: { height: 40 }
+};
+
+/* AnimatedDetailRow */
+const getExpandedStateName = state => state ? 'expanded' : 'collapsed';
+
+const expandedStateStyles = {
+    'expanded': {
+        height: 40,
+        opacity: 1
+    },
+    'collapsed': {
+        height: 0,
+        opacity: 0
+    }
+};
+
+const getTransitionStyle = (getStateName, stateStyles) => {
+    return (fromState, toState) => {
+        let fromName = getStateName(fromState),
+            toName = getStateName(toState);
+
+        return {
+            from: fromState !== undefined ? stateStyles[fromName] : stateStyles[toName],
+            to: stateStyles[toName] 
+        };
+    }
+}
+
+const getDetailRowTransition = getTransitionStyle(getExpandedStateName, expandedStateStyles);
+
+export class AnimatedDetailRow extends React.Component {
+    render() {
+        return (
+            <Transition state={this.props.expanded} getTransition={getDetailRowTransition}>
+                {(detailStyles) => {
+                    this.props.heightChange(detailStyles.height + 40);
+                    return <DetailRow {...this.props} detailStyles={detailStyles} />
+                }}
+            </Transition>
+        );
+    }
+}
+AnimatedDetailRow.propTypes = {
+    columns: React.PropTypes.array.isRequired,
+    rowIndex: React.PropTypes.number.isRequired,
+    row: React.PropTypes.any.isRequired,
+    expanded: React.PropTypes.bool.isRequired,
+};
+/* end of AnimatedDetailRow */
 
 export const detailRowProvider = ({ isExpanded, toggleExpanded, collapsedHeight, expandedHeight }) => {
     return {
         predicate: () => true,
         size: (rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight,
-        template: ({ rowIndex, row, columns }) => {
+        template: ({ rowIndex, row, columns, sizeChange }) => {
             return (
-                <DetailRow
+                <AnimatedDetailRow
                     columns={columns}
                     rowIndex={rowIndex}
                     row={row}
+                    heightChange={sizeChange}
                     expanded={isExpanded({ rowIndex, row })}/>
             );
         }

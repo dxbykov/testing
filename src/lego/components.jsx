@@ -102,7 +102,18 @@ WindowedScroller.childContextTypes = {
     }).isRequired
 };
 
-export class VirtualBox extends React.Component {
+export class VirtualBox extends React.PureComponent {
+    constructor(props) {
+        super();
+        this.state = {
+            itemSizes: new Array(props.itemCount)
+        };
+    }
+    itemSizeChange(index, size) {
+        let newSizes = this.state.itemSizes.slice();
+        newSizes[index] = size;
+        this.setState({ itemSizes: newSizes });
+    }
     getVisibleItems(options) {
         let viewportStart = options.viewport.start;
         let viewportSize = options.viewport.size;
@@ -114,7 +125,7 @@ export class VirtualBox extends React.Component {
         let offset = 0;
         while(index < options.itemCount) {
             let itemInfo = options.itemInfo(index);
-            let itemSize = itemInfo.size;
+            let itemSize = this.state.itemSizes[index] || itemInfo.size;
             let itemStick = itemInfo.stick;
             
             if(itemStick === 'before' && offset <= viewportStart) {
@@ -168,7 +179,7 @@ export class VirtualBox extends React.Component {
                     position={visibleItemMeta.offset}
                     size={visibleItemMeta.size}
                     stick={visibleItemMeta.stick}>
-                    {this.props.itemTemplate(visibleItemMeta.index)}
+                    {this.props.itemTemplate(visibleItemMeta.index, (size) => this.itemSizeChange(visibleItemMeta.index, size))}
                 </VirtualItem>
             );
         })
