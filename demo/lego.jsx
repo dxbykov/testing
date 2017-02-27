@@ -70,6 +70,7 @@ class HeadingSortingSelectingDemo extends React.Component {
                 cellProviders={[
                     cellProvider({
                         predicate: ({ row }) => row.type === 'heading',
+                        preserve: () => true,
                         template: ({ column, data }) => {
                             let onResize = (width) => {
                                 columns[columns.indexOf(column)].width = width;
@@ -97,20 +98,31 @@ class HeadingSortingSelectingDemo extends React.Component {
                     }),
                     cellProvider({
                         predicate: ({ row, column }) => row.type === 'heading' && column.resizable === false,
-                        template: ({ column, data }) => (
-                            <DraggableCell>
-                                <SortableCell
-                                    direction={this.sortingCtrl.directionFor(column.name)}
-                                    directionChange={() => this.sortingCtrl.onSort(column.name)}
-                                    style={{
-                                        height: '100%',
-                                        borderBottom: 'none',
-                                        borderRight: 'none',
-                                    }}>
-                                    {data}
-                                </SortableCell>
-                            </DraggableCell>
-                        )
+                        preserve: () => true,
+                        template: ({ column, data }) => {
+                            let onMove = (direction) => {
+                                let index = columns.indexOf(column);
+                                columns.splice(index, 1);
+                                columns.splice(index + direction, 0, column);
+                                this.setState({ columns });
+                            };
+
+                            return (
+                                <DraggableCell
+                                    onMove={onMove}>
+                                    <SortableCell
+                                        direction={this.sortingCtrl.directionFor(column.name)}
+                                        directionChange={() => this.sortingCtrl.onSort(column.name)}
+                                        style={{
+                                            height: '100%',
+                                            borderBottom: 'none',
+                                            borderRight: 'none',
+                                        }}>
+                                        {data}
+                                    </SortableCell>
+                                </DraggableCell>
+                            )
+                        }
                     }),
                     cellProvider({
                         predicate: ({ column }) => column.type === 'select',

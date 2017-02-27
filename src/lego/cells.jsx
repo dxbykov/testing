@@ -23,11 +23,12 @@ export class Cell extends React.Component {
     }
 }
 
-export const cellProvider = ({ stick, predicate, template } = {}) => {
+export const cellProvider = ({ stick, predicate, template, preserve } = {}) => {
     return {
         predicate: predicate || (() => true),
         stick: stick || (() => false),
         size: ({ column }) => column.width || 200,
+        preserve: preserve || (() => false),
         template: template || (({ data }) => (
             <Cell>{data}</Cell>
         ))
@@ -88,15 +89,18 @@ export class ResizableCell extends React.Component {
 
         let root;
         let handlePanStart = (e) => {
+            e.preventDefault();
             this.startWidth = root.getBoundingClientRect().width;
             clearSelection();
             gestureCover(true, 'col-resize');
         };
         let handlePanMove = (e) => {
+            e.preventDefault();
             clearSelection();
             onResize(clamp(this.startWidth + e.deltaX, minWidth || 0, maxWidth || Number.POSITIVE_INFINITY));
         };
         let handlePanEnd = (e) => {
+            e.preventDefault();
             gestureCover(false, 'col-resize');
         };
 
@@ -140,22 +144,28 @@ ResizableCell.propTypes = {
 
 export class DraggableCell extends React.Component {
     render() {
-        let { minWidth, maxWidth, onResize } = this.props;
+        let { onMove } = this.props;
 
         let root;
         let handlePanStart = (e) => {
             this.startWidth = root.getBoundingClientRect().width;
             clearSelection();
+            gestureCover(true, 'move');
         };
         let handlePanMove = (e) => {
-            //onResize(clamp(this.startWidth + e.deltaX, minWidth || 0, maxWidth || Number.POSITIVE_INFINITY));
+            clearSelection();
+        };
+        let handlePanEnd = (e) => {
+            gestureCover(false, 'move');
+            onMove(e.deltaX / Math.abs(e.deltaX));
         };
 
         return (
-            /*<ReactHammer
+            <ReactHammer
                 onPanStart={handlePanStart}
                 onPan={handlePanMove}
-                options={{ direction: Hammer.DIRECTION_HORIZONTAL }}>*/
+                onPanEnd={handlePanEnd}
+                options={{ direction: Hammer.DIRECTION_HORIZONTAL }}>
                 <div
                     ref={ref => root = ref}
                     style={{
@@ -164,16 +174,15 @@ export class DraggableCell extends React.Component {
                         WebkitUserSelect: 'none',
                         userSelect: 'none',
                         borderRight: '1px dotted black',
-                    }}
-                    draggable="true">
+                    }}>
                     {this.props.children}
                 </div>
-            // </ReactHammer>
+            </ReactHammer>
         )
     }
 }
 DraggableCell.propTypes = {
-    onResize: React.PropTypes.func.isRequired,
+    onMove: React.PropTypes.func.isRequired,
 };
 
 export class DetailCell extends React.Component {

@@ -122,10 +122,10 @@ export class VirtualBox extends React.Component {
                 viewportStart = viewportStart + itemSize;
             }
 
-            if((offset + itemSize > viewportStart && offset + itemSize < viewportStart + viewportSize ||
-                offset < viewportStart + viewportSize && offset > viewportStart ||
-                offset <= viewportStart && offset + itemSize >= viewportStart + viewportSize) &&
-                itemSize > 0 && itemStick === false) {
+            let inVisibleBounds = offset + itemSize > viewportStart && offset + itemSize < viewportStart + viewportSize ||
+                                  offset < viewportStart + viewportSize && offset > viewportStart ||
+                                  offset <= viewportStart && offset + itemSize >= viewportStart + viewportSize;
+            if((inVisibleBounds || itemInfo.preserve) && itemSize > 0 && itemStick === false) {
                 visibleItemMetas.push({ index, offset, size: itemSize, stick: false });
             }
 

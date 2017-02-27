@@ -35,6 +35,7 @@ export class Cells extends React.Component {
                     let cellProvider = cellProviderFor({ row, column, cellProviders });
                     
                     return {
+                        preserve: cellProvider.preserve ? cellProvider.preserve({ column: column, cellProviders }) : false,
                         size: cellProvider.size({ column: column, cellProviders }),
                         stick: cellProvider.stick ? cellProvider.stick(index, row, cellProviders) : false,
                     }
