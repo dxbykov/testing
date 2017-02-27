@@ -13,6 +13,7 @@ export class Cell extends React.Component {
                     padding: '10px',
                     borderBottom: '1px dotted black',
                     borderRight: '1px dotted black',
+                    backgroundColor: '#fff',
                     ...style
                 }}
                 {...other}>
@@ -62,6 +63,7 @@ export class SelectableCell extends React.Component {
                 alignItems: 'center',
                 flexDirection: 'column',
                 justifyContent: 'center',
+                backgroundColor: '#fff',
                 padding: 0,
                 ...style
             }}>
@@ -150,7 +152,8 @@ export class DetailCell extends React.Component {
                 style={{ 
                     padding: '10px',
                     borderBottom: '1px dotted black',
-                    borderRight: '1px dotted black'
+                    borderRight: '1px dotted black',
+                    backgroundColor: '#fff',
                 }} 
                 onClick={() => this.props.expandedChange(!this.props.expanded)}>
                 {this.props.expanded ? '-' : '+'}
