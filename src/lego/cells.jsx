@@ -89,19 +89,16 @@ export class ResizableCell extends React.Component {
 
         let root;
         let handlePanStart = (e) => {
-            e.preventDefault();
             this.startWidth = root.getBoundingClientRect().width;
             clearSelection();
             gestureCover(true, 'col-resize');
         };
         let handlePanMove = (e) => {
-            e.preventDefault();
             clearSelection();
-            onResize(clamp(this.startWidth + e.deltaX, minWidth || 0, maxWidth || Number.POSITIVE_INFINITY));
         };
         let handlePanEnd = (e) => {
-            e.preventDefault();
             gestureCover(false, 'col-resize');
+            onResize(clamp(this.startWidth + e.deltaX, minWidth || 0, maxWidth || Number.POSITIVE_INFINITY));
         };
 
         return (
@@ -145,19 +142,24 @@ ResizableCell.propTypes = {
 export class DraggableCell extends React.Component {
     render() {
         let { onMove } = this.props;
+        let { projectPoint, columnAt, columns } = this.context.gridHost;
 
         let root;
         let handlePanStart = (e) => {
-            this.startWidth = root.getBoundingClientRect().width;
             clearSelection();
             gestureCover(true, 'move');
         };
         let handlePanMove = (e) => {
             clearSelection();
+            console.log(projectPoint(e.center), columnAt(projectPoint(e.center)).name);
         };
         let handlePanEnd = (e) => {
             gestureCover(false, 'move');
-            onMove(e.deltaX / Math.abs(e.deltaX));
+            let rect = root.getBoundingClientRect();
+            let currentColumn = columnAt(projectPoint({ x: rect.left, y: rect.top }));
+            let destinationColumn = columnAt(projectPoint(e.center));
+            let diff = columns.indexOf(destinationColumn) - columns.indexOf(currentColumn);
+            onMove(diff);
         };
 
         return (
@@ -183,6 +185,9 @@ export class DraggableCell extends React.Component {
 }
 DraggableCell.propTypes = {
     onMove: React.PropTypes.func.isRequired,
+};
+DraggableCell.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
 };
 
 export class DetailCell extends React.Component {

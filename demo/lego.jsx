@@ -99,7 +99,7 @@ class HeadingSortingSelectingDemo extends React.Component {
                     cellProvider({
                         predicate: ({ row, column }) => row.type === 'heading' && column.resizable === false,
                         preserve: () => true,
-                        template: ({ column, data }) => {
+                        template: ({ row, column, data }) => {
                             let onMove = (direction) => {
                                 let index = columns.indexOf(column);
                                 columns.splice(index, 1);
