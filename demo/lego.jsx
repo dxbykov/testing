@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-    Grid, RowProvider, Cells,
-    Cell, cellProvider, SortableCell, SelectableCell, ResizableCell, DraggableCell, DetailCell, detailCellProvider,
+    Grid, RowProvider, Cells, CellProvider, Cell,
+    SortableCell, SelectableCell, ResizableCell, DraggableCell, DetailCell, DetailCellProvider,
     HeadingRowProvider, DetailRow, DetailRowProvider, GroupRow, GroupRowProvider
 } from '../src/lego';
 
@@ -66,89 +66,84 @@ class HeadingSortingSelectingDemo extends React.Component {
         return (
             <Grid
                 columns={[{ type: 'select', width: 40 }].concat(columns)}
-                rows={[generateHeaderRow()].concat(sort(rows, sortings))}
-                cellProviders={[
-                    cellProvider({
-                        predicate: ({ row }) => row.type === 'heading',
-                        preserve: () => true,
-                        template: ({ column, data }) => {
-                            let onResize = (width) => {
-                                columns[columns.indexOf(column)].width = width;
-                                this.setState({ columns })
-                            };
-
-                            return (
-                                <ResizableCell
-                                    minWidth={column.minWidth}
-                                    maxWidth={column.maxWidth}
-                                    onResize={onResize}>
-                                    <SortableCell
-                                        direction={this.sortingCtrl.directionFor(column.name)}
-                                        directionChange={() => this.sortingCtrl.onSort(column.name)}
-                                        style={{
-                                            height: '100%',
-                                            borderBottom: 'none',
-                                            borderRight: 'none',
-                                        }}>
-                                        {data}
-                                    </SortableCell>
-                                </ResizableCell>
-                            )
-                        }
-                    }),
-                    cellProvider({
-                        predicate: ({ row, column }) => row.type === 'heading' && column.resizable === false,
-                        preserve: () => true,
-                        template: ({ row, column, data }) => {
-                            let onMove = (direction) => {
-                                let index = columns.indexOf(column);
-                                columns.splice(index, 1);
-                                columns.splice(index + direction, 0, column);
-                                this.setState({ columns });
-                            };
-
-                            return (
-                                <DraggableCell
-                                    onMove={onMove}>
-                                    <SortableCell
-                                        direction={this.sortingCtrl.directionFor(column.name)}
-                                        directionChange={() => this.sortingCtrl.onSort(column.name)}
-                                        style={{
-                                            height: '100%',
-                                            borderBottom: 'none',
-                                            borderRight: 'none',
-                                        }}>
-                                        {data}
-                                    </SortableCell>
-                                </DraggableCell>
-                            )
-                        }
-                    }),
-                    cellProvider({
-                        predicate: ({ column }) => column.type === 'select',
-                        stick: () => 'before',
-                        template: ({ row, column, data }) => (
-                            <SelectableCell
-                                selected={this.selectionCtrl.isSelected(row.id)}
-                                selectedChange={() => this.selectionCtrl.selectedChange(row.id)}
-                                style={{ borderBottom: '1px dotted black' }}/>
-                        )
-                    }),
-                    cellProvider({
-                        predicate: ({ row, column }) => row.type === 'heading' && column.type === 'select',
-                        stick: () => 'before',
-                        template: ({ row, column, data }) => (
-                            <SelectableCell
-                                selected={selection.length === rows.length}
-                                indeterminate={selection.length !== 0 && selection.length !== rows.length}
-                                selectedChange={() => this.selectionCtrl.selectedAllChange(rows, row => row.id)}
-                                style={{ 
-                                    borderBottom: 'none'
-                                }}/>
-                        )
-                    })
-                ]}>
+                rows={[generateHeaderRow()].concat(sort(rows, sortings))}>
                 <HeadingRowProvider/>
+
+                <CellProvider
+                    predicate={({ row }) => row.type === 'heading'}
+                    preserve={() => true}
+                    template={({ column, data }) => {
+                        let onResize = (width) => {
+                            columns[columns.indexOf(column)].width = width;
+                            this.setState({ columns })
+                        };
+
+                        return (
+                            <ResizableCell
+                                minWidth={column.minWidth}
+                                maxWidth={column.maxWidth}
+                                onResize={onResize}>
+                                <SortableCell
+                                    direction={this.sortingCtrl.directionFor(column.name)}
+                                    directionChange={() => this.sortingCtrl.onSort(column.name)}
+                                    style={{
+                                        height: '100%',
+                                        borderBottom: 'none',
+                                        borderRight: 'none',
+                                    }}>
+                                    {data}
+                                </SortableCell>
+                            </ResizableCell>
+                        )
+                    }}/>
+                <CellProvider
+                    predicate={({ row, column }) => row.type === 'heading' && column.resizable === false}
+                    preserve={() => true}
+                    template={({ row, column, data }) => {
+                        let onMove = (direction) => {
+                            let index = columns.indexOf(column);
+                            columns.splice(index, 1);
+                            columns.splice(index + direction, 0, column);
+                            this.setState({ columns });
+                        };
+
+                        return (
+                            <DraggableCell
+                                onMove={onMove}>
+                                <SortableCell
+                                    direction={this.sortingCtrl.directionFor(column.name)}
+                                    directionChange={() => this.sortingCtrl.onSort(column.name)}
+                                    style={{
+                                        height: '100%',
+                                        borderBottom: 'none',
+                                        borderRight: 'none',
+                                    }}>
+                                    {data}
+                                </SortableCell>
+                            </DraggableCell>
+                        )
+                    }}/>
+                <CellProvider
+                    predicate={({ column }) => column.type === 'select'}
+                    stick={() => 'before'}
+                    template={({ row, column, data }) => (
+                        <SelectableCell
+                            selected={this.selectionCtrl.isSelected(row.id)}
+                            selectedChange={() => this.selectionCtrl.selectedChange(row.id)}
+                            style={{ borderBottom: '1px dotted black' }}/>
+                    )}/>
+                <CellProvider
+                    predicate={({ row, column }) => row.type === 'heading' && column.type === 'select'}
+                    stick={() => 'before'}
+                    template={({ row, column, data }) => (
+                        <SelectableCell
+                            selected={selection.length === rows.length}
+                            indeterminate={selection.length !== 0 && selection.length !== rows.length}
+                            selectedChange={() => this.selectionCtrl.selectedAllChange(rows, row => row.id)}
+                            style={{ 
+                                borderBottom: 'none'
+                            }}/>
+                    )}/>
             </Grid>
         )
     }
@@ -205,17 +200,15 @@ class MasterDetailDemo extends React.Component {
         return (
             <Grid
                 columns={columns}
-                rows={rows}
-                cellProviders={[
-                    detailCellProvider({
-                        isExpanded,
-                        toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(row.id)
-                    })
-                ]}>
+                rows={rows}>
                 <DetailRowProvider
                     isExpanded={isExpanded}
                     collapsedHeight={40}
                     expandedHeight={80}/>
+
+                <DetailCellProvider
+                    isExpanded={isExpanded}
+                    toggleExpanded={({ row }) => this.expandedCtrl.toggleExpanded(row.id)}/>
             </Grid>
         )
     }
@@ -339,13 +332,7 @@ class GroupedMasterDetailDemo extends React.Component {
                 />
                 <Grid
                     columns={columns}
-                    rows={[generateHeaderRow(), ...visibleRows]}
-                    cellProviders={[
-                        detailCellProvider({
-                            isExpanded: isExpandedRow,
-                            toggleExpanded: ({ row }) => this.expandedRowsCtrl.toggleExpanded(row.id)
-                        })
-                    ]}>
+                    rows={[generateHeaderRow(), ...visibleRows]}>
                     <DetailRowProvider
                         isExpanded={isExpandedRow}
                         collapsedHeight={40}
@@ -354,6 +341,10 @@ class GroupedMasterDetailDemo extends React.Component {
                         isExpanded={({ row }) => this.expandedGroupsCtrl.isExpanded(row.id)}
                         toggleExpanded={({ row }) => this.expandedGroupsCtrl.toggleExpanded(row.id)}/>
                     <HeadingRowProvider/>
+
+                    <DetailCellProvider
+                        isExpanded={isExpandedRow}
+                        toggleExpanded={({ row }) => this.expandedRowsCtrl.toggleExpanded(row.id)}/>
                 </Grid>
                 {/*<Pager
                     page={this.state.currentPage}

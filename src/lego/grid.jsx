@@ -1,6 +1,24 @@
 import React from 'react';
 import { WindowedScroller, VirtualBox, VirtualItem } from './components';
-import { cellProvider } from './cells';
+
+export class Cell extends React.Component {
+    render() {
+        let { children, style, ...other } = this.props;
+
+        return (
+            <div
+                style={{ 
+                    padding: '10px',
+                    borderBottom: '1px dotted black',
+                    borderRight: '1px dotted black',
+                    ...style
+                }}
+                {...other}>
+                {children}
+            </div>
+        );
+    }
+}
 
 export let cellProviderFor = ({ row, column, cellProviders }) => {
     return cellProviders.filter((p) => p.predicate({ row, column })).pop();
@@ -105,11 +123,9 @@ export class Grid extends React.Component {
     getChildContext() {
         let { rows, columns, cellProviders, rowProviders } = this.props;
 
-        cellProviders = [cellProvider()].concat(cellProviders || []);
-
         return {
             gridHost: {
-                cellProviders,
+                cellProviders: [],
                 rowProviders: [],
                 rows,
                 columns,
@@ -143,6 +159,7 @@ export class Grid extends React.Component {
         return (
             <div style={{ height: '340px', border: '1px solid black' }}>
                 <RowProvider/>
+                <CellProvider/>
                 { children }
                 <WindowedScroller>
                     <div ref={ref => this.root = ref}>
@@ -167,13 +184,13 @@ Grid.childContextTypes = {
 
 export class RowProvider extends React.Component {
     render() {
-        let props = this.props;
+        let { stick, predicate, size, template } = this.props;
 
         this.context.gridHost.rowProviders.push({
-            predicate: props.predicate || (() => true),
-            size: props.size || (() => 40),
-            stick: props.stick || (() => false),
-            template: props.template || (({ rowIndex, row, columns }) => (
+            predicate: predicate || (() => true),
+            size: size || (() => 40),
+            stick: stick || (() => false),
+            template: template || (({ rowIndex, row, columns }) => (
                 <Cells
                     columns={columns}
                     rowIndex={rowIndex}
@@ -185,5 +202,26 @@ export class RowProvider extends React.Component {
     }
 };
 RowProvider.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired
+};
+
+export class CellProvider extends React.Component {
+    render() {
+        let { stick, predicate, size, template, preserve } = this.props;
+
+        this.context.gridHost.cellProviders.push({
+            predicate: predicate || (() => true),
+            stick: stick || (() => false),
+            size: size || (({ column }) => column.width || 200),
+            preserve: preserve || (() => false),
+            template: template || (({ data }) => (
+                <Cell>{data}</Cell>
+            ))
+        });
+
+        return null;
+    }
+};
+CellProvider.contextTypes = {
     gridHost: React.PropTypes.object.isRequired
 };

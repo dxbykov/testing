@@ -1,39 +1,10 @@
-import React from 'react'
+import React from 'react';
 
 import ReactHammer from 'react-hammerjs';
 import Hammer from 'hammerjs';
-import { gestureCover, clearSelection, clamp } from './utils'
 
-export class Cell extends React.Component {
-    render() {
-        let { children, style, ...other } = this.props;
-
-        return (
-            <div
-                style={{ 
-                    padding: '10px',
-                    borderBottom: '1px dotted black',
-                    borderRight: '1px dotted black',
-                    ...style
-                }}
-                {...other}>
-                {children}
-            </div>
-        );
-    }
-}
-
-export const cellProvider = ({ stick, predicate, template, preserve } = {}) => {
-    return {
-        predicate: predicate || (() => true),
-        stick: stick || (() => false),
-        size: ({ column }) => column.width || 200,
-        preserve: preserve || (() => false),
-        template: template || (({ data }) => (
-            <Cell>{data}</Cell>
-        ))
-    };
-};
+import { gestureCover, clearSelection, clamp } from './utils';
+import { Cell, CellProvider } from './grid';
 
 export class SortableCell extends React.Component {
     render() {
@@ -209,14 +180,19 @@ DetailCell.propTypes = {
     expandedChange: React.PropTypes.func.isRequired,
 };
 
-export const detailCellProvider = ({ isExpanded, toggleExpanded }) => {
-    return {
-        predicate: ({ column }) => column.type === 'detail',
-        size: ({ column }) => column.width || 40,
-        template: ({ rowIndex, row, columnIndex }) => (
-            <DetailCell
-                expanded={isExpanded({ rowIndex, row })}
-                expandedChange={() => toggleExpanded({ rowIndex, row })}/>
-        )
-    };
+export class DetailCellProvider extends React.Component {
+    render() {
+        let { isExpanded, toggleExpanded } = this.props;
+        
+        return (
+            <CellProvider
+                predicate={({ column }) => column.type === 'detail'}
+                size={({ column }) => column.width || 40}
+                template={({ rowIndex, row, columnIndex }) => (
+                    <DetailCell
+                        expanded={isExpanded({ rowIndex, row })}
+                        expandedChange={() => toggleExpanded({ rowIndex, row })}/>
+                )}/>
+        );
+    }
 };
