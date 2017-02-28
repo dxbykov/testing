@@ -1,7 +1,6 @@
 import React from 'react';
 import { WindowedScroller, VirtualBox, VirtualItem } from './components';
 import { cellProvider } from './cells';
-import { rowProvider } from './rows';
 
 export let cellProviderFor = ({ row, column, cellProviders }) => {
     return cellProviders.filter((p) => p.predicate({ row, column })).pop();
@@ -107,12 +106,11 @@ export class Grid extends React.Component {
         let { rows, columns, cellProviders, rowProviders } = this.props;
 
         cellProviders = [cellProvider()].concat(cellProviders || []);
-        rowProviders = [rowProvider()].concat(rowProviders || []);
 
         return {
             gridHost: {
                 cellProviders,
-                rowProviders,
+                rowProviders: [],
                 rows,
                 columns,
                 projectPoint: ({ x, y }) => {
@@ -140,10 +138,12 @@ export class Grid extends React.Component {
     }
 
     render() {
-        let { rows, columns } = this.props;
+        let { rows, columns, children } = this.props;
 
         return (
             <div style={{ height: '340px', border: '1px solid black' }}>
+                <RowProvider/>
+                { children }
                 <WindowedScroller>
                     <div ref={ref => this.root = ref}>
                         <Rows
@@ -162,8 +162,28 @@ Grid.propTypes = {
     rowProviders: React.PropTypes.array,
 };
 Grid.childContextTypes = {
-    gridHost: React.PropTypes.shape({
-        cellProviders: React.PropTypes.array.isRequired,
-        rowProviders: React.PropTypes.array.isRequired,
-    }).isRequired
+    gridHost: React.PropTypes.object.isRequired
+};
+
+export class RowProvider extends React.Component {
+    render() {
+        let props = this.props;
+
+        this.context.gridHost.rowProviders.push({
+            predicate: props.predicate || (() => true),
+            size: props.size || (() => 40),
+            stick: props.stick || (() => false),
+            template: props.template || (({ rowIndex, row, columns }) => (
+                <Cells
+                    columns={columns}
+                    rowIndex={rowIndex}
+                    row={row}/>
+            )),
+        });
+
+        return null;
+    }
+};
+RowProvider.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired
 };

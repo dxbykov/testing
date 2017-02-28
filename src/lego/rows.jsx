@@ -1,39 +1,27 @@
 import React from 'react';
 
 import { VirtualBox, stickyProp } from './components';
-import { Cells, Rows, rowProviderFor } from './grid';
+import { Cells, Rows, RowProvider, rowProviderFor } from './grid';
 
-
-export const rowProvider = () => {
-    return {
-        predicate: () => true,
-        size: () => 40,
-        template: ({ rowIndex, row, columns }) => (
-            <Cells
-                columns={columns}
-                rowIndex={rowIndex}
-                row={row}/>
-        )
-    };
-};
-
-
-export const headingRowProvider = () => {
-    return {
-        predicate: ({ row }) => row.type === 'heading',
-        stick: () => 'before',
-        size: () => 40,
-        template: ({ rowIndex, row, columns }) => (
-            <Cells
-                columns={columns}
-                rowIndex={rowIndex}
-                row={row}
-                style={{ 
-                    background: 'white',
-                    borderBottom: '2px solid black'
-                }}/>
-        )
-    };
+export class HeadingRowProvider extends React.Component {
+    render() {
+        return (
+            <RowProvider
+                predicate={({ row }) => row.type === 'heading'}
+                stick={() => 'before'}
+                size={() => 40}
+                template={({ rowIndex, row, columns }) => (
+                    <Cells
+                        columns={columns}
+                        rowIndex={rowIndex}
+                        row={row}
+                        style={{ 
+                            background: 'white',
+                            borderBottom: '2px solid black'
+                        }}/>
+                )}/>
+        );
+    }
 };
 
 export class DetailRow extends React.Component {
@@ -67,21 +55,26 @@ DetailRow.propTypes = {
     expanded: React.PropTypes.bool.isRequired,
 };
 
-export const detailRowProvider = ({ isExpanded, toggleExpanded, collapsedHeight, expandedHeight }) => {
-    return {
-        predicate: () => true,
-        size: (rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight,
-        template: ({ rowIndex, row, columns }) => {
-            return (
-                <DetailRow
-                    columns={columns}
-                    rowIndex={rowIndex}
-                    row={row}
-                    expanded={isExpanded({ rowIndex, row })}/>
-            );
-        }
+export class DetailRowProvider extends React.Component {
+    render() {
+        let { isExpanded, collapsedHeight, expandedHeight } = this.props;
+        
+        return (
+            <RowProvider
+                predicate={() => true}
+                size={(rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight}
+                template={({ rowIndex, row, columns }) => {
+                    return (
+                        <DetailRow
+                            columns={columns}
+                            rowIndex={rowIndex}
+                            row={row}
+                            expanded={isExpanded({ rowIndex, row })}/>
+                    );
+                }}/>
+        );
     }
-}
+};
 
 export class GroupRow extends React.Component {
     render() {
@@ -145,25 +138,30 @@ GroupRow.contextTypes = {
     }).isRequired
 };
 
-export const groupRowProvider = ({ isExpanded, toggleExpanded }) => {
-    return {
-        predicate: ({ row }) => row.type === 'group',
-        size: (rowIndex, row, rowProviders) => {
-            let result = 40;
-            if(isExpanded({ rowIndex, row })) {
-                result = result + row.items.reduce(((accumulator, row, index) =>
-                    accumulator + (rowProviderFor({ row, rowProviders })).size(index, row, rowProviders)
-                ), 0);
-            }
-            return result;
-        },
-        template: ({ rowIndex, row, columns }) => (
-            <GroupRow
-                columns={columns}
-                rowIndex={rowIndex}
-                row={row}
-                expanded={isExpanded({ rowIndex, row })}
-                expandedChange={(expanded) => toggleExpanded({ rowIndex, row, expanded })}/>
-        )
-    };
+export class GroupRowProvider extends React.Component {
+    render() {
+        let { isExpanded, toggleExpanded } = this.props;
+        
+        return (
+            <RowProvider
+                predicate={({ row }) => row.type === 'group'}
+                size={(rowIndex, row, rowProviders) => {
+                    let result = 40;
+                    if(isExpanded({ rowIndex, row })) {
+                        result = result + row.items.reduce(((accumulator, row, index) =>
+                            accumulator + (rowProviderFor({ row, rowProviders })).size(index, row, rowProviders)
+                        ), 0);
+                    }
+                    return result;
+                }}
+                template={({ rowIndex, row, columns }) => (
+                    <GroupRow
+                        columns={columns}
+                        rowIndex={rowIndex}
+                        row={row}
+                        expanded={isExpanded({ rowIndex, row })}
+                        expandedChange={(expanded) => toggleExpanded({ rowIndex, row, expanded })}/>
+                )}/>
+        );
+    }
 };

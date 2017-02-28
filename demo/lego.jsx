@@ -1,8 +1,8 @@
 import React from 'react';
 import {
-    Grid,
+    Grid, RowProvider, Cells,
     Cell, cellProvider, SortableCell, SelectableCell, ResizableCell, DraggableCell, DetailCell, detailCellProvider,
-    Row, rowProvider, headingRowProvider, DetailRow, detailRowProvider, GroupRow, groupRowProvider
+    HeadingRowProvider, DetailRow, DetailRowProvider, GroupRow, GroupRowProvider
 } from '../src/lego';
 
 import { Grouper, Pager } from '../src';
@@ -147,10 +147,9 @@ class HeadingSortingSelectingDemo extends React.Component {
                                 }}/>
                         )
                     })
-                ]}
-                rowProviders={[
-                    headingRowProvider()
-                ]}/>
+                ]}>
+                <HeadingRowProvider/>
+            </Grid>
         )
     }
 }
@@ -212,14 +211,12 @@ class MasterDetailDemo extends React.Component {
                         isExpanded,
                         toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(row.id)
                     })
-                ]}
-                rowProviders={[
-                    detailRowProvider({
-                        isExpanded,
-                        collapsedHeight: 40,
-                        expandedHeight: 80
-                    })
-                ]}/>
+                ]}>
+                <DetailRowProvider
+                    isExpanded={isExpanded}
+                    collapsedHeight={40}
+                    expandedHeight={80}/>
+            </Grid>
         )
     }
 }
@@ -252,14 +249,11 @@ class GroupedDemo extends React.Component {
                 />
                 <Grid
                     columns={columns}
-                    rows={gridGroupShaper(group(rows, grouping))}
-                    rowProviders={[
-                        groupRowProvider({
-                            isExpanded: ({ row }) => this.expandedCtrl.isExpanded(keyGetter(row)),
-                            toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(keyGetter(row))
-                        })
-                    ]}
-                />
+                    rows={gridGroupShaper(group(rows, grouping))}>
+                    <GroupRowProvider
+                        isExpanded={({ row }) => this.expandedCtrl.isExpanded(keyGetter(row))}
+                        toggleExpanded={({ row }) => this.expandedCtrl.toggleExpanded(keyGetter(row))}/>
+                </Grid>
             </div>
         )
     }
@@ -293,15 +287,12 @@ class NestedGroupedDemo extends React.Component {
                 />
                 <Grid
                     columns={columns}
-                    rows={[generateHeaderRow(), ...gridGroupShaper(group(rows, grouping))]}
-                    rowProviders={[
-                        groupRowProvider({
-                            isExpanded: ({ row }) => this.expandedCtrl.isExpanded(keyGetter(row)),
-                            toggleExpanded: ({ row }) => this.expandedCtrl.toggleExpanded(keyGetter(row))
-                        }),
-                        headingRowProvider()
-                    ]}
-                />
+                    rows={[generateHeaderRow(), ...gridGroupShaper(group(rows, grouping))]}>
+                    <GroupRowProvider
+                        isExpanded={({ row }) => this.expandedCtrl.isExpanded(keyGetter(row))}
+                        toggleExpanded={({ row }) => this.expandedCtrl.toggleExpanded(keyGetter(row))}/>
+                    <HeadingRowProvider/>
+                </Grid>
             </div>
         )
     }
@@ -336,7 +327,6 @@ class GroupedMasterDetailDemo extends React.Component {
 
     render() {
         let { columns, rows, grouping } = this.state;
-        let isExpanded = ({ row }) => this.expandedGroupsCtrl.isExpanded(row.value);
         let isExpandedRow = ({ row }) => this.expandedRowsCtrl.isExpanded(row.id);
         let visibleRows = gridGroupShaper(group(rows, grouping));
 
@@ -355,20 +345,16 @@ class GroupedMasterDetailDemo extends React.Component {
                             isExpanded: isExpandedRow,
                             toggleExpanded: ({ row }) => this.expandedRowsCtrl.toggleExpanded(row.id)
                         })
-                    ]}
-                    rowProviders={[
-                        detailRowProvider({
-                            isExpanded: isExpandedRow,
-                            collapsedHeight: 40,
-                            expandedHeight: 80
-                        }),
-                        groupRowProvider({
-                            isExpanded,
-                            toggleExpanded: ({ row }) => this.expandedGroupsCtrl.toggleExpanded(row.value)
-                        }),
-                        headingRowProvider()
-                    ]}
-                />
+                    ]}>
+                    <DetailRowProvider
+                        isExpanded={isExpandedRow}
+                        collapsedHeight={40}
+                        expandedHeight={80}/>
+                    <GroupRowProvider
+                        isExpanded={({ row }) => this.expandedGroupsCtrl.isExpanded(row.id)}
+                        toggleExpanded={({ row }) => this.expandedGroupsCtrl.toggleExpanded(row.id)}/>
+                    <HeadingRowProvider/>
+                </Grid>
                 {/*<Pager
                     page={this.state.currentPage}
                     pageSize={this.state.pageSize}
@@ -396,13 +382,13 @@ export class LegoDemo extends React.Component {
     render() {
         return (
             <div>
-                {/*<Box title="Simple" demo={SimpleDemo}/>*/}
-                <Box title="Simple w/ Heading, Sorting, Selection, Column Resizing" demo={HeadingSortingSelectingDemo}/>
-                {/*<Box title="Simple w/ Paging" demo={PagingDemo}/>
+                <Box title="Simple" demo={SimpleDemo}/>
+                <Box title="Simple w/ Heading, Sorting, Selection, Column Resizing, Column Reordering" demo={HeadingSortingSelectingDemo}/>
+                <Box title="Simple w/ Paging" demo={PagingDemo}/>
                 <Box title="Master Detail" demo={MasterDetailDemo}/>
                 <Box title="Grouped" demo={GroupedDemo}/>
                 <Box title="Nested Grouped with Heading" demo={NestedGroupedDemo}/>
-                <Box title="Grouped Master Detail" demo={GroupedMasterDetailDemo}/>*/}
+                <Box title="Grouped Master Detail" demo={GroupedMasterDetailDemo}/>
             </div>
         )
     }
