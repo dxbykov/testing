@@ -151,7 +151,6 @@ export class DraggableCell extends React.Component {
         };
         let handlePanMove = (e) => {
             clearSelection();
-            console.log(projectPoint(e.center), columnAt(projectPoint(e.center)).name);
         };
         let handlePanEnd = (e) => {
             gestureCover(false, 'move');
