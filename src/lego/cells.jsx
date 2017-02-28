@@ -187,7 +187,7 @@ export class DetailCellProvider extends React.Component {
         return (
             <CellProvider
                 predicate={({ column }) => column.type === 'detail'}
-                size={({ column }) => column.width || 40}
+                width={({ column }) => column.width || 40}
                 template={({ rowIndex, row, columnIndex }) => (
                     <DetailCell
                         expanded={isExpanded({ rowIndex, row })}

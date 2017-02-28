@@ -39,7 +39,7 @@ export class Cells extends React.Component {
                     
                     return {
                         preserve: cellProvider.preserve ? cellProvider.preserve({ column: column, cellProviders }) : false,
-                        size: cellProvider.size({ column: column, cellProviders }),
+                        size: cellProvider.width({ column: column, cellProviders }),
                         stick: cellProvider.stick ? cellProvider.stick(index, row, cellProviders) : false,
                         key: column.name
                     }
@@ -91,7 +91,7 @@ export class Rows extends React.Component {
                     let rowProvider = rowProviderFor({ row, rowProviders });
                     
                     return {
-                        size: rowProvider.size(index, rows[index], rowProviders),
+                        size: rowProvider.height(index, rows[index], rowProviders),
                         stick: rowProvider.stick ? rowProvider.stick(index, rows[index], rowProviders) : false,
                     }
                 }}
@@ -142,7 +142,7 @@ export class Grid extends React.Component {
                     while(index < columns.length) {
                         let column = columns[index];
                         let cellProvider = cellProviderFor({ row: rows[0], column, cellProviders });
-                        let itemSize = cellProvider.size({ column, cellProviders });
+                        let itemSize = cellProvider.width({ column, cellProviders });
                         
                         if(x >= offset && x < offset + itemSize) {
                             return column;
@@ -185,11 +185,11 @@ Grid.childContextTypes = {
 
 export class RowProvider extends React.Component {
     render() {
-        let { stick, predicate, size, template } = this.props;
+        let { stick, predicate, height, template } = this.props;
 
         this.context.gridHost.rowProviders.push({
             predicate: predicate || (() => true),
-            size: size || (() => 40),
+            height: height || (() => 40),
             stick: stick || (() => false),
             template: template || (({ rowIndex, row, columns }) => (
                 <Cells
@@ -208,12 +208,12 @@ RowProvider.contextTypes = {
 
 export class CellProvider extends React.Component {
     render() {
-        let { stick, predicate, size, template, preserve } = this.props;
+        let { stick, predicate, width, template, preserve } = this.props;
 
         this.context.gridHost.cellProviders.push({
             predicate: predicate || (() => true),
             stick: stick || (() => false),
-            size: size || (({ column }) => column.width || 200),
+            width: width || (({ column }) => column.width || 200),
             preserve: preserve || (() => false),
             template: template || (({ data }) => (
                 <Cell>{data}</Cell>

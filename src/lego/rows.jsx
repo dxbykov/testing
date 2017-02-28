@@ -9,7 +9,7 @@ export class HeadingRowProvider extends React.Component {
             <RowProvider
                 predicate={({ row }) => row.type === 'heading'}
                 stick={() => 'before'}
-                size={() => 40}
+                height={() => 40}
                 template={({ rowIndex, row, columns }) => (
                     <Cells
                         columns={columns}
@@ -62,7 +62,7 @@ export class DetailRowProvider extends React.Component {
         return (
             <RowProvider
                 predicate={() => true}
-                size={(rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight}
+                height={(rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight}
                 template={({ rowIndex, row, columns }) => {
                     return (
                         <DetailRow
@@ -85,7 +85,7 @@ export class GroupRow extends React.Component {
                 return 40;
             if(this.props.expanded)
                 return this.props.row.items.reduce(((accumulator, row, index) =>
-                    accumulator + (rowProviderFor({ row, rowProviders })).size(index, row, rowProviders)
+                    accumulator + (rowProviderFor({ row, rowProviders })).height(index, row, rowProviders)
                 ), 0)
             return 0;
         };
@@ -145,11 +145,11 @@ export class GroupRowProvider extends React.Component {
         return (
             <RowProvider
                 predicate={({ row }) => row.type === 'group'}
-                size={(rowIndex, row, rowProviders) => {
+                height={(rowIndex, row, rowProviders) => {
                     let result = 40;
                     if(isExpanded({ rowIndex, row })) {
                         result = result + row.items.reduce(((accumulator, row, index) =>
-                            accumulator + (rowProviderFor({ row, rowProviders })).size(index, row, rowProviders)
+                            accumulator + (rowProviderFor({ row, rowProviders })).height(index, row, rowProviders)
                         ), 0);
                     }
                     return result;
