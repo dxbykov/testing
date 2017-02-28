@@ -3,18 +3,6 @@ import { WindowedScroller, VirtualBox, VirtualItem } from './components';
 import { cellProvider } from './cells';
 import { rowProvider } from './rows';
 
-let memorized = () => {
-    let map = new WeakMap();
-    return (obj, getter) => {
-        let cached = map.get(obj);
-        if(!cached) {
-            cached = getter(obj);
-            map.set(obj, cached);
-        }
-        return cached;
-    }
-};
-
 export let cellProviderFor = ({ row, column, cellProviders }) => {
     return cellProviders.filter((p) => p.predicate({ row, column })).pop();
 };
@@ -23,8 +11,6 @@ export class Cells extends React.Component {
      render() {
         let { columns, row, rowIndex } = this.props;
         let { cellProviders } = this.context.gridHost;
-
-        let cellProvider = memorized();
 
         return (
             <VirtualBox
@@ -35,8 +21,10 @@ export class Cells extends React.Component {
                     let cellProvider = cellProviderFor({ row, column, cellProviders });
                     
                     return {
+                        preserve: cellProvider.preserve ? cellProvider.preserve({ column: column, cellProviders }) : false,
                         size: cellProvider.size({ column: column, cellProviders }),
                         stick: cellProvider.stick ? cellProvider.stick(index, row, cellProviders) : false,
+                        key: column.name
                     }
                 }}
                 itemTemplate={(index) => {
@@ -76,8 +64,6 @@ export class Rows extends React.Component {
     render() {
         let { rows, columns } = this.props;
         let { rowProviders } = this.context.gridHost;
-
-        let rowProvider = memorized();
 
         return (
             <VirtualBox
@@ -119,25 +105,52 @@ Rows.contextTypes = {
 
 export class Grid extends React.Component {
     getChildContext() {
-        let { cellProviders, rowProviders } = this.props;
+        let { rows, columns, cellProviders, rowProviders } = this.props;
+
+        cellProviders = [cellProvider()].concat(cellProviders || []);
+        rowProviders = [rowProvider()].concat(rowProviders || []);
 
         return {
             gridHost: {
-                cellProviders: [cellProvider()].concat(cellProviders || []),
-                rowProviders: [rowProvider()].concat(rowProviders || []),
+                cellProviders,
+                rowProviders,
+                rows,
+                columns,
+                projectPoint: ({ x, y }) => {
+                    let rect = this.root.getBoundingClientRect();
+                    return { x: x - rect.left, y: y - rect.top };
+                },
+                columnAt: ({ x }) => {
+                    let index = 0;
+                    let offset = 0;
+                    while(index < columns.length) {
+                        let column = columns[index];
+                        let cellProvider = cellProviderFor({ row: rows[0], column, cellProviders });
+                        let itemSize = cellProvider.size({ column, cellProviders });
+                        
+                        if(x >= offset && x < offset + itemSize) {
+                            return column;
+                        }
+
+                        index = index + 1;
+                        offset = offset + itemSize;
+                    }
+                }
             }
         };
     }
 
     render() {
-        let { rows, columns } = this.props
+        let { rows, columns } = this.props;
 
         return (
             <div style={{ height: '340px', border: '1px solid black' }}>
                 <WindowedScroller>
-                    <Rows
-                        rows={rows}
-                        columns={columns}/>
+                    <div ref={ref => this.root = ref}>
+                        <Rows
+                            rows={rows}
+                            columns={columns}/>
+                    </div>
                 </WindowedScroller>
             </div>
         );

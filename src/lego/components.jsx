@@ -42,7 +42,7 @@ export class WindowedScroller extends React.Component {
     getChildContext() {
         return {
             virtualHost: {
-                viewport: this.state.viewport
+                viewport: this.state.viewport,
             }
         };
     }
@@ -127,17 +127,18 @@ export class VirtualBox extends React.PureComponent {
             let itemInfo = options.itemInfo(index);
             let itemSize = this.state.itemSizes[index] || itemInfo.size;
             let itemStick = itemInfo.stick;
+            let key = itemInfo.key || index;
             
             if(itemStick === 'before' && offset <= viewportStart) {
-                stickyItemsMetas.push({ index, offset, size: itemSize, stick: itemStick });
+                stickyItemsMetas.push({ index, offset, size: itemSize, stick: itemStick, key });
                 viewportStart = viewportStart + itemSize;
             }
 
-            if((offset + itemSize > viewportStart && offset + itemSize < viewportStart + viewportSize ||
-                offset < viewportStart + viewportSize && offset > viewportStart ||
-                offset <= viewportStart && offset + itemSize >= viewportStart + viewportSize) &&
-                itemSize > 0 && itemStick === false) {
-                visibleItemMetas.push({ index, offset, size: itemSize, stick: false });
+            let inVisibleBounds = offset + itemSize > viewportStart && offset + itemSize < viewportStart + viewportSize ||
+                                  offset < viewportStart + viewportSize && offset > viewportStart ||
+                                  offset <= viewportStart && offset + itemSize >= viewportStart + viewportSize;
+            if((inVisibleBounds || itemInfo.preserve) && itemSize > 0 && itemStick === false) {
+                visibleItemMetas.push({ index, offset, size: itemSize, stick: false, key });
             }
 
             index = index + 1;
@@ -167,7 +168,7 @@ export class VirtualBox extends React.PureComponent {
         let visibleItems = visibleItemMetas.map(visibleItemMeta => {
             return (
                 <VirtualItem 
-                    key={`${visibleItemMeta.index}`}
+                    key={visibleItemMeta.key}
                     viewport={{ 
                         ...viewport,
                         [positionProp]: viewport[positionProp] + stickyBeforeSize,
@@ -203,14 +204,7 @@ VirtualBox.propTypes = {
     itemTemplate: React.PropTypes.func.isRequired,
 };
 VirtualBox.contextTypes = {
-    virtualHost: React.PropTypes.shape({
-        viewport: React.PropTypes.shape({
-            top: React.PropTypes.number,
-            left: React.PropTypes.number,
-            width: React.PropTypes.number,
-            height: React.PropTypes.number,
-        }).isRequired,
-    }).isRequired,
+    virtualHost: React.PropTypes.object.isRequired,
 };
 
 class VirtualItem extends React.Component {
@@ -231,7 +225,7 @@ class VirtualItem extends React.Component {
                     [crossSizeProp]: viewport[crossSizeProp],
 
                     [positionProp + 'Stick']: viewport[positionProp + 'ChildStick'],
-                }
+                },
             }
         };
     }
@@ -249,8 +243,6 @@ class VirtualItem extends React.Component {
             [positionProp]: position + 'px',
             [crossSizeProp]: '100%',
         };
-
-        
 
         if(stick) {
             if(stickyProp) {
@@ -310,12 +302,5 @@ VirtualItem.propTypes = {
     }).isRequired,
 };
 VirtualItem.childContextTypes = {
-    virtualHost: React.PropTypes.shape({
-        viewport: React.PropTypes.shape({
-            top: React.PropTypes.number,
-            left: React.PropTypes.number,
-            width: React.PropTypes.number,
-            height: React.PropTypes.number,
-        }).isRequired,
-    }).isRequired
+    virtualHost: React.PropTypes.object.isRequired
 };

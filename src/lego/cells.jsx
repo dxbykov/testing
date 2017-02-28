@@ -2,6 +2,7 @@ import React from 'react'
 
 import ReactHammer from 'react-hammerjs';
 import Hammer from 'hammerjs';
+import { gestureCover, clearSelection, clamp } from './utils'
 
 export class Cell extends React.Component {
     render() {
@@ -23,11 +24,12 @@ export class Cell extends React.Component {
     }
 }
 
-export const cellProvider = ({ stick, predicate, template } = {}) => {
+export const cellProvider = ({ stick, predicate, template, preserve } = {}) => {
     return {
         predicate: predicate || (() => true),
         stick: stick || (() => false),
         size: ({ column }) => column.width || 200,
+        preserve: preserve || (() => false),
         template: template || (({ data }) => (
             <Cell>{data}</Cell>
         ))
@@ -83,18 +85,6 @@ SelectableCell.propTypes = {
     selectedChange: React.PropTypes.func.isRequired,
 };
 
-let clearSelection = function() {
-    let selection = getSelection();
-    if(!selection) return;
-    if(selection.type === "Caret") return;
-
-    if(selection.empty) {
-        selection.empty();
-    } else if(selection.removeAllRanges) {
-        selection.removeAllRanges();
-    }
-};
-let clamp = (value, min, max) => Math.min(Math.max(min, value), max);
 export class ResizableCell extends React.Component {
     render() {
         let { minWidth, maxWidth, onResize } = this.props;
@@ -103,8 +93,13 @@ export class ResizableCell extends React.Component {
         let handlePanStart = (e) => {
             this.startWidth = root.getBoundingClientRect().width;
             clearSelection();
+            gestureCover(true, 'col-resize');
         };
         let handlePanMove = (e) => {
+            clearSelection();
+        };
+        let handlePanEnd = (e) => {
+            gestureCover(false, 'col-resize');
             onResize(clamp(this.startWidth + e.deltaX, minWidth || 0, maxWidth || Number.POSITIVE_INFINITY));
         };
 
@@ -126,6 +121,7 @@ export class ResizableCell extends React.Component {
                 <ReactHammer
                     onPanStart={handlePanStart}
                     onPan={handlePanMove}
+                    onPanEnd={handlePanEnd}
                     options={{ direction: Hammer.DIRECTION_HORIZONTAL }}>
                     <div
                         style={{
@@ -143,6 +139,56 @@ export class ResizableCell extends React.Component {
 }
 ResizableCell.propTypes = {
     onResize: React.PropTypes.func.isRequired,
+};
+
+export class DraggableCell extends React.Component {
+    render() {
+        let { onMove } = this.props;
+        let { projectPoint, columnAt, columns } = this.context.gridHost;
+
+        let root;
+        let handlePanStart = (e) => {
+            clearSelection();
+            gestureCover(true, 'move');
+        };
+        let handlePanMove = (e) => {
+            clearSelection();
+        };
+        let handlePanEnd = (e) => {
+            gestureCover(false, 'move');
+            let rect = root.getBoundingClientRect();
+            let currentColumn = columnAt(projectPoint({ x: rect.left, y: rect.top }));
+            let destinationColumn = columnAt(projectPoint(e.center));
+            let diff = columns.indexOf(destinationColumn) - columns.indexOf(currentColumn);
+            onMove(diff);
+        };
+
+        return (
+            <ReactHammer
+                onPanStart={handlePanStart}
+                onPan={handlePanMove}
+                onPanEnd={handlePanEnd}
+                options={{ direction: Hammer.DIRECTION_HORIZONTAL }}>
+                <div
+                    ref={ref => root = ref}
+                    style={{
+                        height: '100%',
+                        cursor: 'move',
+                        WebkitUserSelect: 'none',
+                        userSelect: 'none',
+                        borderRight: '1px dotted black',
+                    }}>
+                    {this.props.children}
+                </div>
+            </ReactHammer>
+        )
+    }
+}
+DraggableCell.propTypes = {
+    onMove: React.PropTypes.func.isRequired,
+};
+DraggableCell.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
 };
 
 export class DetailCell extends React.Component {
