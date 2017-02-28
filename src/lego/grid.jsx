@@ -121,12 +121,15 @@ Rows.contextTypes = {
 
 export class Grid extends React.Component {
     getChildContext() {
-        let { rows, columns, cellProviders, rowProviders } = this.props;
+        let { rows, columns } = this.props;
+        
+        let cellProviders = [];
+        let rowProviders = [];
 
         return {
             gridHost: {
-                cellProviders: [],
-                rowProviders: [],
+                cellProviders,
+                rowProviders,
                 rows,
                 columns,
                 projectPoint: ({ x, y }) => {
@@ -175,8 +178,6 @@ export class Grid extends React.Component {
 Grid.propTypes = {
     columns: React.PropTypes.array.isRequired,
     rows: React.PropTypes.array.isRequired,
-    cellProviders: React.PropTypes.array,
-    rowProviders: React.PropTypes.array,
 };
 Grid.childContextTypes = {
     gridHost: React.PropTypes.object.isRequired
