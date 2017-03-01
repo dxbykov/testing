@@ -1,0 +1,9 @@
+table {
+    border: 1px solid gray;
+}
+td:not(:last-of-type) {
+    border-right: 1px solid gray; 
+}
+tr:not(:last-of-type) td {
+    border-bottom: 1px solid gray; 
+}
