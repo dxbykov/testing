@@ -2,6 +2,7 @@ import React from 'react';
 import {
     Grid, RowProvider, Cells, CellProvider, Cell,
     SortableCell, SelectableCell, ResizableCell, DraggableCell, DetailCell, DetailCellProvider,
+    DetailColumnProvider, SelectableColumnProvider,
     HeadingRowProvider, DetailRow, DetailRowProvider, GroupRow, GroupRowProvider
 } from '../src/lego';
 
@@ -65,9 +66,13 @@ class HeadingSortingSelectingDemo extends React.Component {
 
         return (
             <Grid
-                columns={[{ type: 'select', width: 40 }].concat(columns)}
+                columns={[{ type: 'select' }].concat(columns)}
                 rows={[generateHeaderRow()].concat(sort(rows, sortings))}>
                 <HeadingRowProvider/>
+
+                <SelectableColumnProvider
+                    isSelected={this.selectionCtrl.isSelected}
+                    selectedChange={this.selectionCtrl.selectedChange}/>
 
                 <CellProvider
                     predicate={({ row }) => row.type === 'heading'}
@@ -124,17 +129,7 @@ class HeadingSortingSelectingDemo extends React.Component {
                         )
                     }}/>
                 <CellProvider
-                    predicate={({ column }) => column.type === 'select'}
-                    stick={() => 'before'}
-                    template={({ row, column, data }) => (
-                        <SelectableCell
-                            selected={this.selectionCtrl.isSelected(row.id)}
-                            selectedChange={() => this.selectionCtrl.selectedChange(row.id)}
-                            style={{ borderBottom: '1px dotted black' }}/>
-                    )}/>
-                <CellProvider
                     predicate={({ row, column }) => row.type === 'heading' && column.type === 'select'}
-                    stick={() => 'before'}
                     template={({ row, column, data }) => (
                         <SelectableCell
                             selected={selection.length === rows.length}
@@ -206,7 +201,7 @@ class MasterDetailDemo extends React.Component {
                     collapsedHeight={40}
                     expandedHeight={80}/>
 
-                <DetailCellProvider
+                <DetailColumnProvider
                     isExpanded={isExpanded}
                     toggleExpanded={({ row }) => this.expandedCtrl.toggleExpanded(row.id)}/>
             </Grid>
@@ -296,7 +291,7 @@ class GroupedMasterDetailDemo extends React.Component {
         super(props);
 
         this.state = {
-            columns: [{ type: 'detail', width: 40 }, ...generateColumns()],
+            columns: [{ type: 'detail' }, ...generateColumns()],
             rows: generateRows(200),
             grouping: [{column: 'name'}],
             expandedRows: [],
@@ -342,9 +337,12 @@ class GroupedMasterDetailDemo extends React.Component {
                         toggleExpanded={({ row }) => this.expandedGroupsCtrl.toggleExpanded(row.id)}/>
                     <HeadingRowProvider/>
 
-                    <DetailCellProvider
+                    <DetailColumnProvider
                         isExpanded={isExpandedRow}
                         toggleExpanded={({ row }) => this.expandedRowsCtrl.toggleExpanded(row.id)}/>
+
+                    <CellProvider
+                        predicate={({ row, column }) => row.type === 'heading' && column.type === 'detail'}/>
                 </Grid>
                 {/*<Pager
                     page={this.state.currentPage}

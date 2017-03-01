@@ -1,6 +1,10 @@
 import React from 'react';
 import { WindowedScroller, VirtualBox, VirtualItem } from './components';
 
+export let providerFor = (data, providers) => {
+    return providers.filter((p) => p.predicate(data)).pop();
+};
+
 export class Cell extends React.Component {
     render() {
         let { children, style, ...other } = this.props;
@@ -11,6 +15,7 @@ export class Cell extends React.Component {
                     padding: '10px',
                     borderBottom: '1px dotted black',
                     borderRight: '1px dotted black',
+                    minHeight: '39px',
                     ...style
                 }}
                 {...other}>
@@ -20,14 +25,10 @@ export class Cell extends React.Component {
     }
 }
 
-export let cellProviderFor = ({ row, column, cellProviders }) => {
-    return cellProviders.filter((p) => p.predicate({ row, column })).pop();
-};
-
-export class Cells extends React.Component {
+export class Columns extends React.Component {
      render() {
         let { columns, row, rowIndex } = this.props;
-        let { cellProviders } = this.context.gridHost;
+        let { columnProviders, cellProviders } = this.context.gridHost;
 
         return (
             <VirtualBox
@@ -35,20 +36,41 @@ export class Cells extends React.Component {
                 itemCount={columns.length}
                 itemInfo={(index) => {
                     let column = columns[index];
-                    let cellProvider = cellProviderFor({ row, column, cellProviders });
+                    let cellProvider = providerFor({ row, column }, cellProviders);
+                    let columnProvider = providerFor({ column }, columnProviders);
+
+                    if(cellProvider) {
+                        return {
+                            preserve: cellProvider.preserve ? cellProvider.preserve({ column: column, cellProviders }) : false,
+                            size: columnProvider.width({ column: column }),
+                            stick: cellProvider.stick ? cellProvider.stick(index, row, cellProviders) : false,
+                            key: column.name
+                        }
+                    }
                     
                     return {
-                        preserve: cellProvider.preserve ? cellProvider.preserve({ column: column, cellProviders }) : false,
-                        size: cellProvider.width({ column: column, cellProviders }),
-                        stick: cellProvider.stick ? cellProvider.stick(index, row, cellProviders) : false,
+                        size: columnProvider.width({ column: column }),
+                        stick: columnProvider.stick ? columnProvider.stick(index, row) : false,
                         key: column.name
                     }
                 }}
                 itemTemplate={(index) => {
                     let column = columns[index];
-                    let cellProvider = cellProviderFor({ row, column, cellProviders });
+                    let columnProvider = providerFor({ column }, columnProviders);
+                    let cellProvider = providerFor({ row, column }, cellProviders);
 
-                    return cellProvider
+                    if(cellProvider) {
+                        return cellProvider
+                            .template({ 
+                                rowIndex: rowIndex,
+                                columnIndex: index,
+                                row: row,
+                                column: column,
+                                data: row[column.name]
+                            }) 
+                    }
+
+                    return columnProvider
                         .template({ 
                             rowIndex: rowIndex,
                             columnIndex: index,
@@ -61,20 +83,16 @@ export class Cells extends React.Component {
         );
     }
 }
-Cells.propTypes = {
+Columns.propTypes = {
     columns: React.PropTypes.array.isRequired,
     rowIndex: React.PropTypes.number.isRequired,
     row: React.PropTypes.any.isRequired,
 };
-Cells.contextTypes = {
+Columns.contextTypes = {
     gridHost: React.PropTypes.shape({
         cellProviders: React.PropTypes.array.isRequired,
+        columnProviders: React.PropTypes.array.isRequired,
     }).isRequired
-};
-
-
-export let rowProviderFor = ({ row, rowProviders }) => {
-    return rowProviders.filter((p) => p.predicate({ row })).pop();
 };
 
 export class Rows extends React.Component {
@@ -88,7 +106,7 @@ export class Rows extends React.Component {
                 itemCount={rows.length}
                 itemInfo={(index) => {
                     let row = rows[index];
-                    let rowProvider = rowProviderFor({ row, rowProviders });
+                    let rowProvider = providerFor({ row }, rowProviders);
                     
                     return {
                         size: rowProvider.height(index, rows[index], rowProviders),
@@ -97,7 +115,7 @@ export class Rows extends React.Component {
                 }}
                 itemTemplate={(index) => {
                     let row = rows[index];
-                    let rowProvider = rowProviderFor({ row, rowProviders });
+                    let rowProvider = providerFor({ row }, rowProviders);
                     
                     return rowProvider
                         .template({
@@ -125,11 +143,13 @@ export class Grid extends React.Component {
         
         let cellProviders = [];
         let rowProviders = [];
+        let columnProviders = [];
 
         return {
             gridHost: {
                 cellProviders,
                 rowProviders,
+                columnProviders,
                 rows,
                 columns,
                 projectPoint: ({ x, y }) => {
@@ -141,8 +161,8 @@ export class Grid extends React.Component {
                     let offset = 0;
                     while(index < columns.length) {
                         let column = columns[index];
-                        let cellProvider = cellProviderFor({ row: rows[0], column, cellProviders });
-                        let itemSize = cellProvider.width({ column, cellProviders });
+                        let columnProvider = providerFor({ column }, columnProviders);
+                        let itemSize = columnProvider.width({ column, columnProviders });
                         
                         if(x >= offset && x < offset + itemSize) {
                             return column;
@@ -162,7 +182,7 @@ export class Grid extends React.Component {
         return (
             <div style={{ height: '340px', border: '1px solid black' }}>
                 <RowProvider/>
-                <CellProvider/>
+                <ColumnProvider/>
                 { children }
                 <WindowedScroller>
                     <div ref={ref => this.root = ref}>
@@ -186,13 +206,14 @@ Grid.childContextTypes = {
 export class RowProvider extends React.Component {
     render() {
         let { stick, predicate, height, template } = this.props;
+        let { rowProviders } = this.context.gridHost;
 
-        this.context.gridHost.rowProviders.push({
+        rowProviders.push({
             predicate: predicate || (() => true),
             height: height || (() => 40),
             stick: stick || (() => false),
             template: template || (({ rowIndex, row, columns }) => (
-                <Cells
+                <Columns
                     columns={columns}
                     rowIndex={rowIndex}
                     row={row}/>
@@ -206,14 +227,35 @@ RowProvider.contextTypes = {
     gridHost: React.PropTypes.object.isRequired
 };
 
-export class CellProvider extends React.Component {
+export class ColumnProvider extends React.Component {
     render() {
         let { stick, predicate, width, template, preserve } = this.props;
+        let { columnProviders, cellProviders } = this.context.gridHost;
 
-        this.context.gridHost.cellProviders.push({
+        columnProviders.push({
             predicate: predicate || (() => true),
             stick: stick || (() => false),
             width: width || (({ column }) => column.width || 200),
+            template: template || (({ data }) => (
+                <Cell>{data}</Cell>
+            ))
+        });
+
+        return null;
+    }
+};
+ColumnProvider.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired
+};
+
+export class CellProvider extends React.Component {
+    render() {
+        let { stick, predicate, width, template, preserve } = this.props;
+        let { cellProviders } = this.context.gridHost;
+
+        cellProviders.push({
+            predicate: predicate || (() => true),
+            stick: stick || (() => false),
             preserve: preserve || (() => false),
             template: template || (({ data }) => (
                 <Cell>{data}</Cell>

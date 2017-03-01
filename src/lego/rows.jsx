@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { VirtualBox, stickyProp } from './components';
-import { Cells, Rows, RowProvider, rowProviderFor } from './grid';
+import { Columns, Rows, RowProvider, providerFor } from './grid';
 
 export class HeadingRowProvider extends React.Component {
     render() {
@@ -11,7 +11,7 @@ export class HeadingRowProvider extends React.Component {
                 stick={() => 'before'}
                 height={() => 40}
                 template={({ rowIndex, row, columns }) => (
-                    <Cells
+                    <Columns
                         columns={columns}
                         rowIndex={rowIndex}
                         row={row}
@@ -27,7 +27,7 @@ export class HeadingRowProvider extends React.Component {
 export class DetailRow extends React.Component {
     render() {
         let rowTemplate = (
-            <Cells
+            <Columns
                 columns={this.props.columns}
                 rowIndex={this.props.rowIndex}
                 row={this.props.row}/>
@@ -63,15 +63,13 @@ export class DetailRowProvider extends React.Component {
             <RowProvider
                 predicate={() => true}
                 height={(rowIndex, row) => isExpanded({ rowIndex, row }) ? expandedHeight : collapsedHeight}
-                template={({ rowIndex, row, columns }) => {
-                    return (
-                        <DetailRow
-                            columns={columns}
-                            rowIndex={rowIndex}
-                            row={row}
-                            expanded={isExpanded({ rowIndex, row })}/>
-                    );
-                }}/>
+                template={({ rowIndex, row, columns }) => (
+                    <DetailRow
+                        columns={columns}
+                        rowIndex={rowIndex}
+                        row={row}
+                        expanded={isExpanded({ rowIndex, row })}/>
+                )}/>
         );
     }
 };
@@ -85,7 +83,7 @@ export class GroupRow extends React.Component {
                 return 40;
             if(this.props.expanded)
                 return this.props.row.items.reduce(((accumulator, row, index) =>
-                    accumulator + (rowProviderFor({ row, rowProviders })).height(index, row, rowProviders)
+                    accumulator + (providerFor({ row }, rowProviders)).height(index, row, rowProviders)
                 ), 0)
             return 0;
         };
@@ -149,7 +147,7 @@ export class GroupRowProvider extends React.Component {
                     let result = 40;
                     if(isExpanded({ rowIndex, row })) {
                         result = result + row.items.reduce(((accumulator, row, index) =>
-                            accumulator + (rowProviderFor({ row, rowProviders })).height(index, row, rowProviders)
+                            accumulator + (providerFor({ row }, rowProviders)).height(index, row, rowProviders)
                         ), 0);
                     }
                     return result;
