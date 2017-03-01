@@ -136,6 +136,61 @@ Selection.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
 
+export class MasterDetail extends React.Component {
+    componentWillMount() {
+        let { gridHost } = this.context;
+        let orig_postprocessRows = gridHost.postprocessRows;
+        gridHost.postprocessRows = (rows, columns) => {
+            let { expanded } = this.props;
+            rows = orig_postprocessRows(rows, columns);
+            expanded.forEach(e => {
+                rows.splice(rows.findIndex(row => row.id === e) + 1, 0, { type: 'detailRow', for: e })
+            })
+            return rows
+        };
+        let orig_postprocessColumns = gridHost.postprocessColumns;
+        gridHost.postprocessColumns = (columns) => {
+            return [{ type: 'detail', width: 20 }].concat(orig_postprocessColumns(columns));
+        };
+        let orig_cellInfo = gridHost.cellInfo;
+        gridHost.cellInfo = ({ row, columnIndex, columns }) => {
+            if(row.type === 'detailRow') {
+                if(columnIndex !== 0) {
+                    return { skip: true };
+                }
+                return { colspan: columns.length };
+            }
+            return orig_cellInfo();
+        };
+        let origRenderCell = gridHost.renderCell;
+        gridHost.renderCell = (row, column) => {
+            let { expanded, expandedChange, template } = this.props;
+            if(row.type === 'detailRow') {
+                return template ? template(gridHost.rows().find(r => r.id === row.for)) : <div>Hello detail!</div>
+            }
+            if(column.type === 'detail' && row.type === 'heading') {
+                return null;
+            }
+            if(column.type === 'detail') {
+                return (
+                    <div
+                        style={{ width: '100%', height: '100%' }}
+                        onClick={() => expandedChange(calcSelection(expanded, row.id))}>
+                        {expanded.indexOf(row.id) > -1 ? '-' : '+'}
+                    </div>
+                );
+            }
+            return origRenderCell(row, column);
+        };
+    }
+    render() {
+        return null
+    }
+};
+MasterDetail.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+}
+
 export class Grid extends React.Component {
     constructor(props) {
         super(props);
@@ -145,6 +200,7 @@ export class Grid extends React.Component {
             postprocessRows: (rows) => rows,
             preprocessColumns: (columns) => columns,
             postprocessColumns: (columns) => columns,
+            cellInfo: () => { return {} },
             renderCell: (row, column) => row[column.name],
             rows: () => this.props.rows,
             columns: () => this.props.columns,
@@ -179,21 +235,25 @@ Grid.childContextTypes = {
 export class GridRenderer extends React.Component {
     render() {
         let { rows, columns, children } = this.props;
-        let { gridHost } = this.context;
+        let { preprocessRows, postprocessRows, preprocessColumns, postprocessColumns, cellInfo, renderCell } = this.context.gridHost;
 
-        rows = gridHost.preprocessRows(rows, columns);
-        rows = gridHost.postprocessRows(rows, columns);
-        columns = gridHost.preprocessColumns(columns, rows);
-        columns = gridHost.postprocessColumns(columns, rows);
+        rows = preprocessRows(rows, columns);
+        rows = postprocessRows(rows, columns);
+        columns = preprocessColumns(columns, rows);
+        columns = postprocessColumns(columns, rows);
 
         return (
             <table style={{ borderCollapse: 'collapse' }}>
                 {children}
-                {rows.map(row => 
+                {rows.map((row, rowIndex) => 
                     <tr key={row.id}>
-                        {columns.map(column =>
-                            <td key={column.name} style={{ width: (column.width || 100) + 'px' }}>{gridHost.renderCell(row, column)}</td>
-                        )}
+                        {columns.map((column, columnIndex) => {
+                            let info = cellInfo({ column, row, columnIndex, rowIndex, rows, columns });
+                            if(info.skip) {
+                                return null
+                            }
+                            return <td key={column.name} style={{ width: (column.width || 100) + 'px' }} colSpan={info.colspan || 0}>{renderCell(row, column)}</td>
+                        })}
                     </tr>
                 )}
             </table>
@@ -212,12 +272,13 @@ export class MagicDemo extends React.Component {
             columns: generateColumns(),
             rows: generateRows(20),
             sortings: [{ column: 'id', direction: 'asc' }],
-            selection: [1, 3, 18]
+            selection: [1, 3, 18],
+            expandedRows: [3]
         }
     }
 
     render() {
-        let { rows, columns, sortings, selection } = this.state;
+        let { rows, columns, sortings, selection, expandedRows } = this.state;
 
         return (
             <div>
@@ -231,6 +292,10 @@ export class MagicDemo extends React.Component {
                     <Selection
                         selection={selection}
                         selectionChange={selection => this.setState({ selection })}/>
+                    <MasterDetail
+                        expanded={expandedRows}
+                        expandedChange={expandedRows => this.setState({ expandedRows })}
+                        template={(row) => <div>Detail for {row.name}</div>}/>
                 </Grid>
             </div>
         )
