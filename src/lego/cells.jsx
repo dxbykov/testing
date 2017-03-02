@@ -5,6 +5,7 @@ import Hammer from 'hammerjs';
 
 import { gestureCover, clearSelection, clamp } from './utils';
 import { Cell, CellProvider } from './grid';
+import { Portal } from './components';
 
 export class SortableCell extends React.Component {
     render() {
@@ -111,21 +112,39 @@ ResizableCell.propTypes = {
 };
 
 export class DraggableCell extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            dragging: false,
+            position: { x: 0, y: 0 }
+        }
+    }
     render() {
         let { onMove } = this.props;
+        let { dragging, position } = this.state;
         let { projectPoint, columnAt, columns } = this.context.gridHost;
 
-        let root;
         let handlePanStart = (e) => {
             clearSelection();
             gestureCover(true, 'move');
+            this.setState({
+                dragging: true,
+                position: e.center
+            });
         };
         let handlePanMove = (e) => {
             clearSelection();
+            this.setState({
+                position: e.center
+            });
         };
         let handlePanEnd = (e) => {
             gestureCover(false, 'move');
-            let rect = root.getBoundingClientRect();
+            this.setState({
+                dragging: false
+            });
+            let rect = this.root.getBoundingClientRect();
             let currentColumn = columnAt(projectPoint({ x: rect.left, y: rect.top }));
             let destinationColumn = columnAt(projectPoint(e.center));
             let diff = columns.indexOf(destinationColumn) - columns.indexOf(currentColumn);
@@ -139,7 +158,7 @@ export class DraggableCell extends React.Component {
                 onPanEnd={handlePanEnd}
                 options={{ direction: Hammer.DIRECTION_HORIZONTAL }}>
                 <div
-                    ref={ref => root = ref}
+                    ref={ref => this.root = ref}
                     style={{
                         height: '100%',
                         cursor: 'move',
@@ -147,6 +166,11 @@ export class DraggableCell extends React.Component {
                         userSelect: 'none',
                         borderRight: '1px dotted black',
                     }}>
+                    <Portal opened={dragging}>
+                        <div style={{ position: 'fixed', top: position.y + 'px', left: position.x + 'px', background: '#ccc' }}>
+                            {this.props.children}
+                        </div>
+                    </Portal>
                     {this.props.children}
                 </div>
             </ReactHammer>

@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 
 export function applyTemplate(template, data) {
     if(React.isValidElement(template))
@@ -293,3 +294,53 @@ VirtualItem.propTypes = {
 VirtualItem.childContextTypes = {
     virtualHost: React.PropTypes.object.isRequired
 };
+
+export class Portal extends React.Component {
+    componentDidMount() {
+        if(this.props.opened) {
+            this.open();
+        }
+    }
+    componentWillReceiveProps(newProps) {
+        if(!newProps.opened) {
+            this.close();
+        }
+        if(newProps.opened) {
+            this.open();
+        }
+    }
+    componentWillUnmount() {
+        this.close();
+    }
+    open() {
+        if(!this.node) {
+            this.node = document.createElement('div');
+            document.body.appendChild(this.node);
+            this.portal = ReactDOM.unstable_renderSubtreeIntoContainer(
+                this,
+                this.props.children,
+                this.node,
+                () => {}
+            );
+        }
+    }
+    close() {
+        if(this.node) {
+            ReactDOM.unmountComponentAtNode(this.node);
+            document.body.removeChild(this.node);
+            this.portal = null;
+            this.node = null;
+        }
+    }
+    render() {
+        if(this.node) {
+            this.portal = ReactDOM.unstable_renderSubtreeIntoContainer(
+                this,
+                this.props.children,
+                this.node,
+                () => {}
+            );
+        }
+        return null;
+    }
+}

@@ -320,11 +320,10 @@ class GroupedMasterDetailDemo extends React.Component {
 
         return (
             <div>
-               <Grouper 
+                <Grouper 
                     columns={this.state.columns} 
                     grouping={this.state.grouping}
-                    groupChange={this.groupingCtrl.groupChange}
-                />
+                    groupChange={this.groupingCtrl.groupChange}/>
                 <Grid
                     columns={columns}
                     rows={[generateHeaderRow(), ...visibleRows]}>
@@ -341,6 +340,24 @@ class GroupedMasterDetailDemo extends React.Component {
                         isExpanded={isExpandedRow}
                         toggleExpanded={({ row }) => this.expandedRowsCtrl.toggleExpanded(row.id)}/>
 
+                    <CellProvider
+                        predicate={({ row, column }) => row.type === 'heading'}
+                        preserve={() => true}
+                        template={({ row, column, data }) => {
+                            let onMove = (direction) => {
+                                let index = columns.indexOf(column);
+                                columns.splice(index, 1);
+                                columns.splice(index + direction, 0, column);
+                                this.setState({ columns });
+                            };
+
+                            return (
+                                <DraggableCell
+                                    onMove={onMove}>
+                                    <Cell>{data}</Cell>
+                                </DraggableCell>
+                            )
+                        }}/>
                     <CellProvider
                         predicate={({ row, column }) => row.type === 'heading' && column.type === 'detail'}/>
                 </Grid>
