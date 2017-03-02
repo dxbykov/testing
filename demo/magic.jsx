@@ -4,7 +4,68 @@ import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
 
-export class HeaderRow extends React.Component {
+const filter = (rows, filters) => {
+    if(!filters.length)
+        return rows;
+
+    return rows.filter((row) => {
+        return filters.reduce((accumulator, filter) => {
+            return accumulator && row[filter.column].toLowerCase().indexOf(filter.value.toLowerCase()) > -1;
+        }, true);
+    });
+};
+const filterFor = (columnName, filters) => {
+    if(!filters.length)
+        return '';
+    let filter = filters.filter(s => s.column === columnName)[0];
+    return filter ? filter.value : '';
+};
+const calcFilters = (columnName, value, prevFilters) => {
+    let filterIndex = prevFilters.findIndex(f => { return f.column == columnName; });
+    let result = prevFilters.slice();
+    if(filterIndex > -1) {
+        result.splice(filterIndex, 1, { column: columnName, value: value });
+    } else {
+        result.push({ column: columnName, value: value })
+    }
+    return result;
+};
+export class FilterRow extends React.PureComponent {
+    componentWillMount() {
+        let { gridHost } = this.context;
+        let orig_preprocessRows = gridHost.preprocessRows;
+        gridHost.preprocessRows = (rows, columns) => {
+            let { filters } = this.props;
+            return filter(orig_preprocessRows(rows, columns), filters);
+        };
+        let orig_postprocessRows = gridHost.postprocessRows;
+        gridHost.postprocessRows = (rows, columns) => {
+            return [{ type: 'filter' }].concat(orig_postprocessRows(rows, columns));
+        };
+        let origRenderCell = gridHost.renderCell;
+        gridHost.renderCell = (row, column) => {
+            let { filters, filtersChange } = this.props;
+            if(row.type === 'filter' && !column.type) {
+                return (
+                    <input
+                        type="text"
+                        value={filterFor(column.name, filters)}
+                        onChange={(e) => filtersChange(calcFilters(column.name, e.target.value, filters))}
+                        style={{ width: '100%' }}/>
+                );
+            }
+            return origRenderCell(row, column);
+        };
+    }
+    render() {
+        return null
+    }
+};
+FilterRow.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+}
+
+export class HeaderRow extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
         let orig_postprocessRows = gridHost.postprocessRows;
@@ -47,7 +108,7 @@ const sort = (rows, sortings) => {
         });
     return result;
 };
-export class HeaderRowSorting extends React.Component {
+export class HeaderRowSorting extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
         let orig_preprocessRows = gridHost.preprocessRows;
@@ -96,7 +157,7 @@ const toggleSelectAll = (prevSelection, rows, getRowId) => {
         return rows.map(getRowId);
     }
 };
-export class Selection extends React.Component {
+export class Selection extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
         let orig_postprocessColumns = gridHost.postprocessColumns;
@@ -116,7 +177,7 @@ export class Selection extends React.Component {
                         style={{ margin: '0' }}/>
                 );
             }
-            if(column.type === 'select') {
+            if(column.type === 'select' && !row.type) {
                 return (
                     <input
                         type='checkbox'
@@ -136,7 +197,7 @@ Selection.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
 
-export class MasterDetail extends React.Component {
+export class MasterDetail extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
         let orig_postprocessRows = gridHost.postprocessRows;
@@ -144,7 +205,10 @@ export class MasterDetail extends React.Component {
             let { expanded } = this.props;
             rows = orig_postprocessRows(rows, columns);
             expanded.forEach(e => {
-                rows.splice(rows.findIndex(row => row.id === e) + 1, 0, { type: 'detailRow', for: e })
+                let index = rows.findIndex(row => row.id === e);
+                if(index >= 0) {
+                    rows.splice(rows.findIndex(row => row.id === e) + 1, 0, { type: 'detailRow', for: e })
+                }
             })
             return rows
         };
@@ -171,7 +235,7 @@ export class MasterDetail extends React.Component {
             if(column.type === 'detail' && row.type === 'heading') {
                 return null;
             }
-            if(column.type === 'detail') {
+            if(column.type === 'detail' && !row.type) {
                 return (
                     <div
                         style={{ width: '100%', height: '100%' }}
@@ -191,7 +255,7 @@ MasterDetail.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
 
-export class Grid extends React.Component {
+export class Grid extends React.PureComponent {
     constructor(props) {
         super(props);
 
@@ -264,7 +328,7 @@ GridRenderer.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
 
-export class MagicDemo extends React.Component {
+export class MagicDemo extends React.PureComponent {
     constructor(props) {
         super(props)
 
@@ -273,18 +337,22 @@ export class MagicDemo extends React.Component {
             rows: generateRows(20),
             sortings: [{ column: 'id', direction: 'asc' }],
             selection: [1, 3, 18],
-            expandedRows: [3]
+            expandedRows: [3],
+            filters: [{ column: 'city', value: 'tula' }]
         }
     }
 
     render() {
-        let { rows, columns, sortings, selection, expandedRows } = this.state;
+        let { rows, columns, sortings, selection, expandedRows, filters } = this.state;
 
         return (
             <div>
                 <Grid
                     rows={rows}
                     columns={columns}>
+                    <FilterRow
+                        filters={filters}
+                        filtersChange={filters => this.setState({ filters })}/>
                     <HeaderRow/>
                     <HeaderRowSorting
                         sortings={sortings}
