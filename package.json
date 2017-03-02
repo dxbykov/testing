@@ -8,6 +8,7 @@
     "watch": "webpack-dev-server"
   },
   "dependencies": {
+    "animejs": "^2.0.1",
     "babel-cli": "^6.18.0",
     "babel-core": "^6.21.0",
     "babel-loader": "^6.2.10",

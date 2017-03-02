@@ -2,12 +2,87 @@ import React from 'react';
 import { WindowedScroller, VirtualBox, VirtualItem } from './components';
 import { cellProvider } from './cells';
 import { rowProvider } from './rows';
+import { createAnimator } from './animation';
 
 export let cellProviderFor = ({ row, column, cellProviders }) => {
     return cellProviders.filter((p) => p.predicate({ row, column })).pop();
 };
 
 export class Cells extends React.Component {
+    constructor(props) {
+        super();
+
+        /* 
+            Column reordring animation
+            It should be moved up through the components hierarchy
+        */
+        this.state = {
+            columnsAnimation: {}
+        };
+
+        this.reorderAnimator = createAnimator(props.columns,
+            // animation by state change
+            (prevState, nextState) => {
+                let newIndexes = [];
+
+                prevState.forEach((col, index) => {
+                    if(col.name !== nextState[index].name) {
+                        newIndexes.push({
+                            column: col.name,
+                            prevIndex: index,
+                            nextIndex: nextState.map(c => c.name).indexOf(col.name)
+                        });
+                    }
+                });
+
+                let result = []
+
+                newIndexes.forEach(info => {
+                    let { prevIndex, nextIndex } = info;
+
+                    result.push({
+                        context: {
+                            column: info.column,
+                        },
+                        from: {
+                            leftOffset: this.getColOffset(prevState, prevIndex) - this.getColOffset(nextState, nextIndex)
+                        },
+                        to: {
+                            leftOffset: 0
+                        }
+                    })
+
+                });
+
+
+                return result;
+            },
+            // update state on frame
+            (props, context) => {
+                props.leftOffset = parseFloat(props.leftOffset);//https://github.com/juliangarnier/anime/issues/116
+                let nextColumnsAnimation = Object.assign({}, this.state.columnsAnimation);
+                nextColumnsAnimation[context.column] = props;
+                this.setState({ columnsAnimation: nextColumnsAnimation });
+            }
+        );
+    }
+    componentWillReceiveProps(nextProps) {
+        this.reorderAnimator(nextProps.columns);
+    }
+    getColOffset(columns, index) {
+        let offset = 0;
+        for(let i = 0; i < index; i++) {
+            offset += this.getColumnSize(columns[i]);
+        }
+        return offset;
+    }
+    getColumnSize(column) {
+        let { row } = this.props;
+        let { cellProviders } = this.context.gridHost;
+        let cellProvider = cellProviderFor({ row, column, cellProviders });
+        let size = cellProvider.size({ column, cellProviders });
+        return size;
+    }
      render() {
         let { columns, row, rowIndex } = this.props;
         let { cellProviders } = this.context.gridHost;
@@ -19,10 +94,12 @@ export class Cells extends React.Component {
                 itemInfo={(index) => {
                     let column = columns[index];
                     let cellProvider = cellProviderFor({ row, column, cellProviders });
-                    
+                    let leftOffset = this.state.columnsAnimation[column.name] ? this.state.columnsAnimation[column.name].leftOffset : 0;
+                    let size = cellProvider.size({ column: column, cellProviders });
                     return {
                         preserve: cellProvider.preserve ? cellProvider.preserve({ column: column, cellProviders }) : false,
-                        size: cellProvider.size({ column: column, cellProviders }),
+                        size: size,
+                        leftOffset: leftOffset,
                         stick: cellProvider.stick ? cellProvider.stick(index, row, cellProviders) : false,
                         key: column.name
                     }

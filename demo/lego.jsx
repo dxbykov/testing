@@ -100,16 +100,19 @@ class HeadingSortingSelectingDemo extends React.Component {
                         predicate: ({ row, column }) => row.type === 'heading' && column.resizable === false,
                         preserve: () => true,
                         template: ({ row, column, data }) => {
-                            let onMove = (direction) => {
-                                let index = columns.indexOf(column);
-                                columns.splice(index, 1);
-                                columns.splice(index + direction, 0, column);
-                                this.setState({ columns });
+                            let onMoving = ({colDiff, moveDiff}) => {
+                                if(colDiff * moveDiff > 0) {
+                                    columns = columns.slice();
+                                    let index = columns.indexOf(column);
+                                    columns.splice(index, 1);
+                                    columns.splice(index + colDiff, 0, column);
+                                    this.setState({ columns: columns });
+                                }
                             };
 
                             return (
                                 <DraggableCell
-                                    onMove={onMove}>
+                                    onMoving={onMoving}>
                                     <SortableCell
                                         direction={this.sortingCtrl.directionFor(column.name)}
                                         directionChange={() => this.sortingCtrl.onSort(column.name)}
@@ -396,13 +399,13 @@ export class LegoDemo extends React.Component {
     render() {
         return (
             <div>
-                {/*<Box title="Simple" demo={SimpleDemo}/>*/}
-                <Box title="Simple w/ Heading, Sorting, Selection, Column Resizing" demo={HeadingSortingSelectingDemo}/>
-                {/*<Box title="Simple w/ Paging" demo={PagingDemo}/>
+                <Box title="Simple" demo={SimpleDemo}/>
+                <Box title="Simple w/ Heading, Sorting, Selection, Column Resizing/Reordering, Animation" demo={HeadingSortingSelectingDemo}/>
+                <Box title="Simple w/ Paging" demo={PagingDemo}/>
                 <Box title="Master Detail" demo={MasterDetailDemo}/>
                 <Box title="Grouped" demo={GroupedDemo}/>
                 <Box title="Nested Grouped with Heading" demo={NestedGroupedDemo}/>
-                <Box title="Grouped Master Detail" demo={GroupedMasterDetailDemo}/>*/}
+                <Box title="Grouped Master Detail" demo={GroupedMasterDetailDemo}/>
             </div>
         )
     }

@@ -138,7 +138,7 @@ export class VirtualBox extends React.PureComponent {
                                   offset < viewportStart + viewportSize && offset > viewportStart ||
                                   offset <= viewportStart && offset + itemSize >= viewportStart + viewportSize;
             if((inVisibleBounds || itemInfo.preserve) && itemSize > 0 && itemStick === false) {
-                visibleItemMetas.push({ index, offset, size: itemSize, stick: false, key });
+                visibleItemMetas.push({ index, offset: offset + (itemInfo.leftOffset || 0), size: itemSize, stick: false, key });
             }
 
             index = index + 1;

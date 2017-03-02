@@ -142,17 +142,32 @@ ResizableCell.propTypes = {
 };
 
 export class DraggableCell extends React.Component {
+    constructor() {
+        super();
+        this.state = {
+            dragPos: undefined
+        };
+    }
     render() {
-        let { onMove } = this.props;
+        let { onMove, onMoving } = this.props;
         let { projectPoint, columnAt, columns } = this.context.gridHost;
 
         let root;
         let handlePanStart = (e) => {
             clearSelection();
             gestureCover(true, 'move');
+            this.setState({ dragPos: e.center });
         };
         let handlePanMove = (e) => {
             clearSelection();
+            if(onMoving) {
+                let rect = root.getBoundingClientRect();
+                let currentColumn = columnAt(projectPoint({ x: rect.left, y: rect.top }));
+                let destinationColumn = columnAt(projectPoint(e.center));
+                let diff = columns.indexOf(destinationColumn) - columns.indexOf(currentColumn);
+                onMoving && onMoving({ colDiff: diff, moveDiff: e.center.x - this.state.dragPos.x } );
+                this.setState({ dragPos: e.center });
+            }
         };
         let handlePanEnd = (e) => {
             gestureCover(false, 'move');
@@ -160,7 +175,8 @@ export class DraggableCell extends React.Component {
             let currentColumn = columnAt(projectPoint({ x: rect.left, y: rect.top }));
             let destinationColumn = columnAt(projectPoint(e.center));
             let diff = columns.indexOf(destinationColumn) - columns.indexOf(currentColumn);
-            onMove(diff);
+            onMove && onMove(diff);
+            this.setState({ dragPos: undefined });
         };
 
         return (

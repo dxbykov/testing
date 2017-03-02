@@ -1,4 +1,5 @@
 import React from 'react';
+import anime from 'animejs';
 import { Motion, spring } from 'react-motion';
 
 const springify = styles => {
@@ -50,3 +51,28 @@ Transition.propTypes = {
     isStateChanged: React.PropTypes.func
 };
 
+export const createAnimator = (initialState, getTransition, onFrame, isStateChanged) => {
+    let prevState = initialState;
+
+    return (nextState) => {
+        if(isStateChanged && isStateChanged(nextState, prevState) || !isStateChanged && nextState !== prevState) {
+            let transitions = getTransition(prevState, nextState);
+
+            transitions.forEach(transition => {
+                let animation = Object.assign({}, transition.from),
+                    animeConfig = {
+                        targets: animation,
+                        duration: 1000,
+                        update: () => {
+                            onFrame(animation, transition.context);
+                        }                                        
+                    };
+
+                Object.assign(animeConfig, transition.to);
+                anime(animeConfig);
+            });
+
+            prevState = nextState;
+        }
+    };
+};
