@@ -14,7 +14,7 @@ export const GridLayoutView = ({ header, body }) => {
     );
 };
 
-export class GridLayoutContainer extends React.PureComponent {
+export class GridLayoutContainer extends React.Component {
     constructor(props) {
         super(props);
     }

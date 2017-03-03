@@ -8,18 +8,32 @@ export const GridHeaderCellView = ({ column }) => {
     );
 };
 
-export const GridHeaderRowView = ({ columns, CellComponent }) => {
+export const GridHeaderRowView = ({ columns, cellComponent }) => {
+    let Cell = cellComponent;
     return (
         <tr className="grid-header-row">
-            {columns.map((column, index) => <CellComponent key={index} column={column} />)}
+            {columns.map((column, index) => <Cell key={index} column={column} />)}
         </tr>
     );
 };
 
-const renderRow = (rowContext, originalRender) => {
-    let { row, components } = rowContext;
+export const GridHeaderRowContainer = ({ columns }, { gridHost }) => {
+    let { GridHeaderCell } = gridHost.components;
+    return (
+        <GridHeaderRowView  columns={columns} cellComponent={GridHeaderCell} />
+    );
+};
+
+GridHeaderRowContainer.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+}
+
+const renderRow = (rowContext, originalRender, host) => {
+    let { row } = rowContext;
+    let { components } = host;
+    let { GridHeaderRow } = components;
     if(row.type === 'header') {
-        return <GridHeaderRowView {...rowContext} CellComponent={components.GridHeaderCell} />
+        return <GridHeaderRow {...rowContext} />
     }
     return originalRender(rowContext);
 };
@@ -27,12 +41,12 @@ const renderRow = (rowContext, originalRender) => {
 export const gridHeaderRowPlugin = () => {
     return {
         components: {
-            GridHeaderRow: original => GridHeaderRowView,
+            GridHeaderRow: original => GridHeaderRowContainer,
             GridHeaderCell: original => GridHeaderCellView,
-            renderRow: original => rowContext => renderRow(rowContext, original)
+            renderRow: (original, host) => rowContext => renderRow(rowContext, original, host)
         },
         selectors: {
-            rowsSelector: (original, selectors) => () => [{ type: 'header' }, ...original(selectors)]
+            tableRowsSelector: (original, host) => () => [{ type: 'header' }, ...original()]
         }
     };
 }

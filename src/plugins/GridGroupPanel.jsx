@@ -10,7 +10,7 @@ export const GridGroupPanelView = () => {
     );
 };
 
-export class GridGroupPanelContainer extends React.PureComponent {
+export class GridGroupPanelContainer extends React.Component {
     constructor(props) {
         super(props);
     }

@@ -10,12 +10,14 @@ import GridAutoColumns from '../src/plugins/GridAutoColumns';
 import GridHeaderRow from '../src/plugins/GridHeaderRow';
 import GridCore from '../src/plugins/GridCore';
 import GridDataRow from '../src/plugins/GridDataRow';
+import GridHeaderRowSorting from '../src/plugins/Sorting/GridHeaderSorting';
+import GridSortingState from '../src/plugins/Sorting/GridSortingState';
 
 import './plugins.css';
 
 /* Grid */
 
-class GridRoot extends React.PureComponent {
+class GridRoot extends React.Component {
     render() {
         const { GridLayout } = this.context.gridHost.components;
         return <GridLayout />
@@ -25,11 +27,12 @@ GridRoot.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
 
-export class Grid extends React.PureComponent {
+export class Grid extends React.Component {
     constructor(props) {
         super(props);
 
         this.host = {
+            dispatch: this.dispatch.bind(this),
             selectors: {
                 stateSelector: () => this.state,
                 propsSelector: () => this.props
@@ -38,13 +41,10 @@ export class Grid extends React.PureComponent {
 
         this.state = {};
     }
-    // enhanceInitialState(initialState) {
-    //     let { reducers } = this.host;
-    //     Object.keys(reducers).forEach(key => {
-    //         initialState = reducers[key](initialState)
-    //     });
-    //     return initialState;
-    // }
+    dispatch(action) {
+        console.log(action);
+        this.setState(this.host.reducers[action.type](this.state, action));
+    }
     getChildContext() {
         return {
             gridHost: this.host
@@ -56,7 +56,6 @@ export class Grid extends React.PureComponent {
 };
 Grid.propTypes = {
     rows: React.PropTypes.array.isRequired,
-    //plugins: React.PropTypes.array,
     gridHost: React.PropTypes.object,
 };
 Grid.childContextTypes = {
@@ -64,13 +63,13 @@ Grid.childContextTypes = {
 };
 /* End of Grid */
 
-class Plugins extends React.PureComponent {
+class Plugins extends React.Component {
     render() {
         return <div style={{display: 'none'}}>{this.props.children}</div>;
     }
 }
 
-class DefaultGridConfig extends React.PureComponent {
+class DefaultGridConfig extends React.Component {
     render() {
         return (
             <Plugins>
@@ -81,13 +80,16 @@ class DefaultGridConfig extends React.PureComponent {
                 <GridBody />
                 <GridTableView />
                 <GridHeaderRow />
+                <GridHeaderRowSorting />
                 <GridDataRow />
+
+                <GridSortingState />
             </Plugins>
         );
     }
 }
 
-class CustomGridConfig extends React.PureComponent {
+class CustomGridConfig extends React.Component {
     render() {
         return (
             <Plugins>

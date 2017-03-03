@@ -12,18 +12,18 @@ export const GridTableViewView = ({ children }) => {
     );
 };
 
-export class GridTableViewContainer extends React.PureComponent {
+export class GridTableViewContainer extends React.Component {
     constructor(props) {
         super(props);
     }
     render() {
-        let { rowsSelector, columnsSelector } = this.context.gridHost.selectors;
+        let { tableRowsSelector, columnsSelector } = this.context.gridHost.selectors;
         let { renderRow } = this.context.gridHost.components;
-        let rows = rowsSelector();
+        let rows = tableRowsSelector();
         let columns = columnsSelector();
         return (
             <GridTableViewView>
-                {rows.map((row, key) => renderRow({row, columns, key, components: this.context.gridHost.components}))}
+                {rows.map((row, key) => renderRow({row, columns, key}))}
             </GridTableViewView>
         )
     }
@@ -37,8 +37,11 @@ export const gridTableViewPlugin = (config) => {
     let targetSlot = config.slot || 'body';
 
     let result = {
+        selectors: {
+            tableRowsSelector: (original, host) => () => host.selectors.rowsSelector()
+        },
         components: {
-            renderRow: original => (rowContext) => original && original(rowContext) || null
+            renderRow: (original, host) => (rowContext) => original && original(rowContext) || null
         },
         slots: {
             [targetSlot]: original => {

@@ -10,7 +10,7 @@ export const GridBodyView = ({ items }) => {
     );
 };
 
-export class GridBodyContainer extends React.PureComponent {
+export class GridBodyContainer extends React.Component {
     constructor(props) {
         super(props);
     }

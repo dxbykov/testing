@@ -10,7 +10,7 @@ const addPluginToHost = (plugin, host) => {
             let original = host[extensionType][key],
                 enhancer = plugin[extensionType][key];
 
-            host[extensionType][key] = enhancer(original, host[extensionType]);
+            host[extensionType][key] = enhancer(original, host);
         });
     });
 };
