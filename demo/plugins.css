@@ -1,0 +1,30 @@
+.grid-body,
+.grid-header,
+.grid-group-panel,
+.grid-header-item
+{
+    border: solid 1px red;
+    padding: 10px;
+}
+
+.grid-layout {
+    border: solid 1px blue;
+    padding: 10px;
+}
+
+.grid-header-container,
+.grid-body-container
+{
+    border: dotted 1px orange;
+    padding: 10px;
+}
+
+.grid-data-row-cell,
+.grid-header-row-cell {
+    border: solid 1px green;
+    padding: 5px 10px;
+}
+
+.grid-table-view {
+    width: 100%;
+}

@@ -6,7 +6,7 @@ import './index.css';
 import { Local } from './demo/local'
 import { Remote } from './demo/remote'
 import { LegoDemo } from './demo/lego'
-import { MagicDemo } from './demo/magic'
+import { PluginsDemo } from './demo/plugins'
 
 class App extends React.Component {
     constructor() {
@@ -17,7 +17,7 @@ class App extends React.Component {
         return (
             <div>
                 <h1>Magic</h1>
-                <MagicDemo/>
+                <PluginsDemo/>
             </div>
         );
     }
