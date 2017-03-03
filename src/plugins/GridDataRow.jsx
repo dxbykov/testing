@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { asPluginComponent } from './pluggable';
+
 export const GridDataRowView = ({ row, columns }) => {
     return (
         <tr className="grid-data-row">
@@ -16,11 +18,13 @@ const renderRow = (rowContext, originalRender) => {
     return originalRender(rowContext);
 };
 
-const gridDataRowPlugin = {
-    components: {
-        GridDataRow: original => GridDataRowView,
-        renderRow: original => rowContext => renderRow(rowContext, original)
+export const gridDataRowPlugin = () => {
+    return {
+        components: {
+            GridDataRow: original => GridDataRowView,
+            renderRow: original => rowContext => renderRow(rowContext, original)
+        }
     }
 }
 
-export default gridDataRowPlugin;
+export default asPluginComponent(gridDataRowPlugin);

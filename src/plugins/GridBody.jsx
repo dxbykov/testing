@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { asPluginComponent } from './pluggable';
+
 export const GridBodyView = ({ items }) => {
     return (
         <div className="grid-body">
@@ -25,15 +27,17 @@ GridBodyContainer.contextTypes = {
     gridHost: React.PropTypes.object.isRequired
 }
 
-const gridBodyPlugin = {
-    components: {
-        GridBody: original => GridBodyContainer
-    },
-    slots: {
-        body: original => {
-            return original || [];
+export const gridBodyPlugin = () => {
+    return {
+        components: {
+            GridBody: original => GridBodyContainer
+        },
+        slots: {
+            body: original => {
+                return original || [];
+            }
         }
-    }
+    };
 }
 
-export default gridBodyPlugin;
+export default asPluginComponent(gridBodyPlugin);

@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { asPluginComponent } from './pluggable';
+
 export const GridLayoutView = ({ header, body }) => {
     let GridHeader = header,
         GridBody = body;
@@ -7,7 +9,7 @@ export const GridLayoutView = ({ header, body }) => {
     return (
         <div className="grid-layout">
             { GridHeader ? <div className="grid-header-container"><GridHeader /></div> : null }
-            { GridBody ? <div className="grid-body-container"><GridBody /></div> : null }
+            { GridBody ? <div className="grid-body"><GridBody /></div> : null }
         </div>
     );
 };
@@ -30,10 +32,12 @@ GridLayoutContainer.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
 
-const gridLayoutPlugin = {
-    components: {
-        GridLayout: original => GridLayoutContainer
-    }
+export const gridLayoutPlugin = () => {
+    return {
+        components: {
+            GridLayout: original => GridLayoutContainer
+        }
+    };
 }
 
-export default gridLayoutPlugin;
+export default asPluginComponent(gridLayoutPlugin);

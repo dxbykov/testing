@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { asPluginComponent } from './pluggable';
+
 export const GridTableViewView = ({ children }) => {
     return (
         <table className="grid-table-view">
@@ -21,7 +23,7 @@ export class GridTableViewContainer extends React.PureComponent {
         let columns = columnsSelector();
         return (
             <GridTableViewView>
-                {rows.map((row, key) => renderRow({row, columns, key}))}
+                {rows.map((row, key) => renderRow({row, columns, key, components: this.context.gridHost.components}))}
             </GridTableViewView>
         )
     }
@@ -31,7 +33,7 @@ GridTableViewContainer.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
 
-const gridTableViewPlugin = (config) => {
+export const gridTableViewPlugin = (config) => {
     let targetSlot = config.slot || 'body';
 
     let result = {
@@ -50,4 +52,4 @@ const gridTableViewPlugin = (config) => {
     return result;
 }
 
-export default gridTableViewPlugin;
+export default asPluginComponent(gridTableViewPlugin);

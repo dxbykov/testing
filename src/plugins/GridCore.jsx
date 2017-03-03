@@ -1,20 +1,23 @@
 import React from 'react';
 
+import { asPluginComponent } from './pluggable';
+
 // TODO use reselect here
-const rowsSelector = (state, props) => {
+const rowsSelector = (selectors) => {
+    let props = selectors.propsSelector();
     return props.rows || [];
 }
 
-const gridCorePlugin = {
-    // reducers: {
-    //     test: original => state => state
-    // },
-    selectors: {
-        rowsSelector: original => (state, props) => {
-            return rowsSelector(state, props);
-        },
-        columnsSelector: original => (state, props, selectors) => props.columns || []
-    }
+export const gridCorePlugin = () => {
+    return {
+        // reducers: {
+        //     test: original => state => state
+        // },
+        selectors: {
+            rowsSelector: (original, selectors) => () => rowsSelector(selectors),
+            columnsSelector: (original, selectors) => () => selectors.propsSelector().columns || []
+        }
+    };
 }
 
-export default gridCorePlugin;
+export default asPluginComponent(gridCorePlugin);

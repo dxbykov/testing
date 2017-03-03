@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { asPluginComponent } from './pluggable';
+
 export const GridGroupPanelView = () => {
     return (
         <div className="grid-group-panel">
@@ -23,7 +25,7 @@ GridGroupPanelContainer.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
 
-const gridGroupPanelPlugin = (config) => {
+export const gridGroupPanelPlugin = (config) => {
     let targetSlot = config.slot || 'header';
 
     let result = {
@@ -39,4 +41,4 @@ const gridGroupPanelPlugin = (config) => {
     return result;
 }
 
-export default gridGroupPanelPlugin;
+export default asPluginComponent(gridGroupPanelPlugin);

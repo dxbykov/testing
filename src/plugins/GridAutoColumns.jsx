@@ -1,8 +1,11 @@
 import React from 'react';
 
+import { asPluginComponent } from './pluggable';
+
 // TODO use reselect here
-const columnsSelector = (state, props, selectors, original) => {
-    let columns = original && original(state, props, selectors);
+const columnsSelector = (selectors, original) => {
+    let columns = original && original(selectors);
+    let props = selectors.propsSelector();
     if(columns.length) {
         return columns; 
     }
@@ -15,15 +18,17 @@ const columnsSelector = (state, props, selectors, original) => {
     }
 }
 
-const gridAutoColumnsPlugin = {
-    // reducers: {
-    //     test: original => state => state
-    // },
-    selectors: {
-        columnsSelector: original => (state, props, selectors) => {
-            return columnsSelector(state, props, selectors, original);
+export const gridAutoColumnsPlugin = () => {
+    return {
+        // reducers: {
+        //     test: original => state => state
+        // },
+        selectors: {
+            columnsSelector: (original, selectors) => () => {
+                return columnsSelector(selectors, original);
+            }
         }
-    }
+    };
 }
 
-export default gridAutoColumnsPlugin;
+export default asPluginComponent(gridAutoColumnsPlugin);
