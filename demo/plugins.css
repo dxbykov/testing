@@ -25,6 +25,17 @@
     padding: 5px 10px;
 }
 
+.grid-edit-row-cell {
+    border: solid 1px purple;
+    background-color: #eca;
+    padding: 5px 10px;
+}
+
 .grid-table-view {
     width: 100%;
+}
+
+.edit-command {
+    color: #44f;
+    cursor: pointer;
 }

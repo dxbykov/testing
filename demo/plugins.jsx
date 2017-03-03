@@ -12,6 +12,9 @@ import GridCore from '../src/plugins/GridCore';
 import GridDataRow from '../src/plugins/GridDataRow';
 import GridHeaderRowSorting from '../src/plugins/Sorting/GridHeaderSorting';
 import GridSortingState from '../src/plugins/Sorting/GridSortingState';
+import GridEditColumn from '../src/plugins/Editing/GridEditColumn';
+import GridEditState from '../src/plugins/Editing/GridEditState';
+import GridEditRow from '../src/plugins/Editing/GridEditRow';
 
 import './plugins.css';
 
@@ -82,6 +85,9 @@ class DefaultGridConfig extends React.Component {
                 <GridHeaderRow />
                 <GridHeaderRowSorting />
                 <GridDataRow />
+                <GridEditColumn position="left" />
+                <GridEditState />
+                <GridEditRow />
 
                 <GridSortingState />
             </Plugins>
@@ -89,7 +95,7 @@ class DefaultGridConfig extends React.Component {
     }
 }
 
-class CustomGridConfig extends React.Component {
+/*class CustomGridConfig extends React.Component {
     render() {
         return (
             <Plugins>
@@ -103,7 +109,7 @@ class CustomGridConfig extends React.Component {
             </Plugins>
         );
     }
-}
+}*/
 
 export class PluginsDemo extends React.Component {
     constructor(props) {
@@ -124,11 +130,11 @@ export class PluginsDemo extends React.Component {
                     <GridAutoColumns />
                 </Grid>
 
-                <Grid
+                {/*<Grid
                     rows={rows}
                     columns={['id','name']}>
                     <CustomGridConfig />
-                </Grid>
+                </Grid>*/}
             </div>
         )
     }

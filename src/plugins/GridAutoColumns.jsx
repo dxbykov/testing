@@ -14,7 +14,7 @@ const columnsSelector = (original, { selectors }) => {
     }
     else {
         let { rows } = props;
-        return rows.length ? Object.keys(rows[0]) : [];
+        return rows.length ? Object.keys(rows[0]).map(c => ({ field: c })) : [];
     }
 }
 

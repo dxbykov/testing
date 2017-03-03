@@ -4,7 +4,7 @@ import { asPluginComponent } from './pluggable';
 
 export const GridHeaderCellView = ({ column }) => {
     return (
-        <th className="grid-header-row-cell">{column}</th>
+        <th className="grid-header-row-cell">{column.field}</th>
     );
 };
 

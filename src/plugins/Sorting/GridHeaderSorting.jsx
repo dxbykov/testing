@@ -5,7 +5,7 @@ import { asPluginComponent } from '../pluggable';
 export const GridHeaderCellWithSortingView = ({ column, sortDirection, onClick }, { gridHost }) => {
     return (
         <th onClick={() => onClick({column})} className="grid-header-row-cell">
-            {column} { sortDirection ? (sortDirection === 'desc' ? '↑' : '↓') : '#'}
+            {column.field} { sortDirection ? (sortDirection === 'desc' ? '↑' : '↓') : '#'}
         </th>
     );
 };
@@ -13,7 +13,7 @@ export const GridHeaderCellWithSortingView = ({ column, sortDirection, onClick }
 export const GridHeaderCellWithSortingContainer = ({ column }, { gridHost }) => {
     let { headerCellSortClick } = gridHost.events;
     let { columnSortingsSelector } = gridHost.selectors;
-    let sortDirection = columnSortingsSelector().filter(s => s.column === column).map(s => s.direction)[0];
+    let sortDirection = columnSortingsSelector().filter(s => s.column.field === column.field).map(s => s.direction)[0];
     return (
         <GridHeaderCellWithSortingView onClick={headerCellSortClick} column={column} sortDirection={sortDirection} />
     );

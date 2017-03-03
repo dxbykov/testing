@@ -17,10 +17,10 @@ export class GridTableViewContainer extends React.Component {
         super(props);
     }
     render() {
-        let { tableRowsSelector, columnsSelector } = this.context.gridHost.selectors;
+        let { tableRowsSelector, tableColumnsSelector } = this.context.gridHost.selectors;
         let { renderRow } = this.context.gridHost.components;
         let rows = tableRowsSelector();
-        let columns = columnsSelector();
+        let columns = tableColumnsSelector();
         return (
             <GridTableViewView>
                 {rows.map((row, key) => renderRow({row, columns, key}))}
@@ -38,7 +38,8 @@ export const gridTableViewPlugin = (config) => {
 
     let result = {
         selectors: {
-            tableRowsSelector: (original, host) => () => host.selectors.rowsSelector()
+            tableRowsSelector: (original, host) => () => host.selectors.rowsSelector(),
+            tableColumnsSelector: (original, host) => () => host.selectors.columnsSelector(),
         },
         components: {
             renderRow: (original, host) => (rowContext) => original && original(rowContext) || null
