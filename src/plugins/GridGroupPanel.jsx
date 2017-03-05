@@ -10,29 +10,15 @@ export const GridGroupPanelView = () => {
     );
 };
 
-export class GridGroupPanelContainer extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-    render() {
-        return (
-            <GridGroupPanelView></GridGroupPanelView>
-        )
-    }
-};
-
-GridGroupPanelContainer.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
 
 export const gridGroupPanelPlugin = (config) => {
-    let targetSlot = config.slot || 'header';
+    let targetSlot = config.slot || 'headerSlot';
 
     let result = {
         slots: {
             [targetSlot]: original => {
                 let target = original || [];
-                target.push(GridGroupPanelContainer);
+                target.push(GridGroupPanelView);
                 return target;
             }
         }

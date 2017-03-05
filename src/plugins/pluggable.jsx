@@ -27,3 +27,16 @@ export const asPluginComponent = plugin => React.createClass({
         return null;
     }
 })
+
+export const connectIoC = (Component, select) => {
+    let hoc = (props, context) => {
+        let enhancedProps = Object.assign({}, props, select(context.gridHost));
+        return <Component {...enhancedProps} />;
+    };
+
+    hoc.contextTypes = {
+        gridHost: React.PropTypes.object.isRequired
+    }
+
+    return hoc;
+};

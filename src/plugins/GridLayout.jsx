@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { asPluginComponent } from './pluggable';
+import { asPluginComponent, connectIoC } from './pluggable';
 
 export const GridLayoutView = ({ header, body }) => {
     let GridHeader = header,
@@ -14,28 +14,34 @@ export const GridLayoutView = ({ header, body }) => {
     );
 };
 
-export class GridLayoutContainer extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-    render() {
-        let { data } = this.props;
-        let { GridHeader, GridBody } = this.context.gridHost.components;
-
-        return (
-            <GridLayoutView header={GridHeader} body={GridBody}></GridLayoutView>
-        )
-    }
-};
-
-GridLayoutContainer.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
+const selectIocProps = ioc => {
+  let { components } = ioc;
+  return {
+    header: components.GridHeader,
+    body: components.GridBody
+  }
 }
+
+let GridLayout = connectIoC(GridLayoutView, selectIocProps);
+
+// const selectProps = (selectors) => {
+//   return {
+//       ...
+//   }
+// }
+
+// const selectActions = (actions) => {
+//   return {
+//     onClick: (args) => actions.onSort(args.id)
+//   }
+// }
+
+//GridLayout = connectState(GridLayoutView, selectProps, selectActions);
 
 export const gridLayoutPlugin = () => {
     return {
         components: {
-            GridLayout: original => GridLayoutContainer
+            GridLayout: () => GridLayout
         }
     };
 }

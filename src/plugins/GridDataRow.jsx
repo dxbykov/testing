@@ -4,7 +4,7 @@ import { asPluginComponent } from './pluggable';
 
 export const GridDataCellView = ({ row, column }) => {
     return (
-        <td key={column.field} className="grid-data-row-cell">{row[column.field]}</td>
+        <div className="grid-data-row-cell">{row[column.field]}</div>
     );
 };
 
@@ -12,7 +12,7 @@ export const GridDataRowView = ({ row, columns }, { gridHost: { components } }) 
     let { renderDataRowCell } = components;
     return (
         <tr className="grid-data-row">
-            {columns.map((column, index) => renderDataRowCell({row, column}))}
+            {columns.map((column, index) => <td key={index}>{renderDataRowCell({row, column})}</td>)}
         </tr>
     );
 };

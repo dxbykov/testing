@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { asPluginComponent } from './pluggable';
+import { asPluginComponent, connectIoC } from './pluggable';
 
 export const GridHeaderView = ({ items }) => {
     return (
@@ -10,32 +10,24 @@ export const GridHeaderView = ({ items }) => {
     );
 };
 
-export class GridHeaderContainer extends React.Component {
-    constructor(props) {
-        super(props);
-    }
-    render() {
-        let { header } = this.context.gridHost.slots;
-
-        return (
-            header && <GridHeaderView items={header}></GridHeaderView>
-        )
-    }
-};
-
-GridHeaderContainer.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired
+const selectIocProps = ioc => {
+  let { slots } = ioc;
+  return {
+    items: slots.headerSlot
+  }
 }
+
+let GridHeader = connectIoC(GridHeaderView, selectIocProps);
+
+let headerSlot = original => (original || []);
 
 export const gridHeaderPlugin = () => {
     return {
         components: {
-            GridHeader: original => GridHeaderContainer
+            GridHeader: original => GridHeader
         },
         slots: {
-            header: original => {
-                return original || [];
-            } //what to do in case of collision with other plugin
+            headerSlot: headerSlot
         }
     };
 }

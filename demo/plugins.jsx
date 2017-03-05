@@ -16,19 +16,20 @@ import GridEditColumn from '../src/plugins/Editing/GridEditColumn';
 import GridEditState from '../src/plugins/Editing/GridEditState';
 import GridEditRow from '../src/plugins/Editing/GridEditRow';
 
+import { connectIoC } from '../src/plugins/pluggable';
+
 import './plugins.css';
 
 /* Grid */
 
 class GridRoot extends React.Component {
     render() {
-        const { GridLayout } = this.context.gridHost.components;
-        return <GridLayout />
+        return <this.props.GridLayout />
     }
 }
-GridRoot.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
+GridRoot = connectIoC(GridRoot, ioc => {
+    return { GridLayout: ioc.components.GridLayout };
+});
 
 export class Grid extends React.Component {
     constructor(props) {
