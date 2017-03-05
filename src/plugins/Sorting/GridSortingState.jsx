@@ -17,7 +17,7 @@ const initialState = [];
 const sortChangeReducer = (state = initialState, action) => {
     //Use some immutability lib here
     let nextState = Object.assign({}, state);
-    nextState.columnSortings = calcSortings(action.payload.column, (state.columnSortings || initialState/* TODO */));
+    nextState.columnSortings = calcSortings(action.payload.column.field, (state.columnSortings || initialState/* TODO */));
     return nextState;
 };
 

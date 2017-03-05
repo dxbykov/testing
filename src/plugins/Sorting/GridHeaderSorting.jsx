@@ -13,7 +13,7 @@ export const GridHeaderCellWithSortingView = ({ column, sortDirection, onClick }
 export const GridHeaderCellWithSortingContainer = ({ column }, { gridHost }) => {
     let { headerCellSortClick } = gridHost.events;
     let { columnSortingsSelector } = gridHost.selectors;
-    let sortDirection = columnSortingsSelector().filter(s => s.column.field === column.field).map(s => s.direction)[0];
+    let sortDirection = columnSortingsSelector().filter(s => s.column === column.field).map(s => s.direction)[0];
     return (
         <GridHeaderCellWithSortingView onClick={headerCellSortClick} column={column} sortDirection={sortDirection} />
     );
