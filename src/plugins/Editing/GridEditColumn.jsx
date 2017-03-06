@@ -4,9 +4,9 @@ import { asPluginComponent } from '../pluggable';
 
 export const GridDataCommandCellView = ({ row, column, onClick, commands }) => {
     return (
-        <td key={column.field} className="grid-data-row-cell">
-            {commands.map(command => <span key={command} className="edit-command" onClick={() => onClick({ row, command })}>{command}</span>)}
-        </td>
+        <div key={column.field} className="grid-data-row-cell">
+            {commands.map(command => <span key={command} className="edit-command" onClick={() => onClick({ row, command })}>{command}&nbsp;</span>)}
+        </div>
     );
 };
 

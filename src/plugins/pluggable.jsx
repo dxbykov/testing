@@ -30,7 +30,7 @@ export const asPluginComponent = plugin => React.createClass({
 
 export const connectIoC = (Component, select) => {
     let hoc = (props, context) => {
-        let enhancedProps = Object.assign({}, props, select(context.gridHost));
+        let enhancedProps = Object.assign({}, props, select(context.gridHost || context));
         return <Component {...enhancedProps} />;
     };
 

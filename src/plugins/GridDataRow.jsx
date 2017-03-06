@@ -8,10 +8,10 @@ export const GridDataCellView = ({ row, column }) => {
     );
 };
 
-export const GridDataRowView = ({ row, columns }, { gridHost: { components } }) => {
+export const GridDataRowView = ({ row, columns, style }, { gridHost: { components } }) => {
     let { renderDataRowCell } = components;
     return (
-        <tr className="grid-data-row">
+        <tr className="grid-data-row" style={style}>
             {columns.map((column, index) => <td key={index}>{renderDataRowCell({row, column})}</td>)}
         </tr>
     );
@@ -21,10 +21,11 @@ GridDataRowView.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
 
-const renderRow = (rowContext, originalRender) => {
+const renderRow = (rowContext, originalRender, { components }) => {
     let { row } = rowContext;
+    let { GridDataRow } = components;
     if(!row.type) {
-        return <GridDataRowView {...rowContext} />
+        return <GridDataRow {...rowContext} />
     }
     return originalRender(rowContext);
 };
@@ -41,7 +42,7 @@ export const gridDataRowPlugin = () => {
     return {
         components: {
             GridDataRow: original => GridDataRowView,
-            renderRow: original => rowContext => renderRow(rowContext, original),
+            renderRow: (original, host) => rowContext => renderRow(rowContext, original, host),
             renderDataRowCell: original => cellContext => renderDataRowCell(cellContext, original)
         }
     }

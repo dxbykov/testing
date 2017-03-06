@@ -16,6 +16,8 @@ const saveRowChangesReducer = (state, action) => {
 
 const cancelRowChangesReducer = (state, action) => {
     let nextState = Object.assign({}, state);
+    nextState.editedCells = Object.assign({}, nextState.editedCells);
+    delete nextState.editedCells[action.payload.row.id];
     nextState.editingRows.splice(nextState.editingRows.indexOf(action.payload.row.id), 1);
     return nextState;
 };
@@ -44,12 +46,25 @@ const tableRowsSelector = ({ selectors }, original) => {
     });
 }
 
+const rowsSelector = (original, { selectors }) => () => {
+    let { editingRowsSelector, editedCellsSelector } = selectors;
+    let editingIds = editingRowsSelector();
+    let editedCells = editedCellsSelector();
+    return original().map(row => {
+        if(row.id in editedCells) {
+            return Object.assign({}, row, { _isDirty: true }, editedCells[row.id]);
+        }
+        return row;
+    });
+};
+
 export const gridHeaderSortingPlugin = () => {
     return {
         selectors: {
             tableRowsSelector: (original, host) => () => tableRowsSelector(host, original),
             editingRowsSelector: (original, host) => () => host.selectors.stateSelector().editingRows || [],
             editedCellsSelector: (original, host) => () => host.selectors.stateSelector().editedCells || {},
+            rowsSelector: rowsSelector,
         },
         actionCreators: {
             startRowEdit: (original, host) => ({ row }) => ({ type: 'GRID_START_EDIT_ROW', payload: { row } }),

@@ -3,8 +3,8 @@
 .grid-group-panel,
 .grid-header-item
 {
-    border: solid 1px red;
-    padding: 10px;
+    /*border: solid 1px red;
+    padding: 10px;*/
 }
 
 .grid-layout {
@@ -23,6 +23,7 @@
 .grid-header-row-cell {
     border: solid 1px green;
     padding: 5px 10px;
+    white-space: nowrap;
 }
 
 .grid-edit-row-cell {
