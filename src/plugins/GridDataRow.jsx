@@ -24,18 +24,18 @@ GridDataRowView.contextTypes = {
 const renderRow = (rowContext, originalRender, { components }) => {
     let { row } = rowContext;
     let { GridDataRow } = components;
-    if(!row.type) {
+    //if(!row.type) {
         return <GridDataRow {...rowContext} />
-    }
-    return originalRender(rowContext);
+    // }
+    // return originalRender(rowContext);
 };
 
 const renderDataRowCell = (cellContext, originalRender) => {
     let { row, column } = cellContext;
-    if(!row.type) {
+    //if(!row.type) {
         return <GridDataCellView {...cellContext} />
-    }
-    return originalRender(cellContext);
+    // }
+    // return originalRender(cellContext);
 };
 
 export const gridDataRowPlugin = () => {

@@ -20,9 +20,6 @@ const columnsSelector = (original, { selectors }) => {
 
 export const gridAutoColumnsPlugin = () => {
     return {
-        // reducers: {
-        //     test: original => state => state
-        // },
         selectors: {
             columnsSelector: (original, host) => () => {
                 return columnsSelector(original, host);

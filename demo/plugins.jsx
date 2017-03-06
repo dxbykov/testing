@@ -79,16 +79,12 @@ class DefaultGridConfig extends React.Component {
             <Plugins>
                 <GridCore />
                 <GridLayout />
-                <GridHeader />
-                <GridGroupPanel />
                 <GridBody />
                 <GridTableView />
+                <GridDataRow />
+
                 <GridHeaderRow />
                 <GridHeaderRowSorting />
-                <GridDataRow />
-                <GridEditColumn position="left" />
-                <GridEditState />
-                <GridEditRow />
 
                 <GridSortingState />
             </Plugins>
@@ -96,21 +92,19 @@ class DefaultGridConfig extends React.Component {
     }
 }
 
-/*class CustomGridConfig extends React.Component {
+class CustomGridConfig extends React.Component {
     render() {
         return (
             <Plugins>
                 <GridCore />
                 <GridLayout />
-                <GridHeader />
-                <GridGroupPanel slot="body" />
                 <GridBody />
-                <GridTableView slot="header" />
+                <GridTableView />
                 <GridDataRow />
             </Plugins>
         );
     }
-}*/
+}
 
 export class PluginsDemo extends React.Component {
     constructor(props) {
@@ -126,16 +120,43 @@ export class PluginsDemo extends React.Component {
 
         return (
             <div>
+                <h1>Default Separate Grid Config</h1>
                 <Grid rows={rows}>
                     <DefaultGridConfig />
                     <GridAutoColumns />
                 </Grid>
 
-                {/*<Grid
+                <h1>Inline Plugins Declaration</h1>
+                <Grid rows={rows}>
+                    <Plugins>
+                        <GridCore />
+                        <GridLayout />
+                        <GridHeader />
+                        <GridBody />
+
+                        <GridGroupPanel />
+                        <GridTableView />
+                        <GridDataRow />
+
+                        <GridHeaderRow />
+
+                        <GridEditColumn position="left" />
+                        <GridEditState />
+                        <GridEditRow />
+
+                        <GridSortingState />
+                        <GridHeaderRowSorting />
+
+                        <GridAutoColumns />
+                    </Plugins>
+                </Grid>
+
+                <h1>Custom Separate Grid Config</h1>
+                <Grid
                     rows={rows}
-                    columns={['id','name']}>
+                    columns={[{ field: 'id' }, { field: 'name' }]}>
                     <CustomGridConfig />
-                </Grid>*/}
+                </Grid>
             </div>
         )
     }
