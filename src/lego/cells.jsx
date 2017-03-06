@@ -2,6 +2,7 @@ import React from 'react';
 
 import ReactHammer from 'react-hammerjs';
 import Hammer from 'hammerjs';
+import { DragSource } from 'react-dnd';
 
 import { gestureCover, clearSelection, clamp } from './utils';
 import { Cell, CellProvider } from './grid';
@@ -111,78 +112,44 @@ ResizableCell.propTypes = {
     onResize: React.PropTypes.func.isRequired,
 };
 
-export class DraggableCell extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            dragging: false,
-            position: { x: 0, y: 0 }
-        }
+@DragSource('column', {
+    beginDrag(props) {
+        const item = { column: props.column.name }
+        return item;
+    },
+    endDrag(props, monitor, component) {
+        if (!monitor.didDrop()) return;
     }
+}, (connect, monitor) => ({
+    connectDragSource: connect.dragSource(),
+    isDragging: monitor.isDragging()
+}))
+export class DraggableCell extends React.Component {
+    static contextTypes = {
+        gridHost: React.PropTypes.object.isRequired,
+    }
+
     render() {
-        let { onMove } = this.props;
-        let { dragging, position } = this.state;
+        let { isDragging, connectDragSource } = this.props;
         let { projectPoint, columnAt, columns } = this.context.gridHost;
 
-        let handlePanStart = (e) => {
-            clearSelection();
-            gestureCover(true, 'move');
-            this.setState({
-                dragging: true,
-                position: e.center
-            });
-        };
-        let handlePanMove = (e) => {
-            clearSelection();
-            this.setState({
-                position: e.center
-            });
-        };
-        let handlePanEnd = (e) => {
-            gestureCover(false, 'move');
-            this.setState({
-                dragging: false
-            });
-            let rect = this.root.getBoundingClientRect();
-            let currentColumn = columnAt(projectPoint({ x: rect.left, y: rect.top }));
-            let destinationColumn = columnAt(projectPoint(e.center));
-            let diff = columns.indexOf(destinationColumn) - columns.indexOf(currentColumn);
-            onMove(diff);
-        };
-
         return (
-            <ReactHammer
-                onPanStart={handlePanStart}
-                onPan={handlePanMove}
-                onPanEnd={handlePanEnd}
-                options={{ direction: Hammer.DIRECTION_HORIZONTAL }}>
-                <div
-                    ref={ref => this.root = ref}
-                    style={{
-                        height: '100%',
-                        cursor: 'move',
-                        WebkitUserSelect: 'none',
-                        userSelect: 'none',
-                        borderRight: '1px dotted black',
-                    }}>
-                    <Portal opened={dragging}>
-                        <div style={{ position: 'fixed', top: position.y + 'px', left: position.x + 'px', background: '#ccc' }}>
-                            {this.props.children}
-                        </div>
-                    </Portal>
-                    {this.props.children}
-                </div>
-            </ReactHammer>
+            connectDragSource(<div
+                ref={ref => this.root = ref}
+                style={{
+                    opacity: isDragging ? .4 : 1,
+                    height: '100%',
+                    cursor: 'move',
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    borderRight: '1px dotted black',
+                }}>
+                {this.props.children}
+            </div>)
         )
     }
 }
-DraggableCell.propTypes = {
-    onMove: React.PropTypes.func.isRequired,
-};
-DraggableCell.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
+
 
 export class DetailCell extends React.Component {
     render() {

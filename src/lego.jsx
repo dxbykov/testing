@@ -1,5 +1,6 @@
 import React from 'react'
 
+export { Portal } from './lego/components'
 export { Grid, RowProvider, Rows, ColumnProvider, Columns, CellProvider, Cell } from './lego/grid';
 export { SortableCell, SelectableCell, ResizableCell, DraggableCell, DetailCell, DetailCellProvider } from './lego/cells';
 export { DetailColumnProvider, SelectableColumnProvider } from './lego/columns';

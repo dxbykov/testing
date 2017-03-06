@@ -145,34 +145,36 @@ export class Grid extends React.Component {
         let rowProviders = [];
         let columnProviders = [];
 
-        return {
-            gridHost: {
-                cellProviders,
-                rowProviders,
-                columnProviders,
-                rows,
-                columns,
-                projectPoint: ({ x, y }) => {
-                    let rect = this.root.getBoundingClientRect();
-                    return { x: x - rect.left, y: y - rect.top };
-                },
-                columnAt: ({ x }) => {
-                    let index = 0;
-                    let offset = 0;
-                    while(index < columns.length) {
-                        let column = columns[index];
-                        let columnProvider = providerFor({ column }, columnProviders);
-                        let itemSize = columnProvider.width({ column, columnProviders });
-                        
-                        if(x >= offset && x < offset + itemSize) {
-                            return column;
-                        }
-
-                        index = index + 1;
-                        offset = offset + itemSize;
+        this.host = {
+            cellProviders,
+            rowProviders,
+            columnProviders,
+            rows,
+            columns,
+            projectPoint: ({ x, y }) => {
+                let rect = this.root.getBoundingClientRect();
+                return { x: x - rect.left, y: y - rect.top };
+            },
+            columnAt: ({ x }) => {
+                let index = 0;
+                let offset = 0;
+                while(index < columns.length) {
+                    let column = columns[index];
+                    let columnProvider = providerFor({ column }, columnProviders);
+                    let itemSize = columnProvider.width({ column, columnProviders });
+                    
+                    if(x >= offset && x < offset + itemSize) {
+                        return column;
                     }
+
+                    index = index + 1;
+                    offset = offset + itemSize;
                 }
             }
+        };
+
+        return {
+            gridHost: this.host 
         };
     }
 
