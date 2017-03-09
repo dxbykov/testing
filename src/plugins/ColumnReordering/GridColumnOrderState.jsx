@@ -34,6 +34,21 @@ const columnDragEnd = (state, action) => {
     return null;
 };
 
+const calcGeometries = (columnName, left, width, prevGeometries) => {
+    let filterIndex = prevGeometries.findIndex(f => { return f.column == columnName; });
+    let result = prevGeometries.slice();
+    if(filterIndex > -1) {
+        result.splice(filterIndex, 1, { column: columnName, left, width });
+    } else {
+        result.push({ column: columnName, left, width })
+    }
+    return result;
+};
+
+const columnGeometryUpdateReducer = (state, action) => {
+    return calcGeometries(action.payload.column, action.payload.left, action.payload.width, state);
+};
+
 const reorder = (columns, orders) => {
     if(!orders.length)
         return columns;
@@ -58,7 +73,8 @@ export const gridColumnOrderStatePlugin = () => {
         actionCreators: {
             reorderColumn: (original, host) => ({ column, diff, columns }) => ({ type: 'GRID_COLUMN_ORDER_CHANGE', payload: { column, diff, columns } }),
             columnDragStart: (original, host) => ({ column }) => ({ type: 'GRID_COLUMN_DRAG_START', payload: { column } }),
-            columnDragEnd: (original, host) => () => ({ type: 'GRID_COLUMN_DRAG_END' })
+            columnDragEnd: (original, host) => () => ({ type: 'GRID_COLUMN_DRAG_END' }),
+            columnGeometryUpdate: (original, host) => ({ column, left, width }) => ({ type: 'GRID_COLUMN_GEOMETRY_UPDATE', payload: { column, left, width } })
         },
         reducers: {
             columnOrder: () => createReducer([], {
@@ -67,6 +83,9 @@ export const gridColumnOrderStatePlugin = () => {
             draggingColumn: () => createReducer(null, {
                 'GRID_COLUMN_DRAG_START': columnDragStart,
                 'GRID_COLUMN_DRAG_END': columnDragEnd
+            }),
+            columnGeometries: () => createReducer([], {
+                'GRID_COLUMN_GEOMETRY_UPDATE': columnGeometryUpdateReducer
             })
         }
     };
