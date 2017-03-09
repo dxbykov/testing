@@ -18,6 +18,8 @@ import GridSortingState from '../src/plugins/Sorting/GridSortingState';
 import GridEditColumn from '../src/plugins/Editing/GridEditColumn';
 import GridEditState from '../src/plugins/Editing/GridEditState';
 import GridEditRow from '../src/plugins/Editing/GridEditRow';
+import GridFilterRow from '../src/plugins/Filtering/GridFilterRow';
+import GridFilteringState from '../src/plugins/Filtering/GridFilteringState';
 
 import { connectIoC } from '../src/plugins/pluggable';
 
@@ -162,17 +164,19 @@ export class PluginsDemo extends React.Component {
                         <GridTableView />
                         <GridDataRow />
 
-                        <GridAutoColumns />
-
                         <GridHeaderRow />
+
+                        <GridFilterRow />
+                        <GridFilteringState />
+
+                        <GridEditColumn position="right" />
+                        <GridEditState />
+                        <GridEditRow />
 
                         <GridSortingState />
                         <GridHeaderRowSorting />
 
-                        <GridEditColumn position="left" />
-                        <GridEditState />
-                        <GridEditRow />
-
+                        <GridAutoColumns />
                     </Plugins>
                 </Grid>
 

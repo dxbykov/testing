@@ -4,7 +4,7 @@ import { asPluginComponent, connectIoC } from './pluggable';
 
 export const GridTableViewView = ({ rows, columns, renderRow }) => {
     return (
-        <table className="grid-table-view">
+        <table className="grid-table-view" style={{ borderCollapse: 'collapse' }}>
             <tbody>
                 {rows.map((row, key) => renderRow({row, columns, key}))}
             </tbody>
