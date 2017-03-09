@@ -2,10 +2,9 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { asPluginComponent, connectIoC } from './pluggable';
 
-export const GridTableViewView = ({ rows, columns, renderRow, registerRef }) => {
+export const GridTableViewView = ({ rows, columns, renderRow }) => {
     return (
         <table
-            ref={registerRef}
             className="grid-table-view"
             style={{ borderCollapse: 'collapse' }}>
             <tbody>
@@ -57,15 +56,6 @@ export const gridTableViewPlugin = (config) => {
                 return target;
             }
         },
-        refs: {},
-        helpers: {
-            columnIndexAt: (original, host) => ({ x }) => {
-                // NOTE: DOM access should be changed to smth else
-                
-                let a = host.refs.gridTableView
-                debugger;
-            }
-        }
     };
 
     return result;
