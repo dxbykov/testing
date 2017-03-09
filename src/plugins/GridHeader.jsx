@@ -13,13 +13,13 @@ export const GridHeaderView = ({ items }) => {
 const selectIocProps = ioc => {
   let { slots } = ioc;
   return {
-    items: slots.headerSlot
+    items: slots.headerSlot()
   }
 }
 
 let GridHeader = connectIoC(GridHeaderView, selectIocProps);
 
-let headerSlot = original => (original || []);
+let headerSlot = original => () => [];
 
 export const gridHeaderPlugin = () => {
     return {

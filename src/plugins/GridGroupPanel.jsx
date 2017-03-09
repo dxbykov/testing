@@ -16,8 +16,8 @@ export const gridGroupPanelPlugin = (config) => {
 
     let result = {
         slots: {
-            [targetSlot]: original => {
-                let target = original || [];
+            [targetSlot]: original => () => {
+                let target = original() || [];
                 target.push(GridGroupPanelView);
                 return target;
             }

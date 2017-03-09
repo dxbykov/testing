@@ -17,6 +17,8 @@ import GridEditState from '../src/plugins/Editing/GridEditState';
 import GridEditRow from '../src/plugins/Editing/GridEditRow';
 import GridFilterRow from '../src/plugins/Filtering/GridFilterRow';
 import GridFilteringState from '../src/plugins/Filtering/GridFilteringState';
+import GridColumnReordering from '../src/plugins/ColumnReordering/GridColumnReordering'
+import GridColumnOrderState from '../src/plugins/ColumnReordering/GridColumnOrderState'
 
 import { connectIoC } from '../src/plugins/pluggable';
 
@@ -57,7 +59,9 @@ export class Grid extends React.Component {
         }
     }
     render() {
-        return <div>{this.props.children}<GridRoot /></div>
+        let { children } = this.props;
+
+        return <div>{children}<GridRoot /></div>
     }
 };
 Grid.propTypes = {
@@ -151,6 +155,9 @@ export class PluginsDemo extends React.Component {
 
                         <GridSortingState />
                         <GridHeaderRowSorting />
+
+                        <GridColumnOrderState />
+                        <GridColumnReordering />
 
                         <GridAutoColumns />
                     </Plugins>

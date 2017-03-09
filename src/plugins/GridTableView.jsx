@@ -2,9 +2,12 @@ import React from 'react';
 
 import { asPluginComponent, connectIoC } from './pluggable';
 
-export const GridTableViewView = ({ rows, columns, renderRow }) => {
+export const GridTableViewView = ({ rows, columns, renderRow, registerRef }) => {
     return (
-        <table className="grid-table-view" style={{ borderCollapse: 'collapse' }}>
+        <table
+            ref={registerRef}
+            className="grid-table-view"
+            style={{ borderCollapse: 'collapse' }}>
             <tbody>
                 {rows.map((row, key) => renderRow({row, columns, key}))}
             </tbody>
@@ -15,13 +18,15 @@ export const GridTableViewView = ({ rows, columns, renderRow }) => {
 const selectIocProps = ioc => {
   let { 
       components: { renderRow }, 
-      selectors: { tableRowsSelector, tableColumnsSelector }
+      selectors: { tableRowsSelector, tableColumnsSelector },
+      refs
     } = ioc;
 
   return {
     renderRow,
     rows: tableRowsSelector(),
-    columns: tableColumnsSelector()
+    columns: tableColumnsSelector(),
+    registerRef: (ref) => refs.gridTableView = ref
   };
 }
 
@@ -36,13 +41,24 @@ export const gridTableViewPlugin = (config) => {
             tableColumnsSelector: (original, host) => () => host.selectors.columnsSelector(),
         },
         components: {
-            renderRow: (original, host) => (rowContext) => original && original(rowContext) || null
+            renderRow: (original, host) => (rowContext) => original && original(rowContext) || null,
+            GridTableView: (original) => () => <GridTableView />
         },
         slots: {
-            [targetSlot]: original => {
-                let target = original || [];
-                target.push(GridTableView);
+            [targetSlot]: (original, host) => () => {
+                let target = original() || [];
+                let view = host.components.GridTableView;
+                target.push(view);
                 return target;
+            }
+        },
+        refs: {},
+        helpers: {
+            columnIndexAt: (original, host) => ({ x }) => {
+                // NOTE: DOM access should be changed to smth else
+                
+                let a = host.refs.gridTableView
+                debugger;
             }
         }
     };

@@ -13,13 +13,13 @@ export const GridBodyView = ({ items }) => {
 const selectIocProps = ioc => {
   let { slots } = ioc;
   return {
-    items: slots.bodySlot
+    items: slots.bodySlot()
   }
 }
 
 let GridBody = connectIoC(GridBodyView, selectIocProps);
 
-let bodySlot = original => (original || []);
+let bodySlot = original => () => [];
 
 export const gridBodyPlugin = () => {
     return {
