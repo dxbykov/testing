@@ -28,10 +28,21 @@ export const asPluginComponent = plugin => React.createClass({
     }
 })
 
-export const connectIoC = (Component, select) => {
-    let hoc = (props, context) => {
-        let enhancedProps = Object.assign({}, props, select(context.gridHost || context));
-        return <Component {...enhancedProps} />;
+class IoCHOC extends React.Component {
+    render() {
+        let enhancedProps = Object.assign({}, this.props, this.props.select(this.context.gridHost));
+        return <this.props.WrappedComponent {...enhancedProps} />;
+    }
+}
+
+IoCHOC.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired
+}
+
+
+export const connectIoC = (WrappedComponent, select) => {
+    let hoc = (props) => {
+        return <IoCHOC {...props} select={select} WrappedComponent={WrappedComponent} />;
     };
 
     hoc.contextTypes = {

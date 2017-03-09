@@ -1,16 +1,9 @@
 import React from 'react';
-
+import { connect } from 'react-redux';
 import { asPluginComponent, connectIoC } from '../pluggable';
+import GridEditCellViewContainer from './GridEditCell';
 
-export const GridEditCellView = ({ row, column, onValueChange }) => {
-    return (
-        <div key={column.field} className="grid-edit-row-cell">
-            <input type="text" style={{width: '100%'}} value={row[column.field]} onChange={(args) => onValueChange(args.target.value)} />
-        </div>
-    );
-};
-
-export const GridEditRowView = ({ row, columns }, { gridHost: { components } }) => {
+export const GridEditRowView = ({ row, columns, components }) => {
     let { renderEditRowCell } = components;
     return (
         <tr className="grid-data-row">
@@ -19,47 +12,58 @@ export const GridEditRowView = ({ row, columns }, { gridHost: { components } }) 
     );
 };
 
-GridEditRowView.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
+let GridEditRowContainer = connectIoC(GridEditRowView, ioc => ({ components: ioc.components }));
 
-const renderRow = (rowContext, originalRender) => {
+const renderRow = (rowContext, originalRender, host) => {
+    let { GridEditRow } = host.components;
     let { row } = rowContext;
     if(row.type === 'editing') {
-        return <GridEditRowView {...rowContext} />
+        return <GridEditRow {...rowContext} />
     }
     return originalRender(rowContext);
 };
 
-const renderEditRowCell = (cellContext, { components, events }) => {
+const renderEditRowCell = (cellContext, { components }) => {
     let { row, column } = cellContext;
-    let { GridDataCommandCellView } = components;
-    let { commandColumnClick, editorValueChange } = events;
+    let { GridDataCommandCell } = components;
     if(column.type === 'command') {
-        return <GridDataCommandCellView key={column.field} {...cellContext} onClick={commandColumnClick} commands={['Save', 'Cancel']}/>
+        return <GridDataCommandCell key={column.field} {...cellContext} commands={['Save', 'Cancel']}/>
     }
     else if(!column.type) {
-        return <GridEditCellView key={column.field} {...cellContext} onValueChange={(value) => editorValueChange({ value, row, column })} />
+        return <GridEditCellViewContainer key={column.field} {...cellContext} />
     }
     return null;
 };
 
-let GridDataRowEnhanced = ({ editedCellsSelector, ...props, OriginalRow}) => {
-    let style = {};
-    if(props.row.id in editedCellsSelector()) {
-        style.fontWeight = 'bold';
-    }
-    return <OriginalRow {...props} style={style} />;
+let GridDataRowEnhanced = ({ ...props, OriginalRow }) => {
+    return <OriginalRow {...props}  />;
 };
 
-GridDataRowEnhanced = connectIoC(GridDataRowEnhanced, ioc => ({ editedCellsSelector: ioc.selectors.editedCellsSelector }))
+let mapStateToProps = (state, props) => {
+    let { editedCellsSelector } = props;
+    let style = {};
+    if(props.row.id in editedCellsSelector(state)) {
+        style.fontWeight = 'bold';
+    }
+    return {
+        style: style
+    };
+};
+
+GridDataRowEnhanced = connect(mapStateToProps)(GridDataRowEnhanced);
+
+let mapIocToProps = ioc => {
+    return { editedCellsSelector: ioc.selectors.editedCellsSelector };
+};
+
+GridDataRowEnhanced = connectIoC(GridDataRowEnhanced, mapIocToProps)
 
 export const gridEditRowPlugin = () => {
     return {
         components: {
-            GridEditRow: original => GridEditRowView,
+            GridEditRow: original => GridEditRowContainer,
             GridDataRow: original => (props) => <GridDataRowEnhanced OriginalRow={original} {...props} />,
-            renderRow: original => rowContext => renderRow(rowContext, original),
+            renderRow: (original, host) => rowContext => renderRow(rowContext, original, host),
             renderEditRowCell: (original, host) => cellContext => renderEditRowCell(cellContext, host)
         }
     }

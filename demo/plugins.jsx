@@ -1,4 +1,7 @@
 import React from 'react';
+import { createStore } from 'redux';
+import { combineReducers } from 'redux';
+import { Provider } from 'react-redux';
 import './magic.css';
 import { generateColumns, generateRows } from './demoData';
 import GridLayout from '../src/plugins/GridLayout';
@@ -23,35 +26,55 @@ import './plugins.css';
 /* Grid */
 
 class GridRoot extends React.Component {
+    constructor(props, context) {
+        super(props, context);
+    }
+    componentWillMount() {
+        let { reducers } = this.props;
+        let { stateStore } = this.context;
+
+        let pluginReducer = (state, action) => {
+            Object.keys(reducers).forEach(key => {
+                state = reducers[key](state, action);
+            });
+            return state;
+        };
+
+        stateStore.replaceReducer(pluginReducer);
+    }
     render() {
-        return <this.props.GridLayout />
+        let { stateStore } = this.context;
+        return <Provider store={stateStore}>
+            <this.props.GridLayout />
+        </Provider>
     }
 }
+GridRoot.contextTypes = {
+    stateStore: React.PropTypes.object.isRequired,
+};
 GridRoot = connectIoC(GridRoot, ioc => {
-    return { GridLayout: ioc.components.GridLayout };
+    return {
+        GridLayout: ioc.components.GridLayout,
+        reducers: ioc.reducers 
+    };
 });
+
 
 export class Grid extends React.Component {
     constructor(props) {
         super(props);
 
         this.host = {
-            dispatch: this.dispatch.bind(this),
             selectors: {
-                stateSelector: () => this.state,
-                propsSelector: () => this.props
-            }
+                propsSelector: state => this.props
+            },
+            reducers: {}
         };
-
-        this.state = {};
-    }
-    dispatch(action) {
-        console.log(action);
-        this.setState(this.host.reducers[action.type](this.state, action));
     }
     getChildContext() {
         return {
-            gridHost: this.host
+            gridHost: this.host,
+            stateStore: createStore((state = {}) => state, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__())
         }
     }
     render() {
@@ -64,6 +87,7 @@ Grid.propTypes = {
 };
 Grid.childContextTypes = {
     gridHost: React.PropTypes.object.isRequired,
+    stateStore: React.PropTypes.object.isRequired,
 };
 /* End of Grid */
 
@@ -138,16 +162,17 @@ export class PluginsDemo extends React.Component {
                         <GridTableView />
                         <GridDataRow />
 
+                        <GridAutoColumns />
+
                         <GridHeaderRow />
+
+                        <GridSortingState />
+                        <GridHeaderRowSorting />
 
                         <GridEditColumn position="left" />
                         <GridEditState />
                         <GridEditRow />
 
-                        <GridSortingState />
-                        <GridHeaderRowSorting />
-
-                        <GridAutoColumns />
                     </Plugins>
                 </Grid>
 

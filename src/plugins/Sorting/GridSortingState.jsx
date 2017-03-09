@@ -12,13 +12,13 @@ const calcSortings = (columnName, prevSorting) => {
     ];
 };
 
-const initialState = [];
-
-const sortChangeReducer = (state = initialState, action) => {
-    //Use some immutability lib here
-    let nextState = Object.assign({}, state);
-    nextState.columnSortings = calcSortings(action.payload.column.field, (state.columnSortings || initialState/* TODO */));
-    return nextState;
+const sortChangeReducer = (state = { columnSortings: [] }, action) => {
+    if(action.type == 'GRID_COLUMN_SORT_CHANGE') {
+        let nextState = Object.assign({}, state || { columnSortings: [] });
+        nextState.columnSortings = calcSortings(action.payload.column.field, state.columnSortings);
+        return nextState;
+    }
+    return state;
 };
 
 const sort = (rows, sortings) => {
@@ -33,23 +33,23 @@ const sort = (rows, sortings) => {
     return result;
 };
 
-const sortRows = ({ selectors }, original) => {
+const createSortRowsSelector = ({ selectors }, original) => state => {
     let { columnSortingsSelector } = selectors;
-    return sort(original(), columnSortingsSelector());
+    return sort(original(state), columnSortingsSelector(state));
 }
 
 export const gridHeaderSortingPlugin = () => {
     return {
         selectors: {
-            columnSortingsSelector: (original, host) => () => host.selectors.stateSelector().columnSortings || [],
+            columnSortingsSelector: (original, host) => state => state.columnSortings || [],
             //TODO move to data processors
-            rowsSelector: (original, host) => () => sortRows(host, original)
+            rowsSelector: (original, host) => createSortRowsSelector(host, original)
         },
         actionCreators: {
             sotrByColumn: (original, host) => ({ column }) => ({ type: 'GRID_COLUMN_SORT_CHANGE', payload: { column } })
         },
         reducers: {
-            GRID_COLUMN_SORT_CHANGE: (original, host) => sortChangeReducer
+            'GRID_COLUMN_SORT_CHANGE': (original, host) => sortChangeReducer
         }
     };
 }

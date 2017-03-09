@@ -1,6 +1,6 @@
 import React from 'react';
-
-import { asPluginComponent } from '../pluggable';
+import { connect } from 'react-redux';
+import { asPluginComponent, connectIoC } from '../pluggable';
 
 export const GridDataCommandCellView = ({ row, column, onClick, commands }) => {
     return (
@@ -10,58 +10,66 @@ export const GridDataCommandCellView = ({ row, column, onClick, commands }) => {
     );
 };
 
-const tableColumnsSelector = (original, position) => {
+const mapStateToProps = (state, props) => {
+    return {
+    };
+}
+const mapDispatchToProps = (dispatch, props) => {
+    let { actionCreators } = props;
+    return {
+        onClick: (args) => {
+            let { startRowEdit, saveRowChanges, cancelRowChanges } = actionCreators;
+            let { row, command } = args;
+            switch(command) {
+                case 'Edit':
+                    dispatch(startRowEdit({ row }));
+                break;
+                case 'Save':
+                    dispatch(saveRowChanges({ row }));
+                break;
+                case 'Cancel':
+                    dispatch(cancelRowChanges({ row }));
+                break;
+            }            
+        }
+    }
+}
+let GridDataCommandCellViewContainer = connect(mapStateToProps, mapDispatchToProps)(GridDataCommandCellView);
+
+const mapIocToProps = ioc => {
+    return {
+        actionCreators: ioc.actionCreators
+    };
+}
+GridDataCommandCellViewContainer = connectIoC(GridDataCommandCellViewContainer, mapIocToProps);
+
+
+const enhanceTableColumnsSelector = (original, position) => state => {
     const commandColumn = { type: 'command' };
     if(position === 'left') {
-        return [ commandColumn, ...original() ];
+        return [ commandColumn, ...original(state) ];
     }
     else {
-        return [ ...original(), commandColumn ];
+        return [ ...original(state), commandColumn ];
     }
 };
 
-const renderDataRowCommandCell = (cellContext, originalRender, { events }) => {
-    let { commandColumnClick } = events;
+const renderDataRowCommandCell = (cellContext, originalRender, host) => {
     let { row, column } = cellContext;
+    let { GridDataCommandCell } = host.components;
     if(column.type === 'command') {
-        return <GridDataCommandCellView {...cellContext} onClick={commandColumnClick} commands={['Edit']}/>
+        return <GridDataCommandCell {...cellContext} commands={['Edit']}/>
     }
     return originalRender(cellContext);
-};
-
-const commandColumnClick = (args, { actionCreators, dispatch }) => {
-    let { startRowEdit, saveRowChanges, cancelRowChanges } = actionCreators;
-    let { row, command } = args;
-    switch(command) {
-        case 'Edit':
-            dispatch(startRowEdit({ row }));
-        break;
-        case 'Save':
-            dispatch(saveRowChanges({ row }));
-        break;
-        case 'Cancel':
-            dispatch(cancelRowChanges({ row }));
-        break;
-    }
-};
-
-const editorValueChange = (args, { actionCreators, dispatch }) => {
-    let { value, row, column } = args;
-    let { cellValueChangeEdit } = actionCreators;
-    dispatch(cellValueChangeEdit({ value, row, column }));
 };
 
 export const griEditColumnPlugin = ({ position }) => {
     return {
         selectors: {
-            tableColumnsSelector: (original) => () => tableColumnsSelector(original, position)
-        },
-        events: {
-            commandColumnClick: (original, host) => args => (original && original(args)) || commandColumnClick(args, host),
-            editorValueChange: (original, host) => args => (original && original(args)) || editorValueChange(args, host),
+            tableColumnsSelector: (original) => enhanceTableColumnsSelector(original, position)
         },
         components: {
-            GridDataCommandCellView: () => GridDataCommandCellView,
+            GridDataCommandCell: () => GridDataCommandCellViewContainer,
             renderDataRowCell: (original, host) => cellContext => renderDataRowCommandCell(cellContext, original, host)
         }
     };
