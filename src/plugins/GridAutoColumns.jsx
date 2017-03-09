@@ -3,8 +3,8 @@ import React from 'react';
 import { asPluginComponent } from './pluggable';
 
 // TODO use reselect here
-const columnsSelector = (original, { selectors }) => {
-    let columns = original && original();
+const createColumnsSelector = (original, { selectors }) => state => {
+    let columns = original && original(state);
     let props = selectors.propsSelector();
     if(columns.length) {
         return columns; 
@@ -21,8 +21,8 @@ const columnsSelector = (original, { selectors }) => {
 export const gridAutoColumnsPlugin = () => {
     return {
         selectors: {
-            columnsSelector: (original, host) => () => {
-                return columnsSelector(original, host);
+            columnsSelector: (original, host) => {
+                return createColumnsSelector(original, host);
             }
         }
     };

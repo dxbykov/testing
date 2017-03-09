@@ -1,6 +1,6 @@
 import React from 'react';
-
-import { asPluginComponent } from '../pluggable';
+import { connect } from 'react-redux';
+import { asPluginComponent, connectIoC } from '../pluggable';
 
 const filterFor = (columnName, filters) => {
     if(!filters.length)
@@ -9,23 +9,36 @@ const filterFor = (columnName, filters) => {
     return filter ? filter.value : '';
 };
 
-export const GridFilterCellView = ({ column }, { gridHost }) => {
-    let { filterChange } = gridHost.events;
-    let { columnFiltersSelector } = gridHost.selectors;
+export const GridFilterCellView = ({ column, filterChange, filters }) => {
     return (
         <th className="grid-filter-row-cell">
             <input
                 type="text"
-                value={filterFor(column.field, columnFiltersSelector())}
+                value={filterFor(column.field, filters)}
                 onChange={(e) => filterChange({ column, value: e.target.value })}
                 style={{ width: '100%' }}/>
         </th>
     );
 };
 
-GridFilterCellView.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired
-}
+let GridFilterCellContainer = connectIoC(
+    connect(
+        (state, props) => ({
+            filters: state.columnFilters
+        }),
+        (dispatch, props) => ({
+            filterChange: args => {
+                let { filterColumn } = props;
+                let { column, value } = args;
+                dispatch(filterColumn({ column, value }));
+            }
+        })
+    )(GridFilterCellView),
+    ioc => ({
+        filterColumn: ioc.actionCreators.filterColumn,
+        columnFiltersSelector: ioc.selectors.columnFiltersSelector
+    })
+);
 
 export const GridFilterRowView = ({ columns, cellComponent }) => {
     let Cell = cellComponent;
@@ -36,22 +49,12 @@ export const GridFilterRowView = ({ columns, cellComponent }) => {
     );
 };
 
-export const GridFilterRowContainer = ({ columns }, { gridHost }) => {
-    let { GridFilterCell } = gridHost.components;
-    return (
-        <GridFilterRowView columns={columns} cellComponent={GridFilterCell} />
-    );
-};
-
-GridFilterRowContainer.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired
-}
-
-const filterChange = (args, { actionCreators, dispatch }) => {
-    let { filterColumn } = actionCreators;
-    let { column, value } = args;
-    dispatch(filterColumn({ column, value }));
-};
+let GridFilterRowContainer = connectIoC(
+    GridFilterRowView,
+    ioc => ({
+        cellComponent: ioc.components.GridFilterCell
+    })
+);
 
 const renderRow = (rowContext, originalRender, host) => {
     let { row } = rowContext;
@@ -65,16 +68,13 @@ const renderRow = (rowContext, originalRender, host) => {
 
 export const gridHeaderSortingPlugin = () => {
     return {
-        events: {
-            filterChange: (original, host) => args => (original && original(args)) || filterChange(args, host)
-        },
         components: {
             GridFilterRow: original => GridFilterRowContainer,
-            GridFilterCell: original => GridFilterCellView,
+            GridFilterCell: original => GridFilterCellContainer,
             renderRow: (original, host) => rowContext => renderRow(rowContext, original, host)
         },
         selectors: {
-            tableRowsSelector: (original, host) => () => [original()[0], { type: 'filter' }, ...original().slice(1)]
+            tableRowsSelector: (original, host) => state => [original(state)[0], { type: 'filter' }, ...original(state).slice(1)]
         }
     };
 }

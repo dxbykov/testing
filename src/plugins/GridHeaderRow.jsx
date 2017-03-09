@@ -46,7 +46,7 @@ export const gridHeaderRowPlugin = () => {
             renderRow: (original, host) => rowContext => renderRow(rowContext, original, host)
         },
         selectors: {
-            tableRowsSelector: (original, host) => () => [{ type: 'header' }, ...original()]
+            tableRowsSelector: (original, host) => state => [{ type: 'header' }, ...original(state)]
         }
     };
 }

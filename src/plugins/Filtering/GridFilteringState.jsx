@@ -13,13 +13,13 @@ const calcFilters = (columnName, value, prevFilters) => {
     return result;
 };
 
-const initialState = [];
-
-const filterChangeReducer = (state = initialState, action) => {
-    //Use some immutability lib here
-    let nextState = Object.assign({}, state);
-    nextState.columnFilters = calcFilters(action.payload.column.field, action.payload.value, (state.columnFilters || initialState/* TODO */));
-    return nextState;
+const filterChangeReducer = (state, action) => {
+    if(action.type === 'GRID_COLUMN_FILTER_CHANGE') {
+        let nextState = Object.assign({}, state);
+        nextState.columnFilters = calcFilters(action.payload.column.field, action.payload.value, (state.columnFilters || initialState/* TODO */));
+        return nextState;
+    }
+    return Object.assign({ columnFilters: [] }, state);
 };
 
 const filter = (rows, filters) => {
@@ -33,17 +33,14 @@ const filter = (rows, filters) => {
     });
 };
 
-const filterRows = ({ selectors }, original) => {
-    let { columnFiltersSelector } = selectors;
-    return filter(original(), columnFiltersSelector());
+const createfilterRowsSelector = (original) => state => {
+    return filter(original(state), state.columnFilters);
 }
 
 export const gridHeaderSortingPlugin = () => {
     return {
         selectors: {
-            columnFiltersSelector: (original, host) => () => (host.selectors.stateSelector().columnFilters || initialState/* TODO */),
-            //TODO move to data processors
-            rowsSelector: (original, host) => () => filterRows(host, original)
+            rowsSelector: (original, host) => createfilterRowsSelector(original, host)
         },
         actionCreators: {
             filterColumn: (original, host) => ({ column, value }) => ({ type: 'GRID_COLUMN_FILTER_CHANGE', payload: { column, value } })

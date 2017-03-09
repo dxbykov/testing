@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { connect } from 'react-redux';
 import { asPluginComponent, connectIoC } from './pluggable';
 
 export const GridTableViewView = ({ rows, columns, renderRow, registerRef }) => {
@@ -15,30 +15,37 @@ export const GridTableViewView = ({ rows, columns, renderRow, registerRef }) => 
     );
 };
 
-const selectIocProps = ioc => {
+const mapStateToProps = (state, props) => {
+  let { tableRowsSelector, tableColumnsSelector } = props.selectors;
+  return {
+    rows: tableRowsSelector(state),
+    columns: tableColumnsSelector(state)
+  };
+}
+let GridTableView = connect(mapStateToProps)(GridTableViewView);
+
+const mapIocToProps = ioc => {
   let { 
-      components: { renderRow }, 
-      selectors: { tableRowsSelector, tableColumnsSelector },
+      components: { renderRow },
+      selectors,
       refs
     } = ioc;
 
   return {
     renderRow,
-    rows: tableRowsSelector(),
-    columns: tableColumnsSelector(),
+    selectors,
     registerRef: (ref) => refs.gridTableView = ref
   };
 }
-
-let GridTableView = connectIoC(GridTableViewView, selectIocProps);
+GridTableView = connectIoC(GridTableView, mapIocToProps);
 
 export const gridTableViewPlugin = (config) => {
     let targetSlot = config.slot || 'bodySlot';
 
     let result = {
         selectors: {
-            tableRowsSelector: (original, host) => () => host.selectors.rowsSelector(),
-            tableColumnsSelector: (original, host) => () => host.selectors.columnsSelector(),
+            tableRowsSelector: (original, host) => state => host.selectors.rowsSelector(state),
+            tableColumnsSelector: (original, host) => state => host.selectors.columnsSelector(state),
         },
         components: {
             renderRow: (original, host) => (rowContext) => original && original(rowContext) || null,

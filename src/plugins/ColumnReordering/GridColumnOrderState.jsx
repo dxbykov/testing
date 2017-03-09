@@ -22,13 +22,31 @@ const calcOrders = (columnName, diff, prevOrders, columns) => {
     return result;
 };
 
-const initialState = [];
+const orderChangeReducer = (state, action) => {
+    if(action.type === 'GRID_COLUMN_ORDER_CHANGE') {
+        let nextState = Object.assign({}, state);
+        nextState.columnOrder = calcOrders(action.payload.column, action.payload.diff, state.columnFilters, action.payload.columns);
+        return nextState;
+    }
+    return Object.assign({ columnOrder: [] }, state);
+};
 
-const orderChangeReducer = (host, state = initialState, action) => {
-    //Use some immutability lib here
-    let nextState = Object.assign({}, state);
-    nextState.columnOrder = calcOrders(action.payload.column, action.payload.diff, (state.columnFilters || initialState/* TODO */), host.selectors.tableColumnsSelector());
-    return nextState;
+const columnDragStart = (state, action) => {
+    if(action.type === 'GRID_COLUMN_DRAG_START') {
+        let nextState = Object.assign({}, state);
+        nextState.draggingColumn = action.payload.column.field;
+        return nextState;
+    }
+    return Object.assign({ }, state);
+};
+
+const columnDragEnd = (state, action) => {
+    if(action.type === 'GRID_COLUMN_DRAG_END') {
+        let nextState = Object.assign({}, state);
+        nextState.draggingColumn = null;
+        return nextState;
+    }
+    return Object.assign({ }, state);
 };
 
 const reorder = (columns, orders) => {
@@ -47,23 +65,20 @@ const reorder = (columns, orders) => {
     });
 };
 
-const reorderColumns = ({ selectors }, original) => {
-    let { columnOrderSelector } = selectors;
-    return reorder(original(), columnOrderSelector());
-}
-
 export const gridColumnOrderStatePlugin = () => {
     return {
         selectors: {
-            columnOrderSelector: (original, host) => () => (host.selectors.stateSelector().columnOrder || initialState/* TODO */),
-            //TODO move to data processors
-            tableColumnsSelector: (original, host) => () => reorderColumns(host, original)
+            tableColumnsSelector: (original, host) => (state) => reorder(original(state), state.columnOrder)
         },
         actionCreators: {
-            reorderColumn: (original, host) => ({ column, diff }) => ({ type: 'GRID_COLUMN_ORDER_CHANGE', payload: { column, diff } })
+            reorderColumn: (original, host) => ({ column, diff, columns }) => ({ type: 'GRID_COLUMN_ORDER_CHANGE', payload: { column, diff, columns } }),
+            columnDragStart: (original, host) => ({ column }) => ({ type: 'GRID_COLUMN_DRAG_START', payload: { column } }),
+            columnDragEnd: (original, host) => () => ({ type: 'GRID_COLUMN_DRAG_END' })
         },
         reducers: {
-            'GRID_COLUMN_ORDER_CHANGE': (original, host) => orderChangeReducer.bind(null, host)
+            'GRID_COLUMN_ORDER_CHANGE': (original, host) => orderChangeReducer,
+            'GRID_COLUMN_DRAG_START': (original, host) => columnDragStart,
+            'GRID_COLUMN_DRAG_END': (original, host) => columnDragEnd
         }
     };
 }

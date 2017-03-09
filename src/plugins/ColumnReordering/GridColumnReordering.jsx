@@ -1,70 +1,72 @@
 import React from 'react';
+import { connect } from 'react-redux';
+import { asPluginComponent, connectIoC } from '../pluggable';
 
-import { asPluginComponent } from '../pluggable';
-
-export const GridHeaderCellWithDraggingView = ({ column, sortDirection, onClick, children }) => {
+export const GridHeaderCellWithDraggingView = ({ onDragStart, onDragEnd, children }) => {
     return (
         <th 
             draggable={true}
             className="grid-header-row-cell"
-            onDrag={(e) => e.dataTransfer.setData("columnFiekd", column.field)}>
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}>
             { children }
         </th>
     );
 };
 
-export const GridHeaderCellWithDraggingContainer = ({ column, original }, { gridHost }) => {
-    let { columnSortingsSelector } = gridHost.selectors;
-    let sortDirection = columnSortingsSelector().filter(s => s.column === column.field).map(s => s.direction)[0];
-    return (
-        <GridHeaderCellWithDraggingView onClick={columnOrderChange} column={column} sortDirection={sortDirection}>
-            { original }
-        </GridHeaderCellWithDraggingView>
-    );
-};
+export const GridHeaderCellWithDraggingContainer = connectIoC(
+    connect(
+        (state, props) => ({}),
+        (dispatch, props) => ({
+            onDragStart: args => {
+                let { column } = props;
+                dispatch(props.columnDragStart({ column }));
+            },
+            onDragEnd: args => {
+                dispatch(props.columnDragEnd());
+            }
+        })
+    )(GridHeaderCellWithDraggingView), 
+    ioc => ({
+        columnDragStart: ioc.actionCreators.columnDragStart,
+        columnDragEnd: ioc.actionCreators.columnDragEnd
+    })
+);
 
-GridHeaderCellWithDraggingContainer.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired
-}
-
-export const GridTableViewWithDraggingView = ({ columns, onColumnOrderChange, children }) => {
+export const GridTableViewWithDraggingView = ({ draggingColumn, columns, onColumnOrderChange, children }) => {
     return (
         <div
             onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => onColumnOrderChange({ column: columns[2].field, diff: +2 })}>
+            onDrop={(e) => onColumnOrderChange({ column: draggingColumn, diff: +2, columns })}>
             { children }
         </div>
     );
 };
 
-export const GridTableViewWithDraggingContainer = ({ column, original }, { gridHost }) => {
-    let { columnOrderChange } = gridHost.events;
-    let { tableColumnsSelector } = gridHost.selectors;
-    return (
-        <GridTableViewWithDraggingView columns={tableColumnsSelector()} onColumnOrderChange={columnOrderChange}>
-            { original }
-        </GridTableViewWithDraggingView>
-    );
-};
-
-GridTableViewWithDraggingContainer.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired
-}
-
-const columnOrderChange = (args, { actionCreators, dispatch }) => {
-    let { reorderColumn } = actionCreators;
-    let { column, diff } = args;
-    dispatch(reorderColumn({ column, diff }));
-};
+export const GridTableViewWithDraggingContainer = connectIoC(
+    connect(
+        (state, props) => ({
+            columns: props.tableColumnsSelector(state),
+            draggingColumn: state.draggingColumn
+        }),
+        (dispatch, props) => ({
+            onColumnOrderChange: args => {
+                let { column, diff, columns } = args;
+                dispatch(props.reorderColumn({ column, diff, columns }));
+            }
+        })
+    )(GridTableViewWithDraggingView), 
+    ioc => ({
+        tableColumnsSelector: ioc.selectors.tableColumnsSelector,
+        reorderColumn: ioc.actionCreators.reorderColumn
+    })
+);
 
 export const gridHeaderSortingPlugin = () => {
     return {
-        events: {
-            columnOrderChange: (original, host) => args => (original && original(args)) || columnOrderChange(args, host)
-        },
         components: {
-            GridHeaderCell: (original) => (props) => <GridHeaderCellWithDraggingContainer {...props} original={original(props)} />,
-            GridTableView: (original) => (props) => <GridTableViewWithDraggingContainer {...props} original={original(props)} />
+            GridHeaderCell: (original) => (props) => <GridHeaderCellWithDraggingContainer {...props}>{original(props)}</GridHeaderCellWithDraggingContainer>,
+            GridTableView: (original) => (props) => <GridTableViewWithDraggingContainer {...props}>{original(props)}</GridTableViewWithDraggingContainer>
         }
     };
 }

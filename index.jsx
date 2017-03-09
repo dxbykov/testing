@@ -6,6 +6,7 @@ import './index.css';
 import { Local } from './demo/local'
 import { Remote } from './demo/remote'
 import { LegoDemo } from './demo/lego'
+import { MagicDemo } from './demo/magic'
 import { PluginsDemo } from './demo/plugins'
 
 class App extends React.Component {

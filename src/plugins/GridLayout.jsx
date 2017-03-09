@@ -24,20 +24,6 @@ const selectIocProps = ioc => {
 
 let GridLayout = connectIoC(GridLayoutView, selectIocProps);
 
-// const selectProps = (selectors) => {
-//   return {
-//       ...
-//   }
-// }
-
-// const selectActions = (actions) => {
-//   return {
-//     onClick: (args) => actions.onSort(args.id)
-//   }
-// }
-
-//GridLayout = connectState(GridLayoutView, selectProps, selectActions);
-
 export const gridLayoutPlugin = () => {
     return {
         components: {

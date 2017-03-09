@@ -3,7 +3,7 @@ import React from 'react';
 import { asPluginComponent } from './pluggable';
 
 // TODO use reselect here
-const rowsSelector = ({ selectors }) => {
+const createRowsSelector = ({ selectors }) => state => {
     let props = selectors.propsSelector();
     return props.rows || [];
 }
@@ -11,8 +11,8 @@ const rowsSelector = ({ selectors }) => {
 export const gridCorePlugin = () => {
     return {
         selectors: {
-            rowsSelector: (original, host) => () => rowsSelector(host),
-            columnsSelector: (original, host) => () => host.selectors.propsSelector().columns || []
+            rowsSelector: (original, host) => createRowsSelector(host),
+            columnsSelector: (original, host) => state => host.selectors.propsSelector().columns || []
         }
     };
 }
