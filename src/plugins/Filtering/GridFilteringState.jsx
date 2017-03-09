@@ -19,7 +19,7 @@ const filterChangeReducer = (state, action) => {
         nextState.columnFilters = calcFilters(action.payload.column.field, action.payload.value, (state.columnFilters || initialState/* TODO */));
         return nextState;
     }
-    return state || { columnFilters: [] };
+    return Object.assign({ columnFilters: [] }, state);
 };
 
 const filter = (rows, filters) => {
