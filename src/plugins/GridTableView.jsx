@@ -25,16 +25,14 @@ const mapStateToProps = (state, props) => {
 let GridTableView = connect(mapStateToProps)(GridTableViewView);
 
 const mapIocToProps = ioc => {
-  let { 
-      components: { renderRow },
-      selectors,
-      refs
+  let {
+      components: { renderRow }, 
+      selectors
     } = ioc;
 
   return {
     renderRow,
-    selectors,
-    registerRef: (ref) => refs.gridTableView = ref
+    selectors
   };
 }
 GridTableView = connectIoC(GridTableView, mapIocToProps);

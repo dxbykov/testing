@@ -37,13 +37,11 @@ class GridRoot extends React.PureComponent {
         let { reducers } = this.props;
         let { stateStore } = this.context;
 
-        let pluginReducer = (state, action) => {
-            Object.keys(reducers).forEach(key => {
-                state = reducers[key](state, action);
-            });
-            return state;
-        };
-
+        let toCombine = {};
+        Object.keys(reducers).forEach(key => {
+            toCombine[key] = reducers[key]
+        });
+        let pluginReducer = combineReducers(toCombine);
         stateStore.replaceReducer(pluginReducer);
     }
     render() {

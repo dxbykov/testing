@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { asPluginComponent } from '../pluggable';
+import { asPluginComponent, createReducer } from '../pluggable';
 
 const calcSortings = (columnName, prevSorting) => {
     let sorting = prevSorting.filter(s => s.column == columnName)[0];
@@ -12,13 +12,8 @@ const calcSortings = (columnName, prevSorting) => {
     ];
 };
 
-const sortChangeReducer = (state = { columnSortings: [] }, action) => {
-    if(action.type == 'GRID_COLUMN_SORT_CHANGE') {
-        let nextState = Object.assign({}, state || { columnSortings: [] });
-        nextState.columnSortings = calcSortings(action.payload.column.field, state.columnSortings);
-        return nextState;
-    }
-    return state;
+const sortChangeReducer = (state, action) => {
+    return calcSortings(action.payload.column.field, state);
 };
 
 const sort = (rows, sortings) => {
@@ -42,14 +37,15 @@ export const gridHeaderSortingPlugin = () => {
     return {
         selectors: {
             columnSortingsSelector: (original, host) => state => state.columnSortings || [],
-            //TODO move to data processors
             rowsSelector: (original, host) => createSortRowsSelector(host, original)
         },
         actionCreators: {
             sotrByColumn: (original, host) => ({ column }) => ({ type: 'GRID_COLUMN_SORT_CHANGE', payload: { column } })
         },
         reducers: {
-            'GRID_COLUMN_SORT_CHANGE': (original, host) => sortChangeReducer
+            columnSortings: () => createReducer([], {
+                'GRID_COLUMN_SORT_CHANGE': sortChangeReducer
+            })
         }
     };
 }

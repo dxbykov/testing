@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { asPluginComponent } from '../pluggable';
+import { asPluginComponent, createReducer } from '../pluggable';
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 const sign = (value) => value / Math.abs(value);
@@ -23,30 +23,15 @@ const calcOrders = (columnName, diff, prevOrders, columns) => {
 };
 
 const orderChangeReducer = (state, action) => {
-    if(action.type === 'GRID_COLUMN_ORDER_CHANGE') {
-        let nextState = Object.assign({}, state);
-        nextState.columnOrder = calcOrders(action.payload.column, action.payload.diff, state.columnFilters, action.payload.columns);
-        return nextState;
-    }
-    return Object.assign({ columnOrder: [] }, state);
+    return calcOrders(action.payload.column, action.payload.diff, state, action.payload.columns);
 };
 
 const columnDragStart = (state, action) => {
-    if(action.type === 'GRID_COLUMN_DRAG_START') {
-        let nextState = Object.assign({}, state);
-        nextState.draggingColumn = action.payload.column.field;
-        return nextState;
-    }
-    return Object.assign({ }, state);
+    return action.payload.column.field;
 };
 
 const columnDragEnd = (state, action) => {
-    if(action.type === 'GRID_COLUMN_DRAG_END') {
-        let nextState = Object.assign({}, state);
-        nextState.draggingColumn = null;
-        return nextState;
-    }
-    return Object.assign({ }, state);
+    return null;
 };
 
 const reorder = (columns, orders) => {
@@ -76,9 +61,13 @@ export const gridColumnOrderStatePlugin = () => {
             columnDragEnd: (original, host) => () => ({ type: 'GRID_COLUMN_DRAG_END' })
         },
         reducers: {
-            'GRID_COLUMN_ORDER_CHANGE': (original, host) => orderChangeReducer,
-            'GRID_COLUMN_DRAG_START': (original, host) => columnDragStart,
-            'GRID_COLUMN_DRAG_END': (original, host) => columnDragEnd
+            columnOrder: () => createReducer([], {
+                'GRID_COLUMN_ORDER_CHANGE': orderChangeReducer
+            }),
+            draggingColumn: () => createReducer(null, {
+                'GRID_COLUMN_DRAG_START': columnDragStart,
+                'GRID_COLUMN_DRAG_END': columnDragEnd
+            })
         }
     };
 }
