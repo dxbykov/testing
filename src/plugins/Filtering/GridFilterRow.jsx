@@ -23,7 +23,9 @@ export const GridFilterCellView = ({ column, filterChange, filters }) => {
 
 let GridFilterCellContainer = connectIoC(
     connect(
-        (state, props) => ({ filters: props.columnFiltersSelector(state)}),
+        (state, props) => ({
+            filters: state.columnFilters
+        }),
         (dispatch, props) => ({
             filterChange: args => {
                 let { filterColumn } = props;

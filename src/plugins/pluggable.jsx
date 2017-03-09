@@ -28,7 +28,7 @@ export const asPluginComponent = plugin => React.createClass({
     }
 })
 
-class IoCHOC extends React.Component {
+class IoCHOC extends React.PureComponent {
     render() {
         let enhancedProps = Object.assign({}, this.props, this.props.select(this.context.gridHost));
         return <this.props.WrappedComponent {...enhancedProps} />;

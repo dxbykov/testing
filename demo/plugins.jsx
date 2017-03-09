@@ -27,7 +27,7 @@ import './plugins.css';
 
 /* Grid */
 
-class GridRoot extends React.Component {
+class GridRoot extends React.PureComponent {
     constructor(props, context) {
         super(props, context);
     }
@@ -62,7 +62,7 @@ GridRoot = connectIoC(GridRoot, ioc => {
 });
 
 
-export class Grid extends React.Component {
+export class Grid extends React.PureComponent {
     constructor(props) {
         super(props);
 
@@ -93,13 +93,13 @@ Grid.childContextTypes = {
 };
 /* End of Grid */
 
-class Plugins extends React.Component {
+class Plugins extends React.PureComponent {
     render() {
         return <div style={{display: 'none'}}>{this.props.children}</div>;
     }
 }
 
-class DefaultGridConfig extends React.Component {
+class DefaultGridConfig extends React.PureComponent {
     render() {
         return (
             <Plugins>
@@ -118,7 +118,7 @@ class DefaultGridConfig extends React.Component {
     }
 }
 
-class CustomGridConfig extends React.Component {
+class CustomGridConfig extends React.PureComponent {
     render() {
         return (
             <Plugins>
@@ -132,7 +132,7 @@ class CustomGridConfig extends React.Component {
     }
 }
 
-export class PluginsDemo extends React.Component {
+export class PluginsDemo extends React.PureComponent {
     constructor(props) {
         super(props)
 

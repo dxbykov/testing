@@ -33,16 +33,13 @@ const filter = (rows, filters) => {
     });
 };
 
-const createfilterRowsSelector = (original, { selectors }) => state => {
-    let { columnFiltersSelector } = selectors;
-    return filter(original(state), columnFiltersSelector(state));
+const createfilterRowsSelector = (original) => state => {
+    return filter(original(state), state.columnFilters);
 }
 
 export const gridHeaderSortingPlugin = () => {
     return {
         selectors: {
-            columnFiltersSelector: (original, host) => state => state.columnFilters,
-            //TODO move to data processors
             rowsSelector: (original, host) => createfilterRowsSelector(original, host)
         },
         actionCreators: {
