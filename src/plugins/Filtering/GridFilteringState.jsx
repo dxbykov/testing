@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { asPluginComponent } from '../pluggable';
+import { asPluginComponent, createReducer } from '../pluggable';
 
 const calcFilters = (columnName, value, prevFilters) => {
     let filterIndex = prevFilters.findIndex(f => { return f.column == columnName; });
@@ -14,12 +14,7 @@ const calcFilters = (columnName, value, prevFilters) => {
 };
 
 const filterChangeReducer = (state, action) => {
-    if(action.type === 'GRID_COLUMN_FILTER_CHANGE') {
-        let nextState = Object.assign({}, state);
-        nextState.columnFilters = calcFilters(action.payload.column.field, action.payload.value, (state.columnFilters || initialState/* TODO */));
-        return nextState;
-    }
-    return Object.assign({ columnFilters: [] }, state);
+    return calcFilters(action.payload.column.field, action.payload.value, state);
 };
 
 const filter = (rows, filters) => {
@@ -46,7 +41,9 @@ export const gridHeaderSortingPlugin = () => {
             filterColumn: (original, host) => ({ column, value }) => ({ type: 'GRID_COLUMN_FILTER_CHANGE', payload: { column, value } })
         },
         reducers: {
-            'GRID_COLUMN_FILTER_CHANGE': (original, host) => filterChangeReducer
+            columnFilters: () => createReducer([], {
+                'GRID_COLUMN_FILTER_CHANGE': filterChangeReducer
+            })
         }
     };
 }

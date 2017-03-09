@@ -1,46 +1,29 @@
 import React from 'react';
 
-import { asPluginComponent } from '../pluggable';
+import { asPluginComponent, createReducer } from '../pluggable';
 
-const startRowEditReducer = (state, action) => {
-    if(action.type === 'GRID_START_EDIT_ROW') {
-        let nextState = Object.assign({}, state);
-        nextState.editingRows = [...state.editingRows || [], action.payload.row.id];
-        return nextState;
-    }
-    return state;
+const startEditRowReducer = (state, action) => {
+    return [...state, action.payload.row.id];
 };
 
-const saveRowChangesReducer = (state, action) => {
-    if(action.type === 'GRID_SAVE_ROW_CHANGES') {
-        let nextState = Object.assign({}, state);
-        nextState.editingRows.splice(nextState.editingRows.indexOf(action.payload.row.id), 1);
-        return nextState;
-    }
-    return state;
+const stopEditRowReducer = (state, action) => {
+    let nextState = state.slice()
+    nextState.splice(state.indexOf(action.payload.row.id), 1);
+    return nextState;
 };
 
 const cancelRowChangesReducer = (state, action) => {
-    if(action.type === 'GRID_CANCEL_ROW_CHANGES') {
-        let nextState = Object.assign({}, state);
-        nextState.editedCells = Object.assign({}, nextState.editedCells);
-        delete nextState.editedCells[action.payload.row.id];
-        nextState.editingRows.splice(nextState.editingRows.indexOf(action.payload.row.id), 1);
-        return nextState;
-    }
-    return state;
+    let nextState = Object.assign({}, state);
+    delete nextState[action.payload.row.id];
+    return nextState;
 };
 
 const cellValueChangeReducer = (state, action) => {
-    if(action.type === 'GRID_CELL_VALUE_CHANGE') {
-        let { value, row, column } = action.payload;
-        let nextState = Object.assign({}, state);
-        nextState.editedCells = nextState.editedCells || {};
-        let editedRow = nextState.editedCells[row.id] = nextState.editedCells[row.id] || {};
-        editedRow[column.field] = value;
-        return nextState;
-    }
-    return state;
+    let { value, row, column } = action.payload;
+    let nextState = Object.assign({}, state);
+    let editedRow = nextState[row.id] = nextState[row.id] || {};
+    editedRow[column.field] = value;
+    return nextState;
 };
 
 const enhanceTableRowsSelector = (original, { selectors }) => state => {
@@ -74,8 +57,8 @@ export const gridHeaderSortingPlugin = () => {
     return {
         selectors: {
             tableRowsSelector: (original, host) => enhanceTableRowsSelector(original, host),
-            editingRowsSelector: (original, host) => state => state.editingRows || [],
-            editedCellsSelector: (original, host) => state => state.editedCells || {},
+            editingRowsSelector: (original, host) => state => state.editingRows,
+            editedCellsSelector: (original, host) => state => state.editedCells,
             rowsSelector: (original, host) => enhanceRowsSelector(original, host),
         },
         actionCreators: {
@@ -85,10 +68,15 @@ export const gridHeaderSortingPlugin = () => {
             cellValueChangeEdit: (original, host) => (args) => ({ type: 'GRID_CELL_VALUE_CHANGE', payload: args }),
         },
         reducers: {
-            'GRID_START_EDIT_ROW': (original, host) => startRowEditReducer,
-            'GRID_SAVE_ROW_CHANGES': (original, host) => saveRowChangesReducer,
-            'GRID_CANCEL_ROW_CHANGES': (original, host) => cancelRowChangesReducer,
-            'GRID_CELL_VALUE_CHANGE': (original, host) => cellValueChangeReducer,
+            editingRows: () => createReducer([], {
+                'GRID_START_EDIT_ROW': startEditRowReducer,
+                'GRID_SAVE_ROW_CHANGES': stopEditRowReducer,
+                'GRID_CANCEL_ROW_CHANGES': stopEditRowReducer
+            }),
+            editedCells: () => createReducer({}, {
+                'GRID_CANCEL_ROW_CHANGES': cancelRowChangesReducer,
+                'GRID_CELL_VALUE_CHANGE': cellValueChangeReducer,
+            })
         }
     };
 }
