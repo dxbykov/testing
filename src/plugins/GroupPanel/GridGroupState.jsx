@@ -4,13 +4,15 @@ import { asPluginComponent, createReducer } from '../pluggable';
 
 const groupReducer = (state, action) => {
     let result = state.slice();
-    result.push(action.payload.column);
+    if(result.indexOf(action.payload.column) === -1)
+        result.push(action.payload.column);
     return result;
 };
 
 const ungroupReducer = (state, action) => {
     let result = state.slice();
-    result.splice(result.indexOf(action.payload.column), 1);
+    if(result.indexOf(action.payload.column) !== -1)
+        result.splice(result.indexOf(action.payload.column), 1);
     return result;
 };
 

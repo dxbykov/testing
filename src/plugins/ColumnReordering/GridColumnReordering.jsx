@@ -43,10 +43,10 @@ const GridHeaderCellWithDraggingContainer = connectIoC(
         (dispatch, props) => ({
             onDragStart: args => {
                 let { column } = props;
-                dispatch(props.columnDragStart({ column }));
+                dispatch(props.dragStart({ data: { type: 'column', columnName: column.field } }));
             },
             onDragEnd: args => {
-                dispatch(props.columnDragEnd());
+                dispatch(props.dragEnd());
             },
             onGeometryUpdate: args => {
                 let { left, width } = args;
@@ -56,8 +56,8 @@ const GridHeaderCellWithDraggingContainer = connectIoC(
         })
     )(GridHeaderCellWithDraggingView), 
     ioc => ({
-        columnDragStart: ioc.actionCreators.columnDragStart,
-        columnDragEnd: ioc.actionCreators.columnDragEnd,
+        dragStart: ioc.actionCreators.dragStart,
+        dragEnd: ioc.actionCreators.dragEnd,
         columnGeometryUpdate: ioc.actionCreators.columnGeometryUpdate
     })
 );
@@ -65,8 +65,8 @@ const GridHeaderCellWithDraggingContainer = connectIoC(
 const GridTableViewWithDraggingView = ({ draggingColumn, columnGeometries, columns, onColumnOrderChange, children }) => {
     return (
         <div
-            onDragOver={e => draggingColumn && e.preventDefault()}
-            onDrop={e => {
+            onDragOver={e => {
+                draggingColumn && e.preventDefault()
                 let destination = columnGeometries.find(g => g.left <= e.pageX && g.left + g.width >= e.pageX);
                 if(!destination) return;
                 onColumnOrderChange({ column: draggingColumn, destination: destination.column, columns })
@@ -81,7 +81,7 @@ const GridTableViewWithDraggingContainer = connectIoC(
         (state, props) => ({
             columns: props.columnsSelector(state),
             columnGeometries: state.columnGeometries,
-            draggingColumn: state.draggingColumn
+            draggingColumn: state.draggingObject && state.draggingObject.type === 'column' && state.draggingObject.columnName
         }),
         (dispatch, props) => ({
             onColumnOrderChange: args => {

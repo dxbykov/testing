@@ -10,10 +10,10 @@ const GridGroupItemView = ({ group }) => {
     );
 };
 
-const GridGroupPanelView = ({ groups }) => {
+const GridGroupPanelView = ({ groups, GridGroupItem }) => {
     return (
         <div className="grid-group-panel">
-            {groups.map(group => <GridGroupItemView key={group.field} group={group} />)}
+            {groups.map(group => <GridGroupItem key={group.field} group={group} />)}
         </div>
     );
 };
@@ -26,7 +26,8 @@ const GridGroupPanelController = connectIoC(
         (dispatch, props) => ({})
     )(GridGroupPanelView),
     ioc => ({
-        columnsSelector: ioc.selectors.columnsSelector
+        columnsSelector: ioc.selectors.columnsSelector,
+        GridGroupItem: ioc.components.GridGroupItem
     })
 )
 
@@ -35,6 +36,7 @@ export default asPluginComponent((config) => {
 
     let result = {
         components: {
+            GridGroupItem: (original) => (props) => <GridGroupItemView {...props}></GridGroupItemView>,
             GridGroupPanel: (original) => (props) => <GridGroupPanelController {...props}></GridGroupPanelController>
         },
         slots: {

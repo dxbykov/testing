@@ -28,14 +28,6 @@ const orderChangeReducer = (state, action) => {
     return calcOrders(action.payload.column, action.payload.destination, state, action.payload.columns);
 };
 
-const columnDragStart = (state, action) => {
-    return action.payload.column.field;
-};
-
-const columnDragEnd = (state, action) => {
-    return null;
-};
-
 const calcGeometries = (columnName, left, width, prevGeometries) => {
     let filterIndex = prevGeometries.findIndex(f => { return f.column == columnName; });
     let result = prevGeometries.slice();
@@ -74,17 +66,11 @@ export default asPluginComponent(() => {
         },
         actionCreators: {
             reorderColumn: (original, host) => ({ column, destination, columns }) => ({ type: 'GRID_COLUMN_ORDER_CHANGE', payload: { column, destination, columns } }),
-            columnDragStart: (original, host) => ({ column }) => ({ type: 'GRID_COLUMN_DRAG_START', payload: { column } }),
-            columnDragEnd: (original, host) => () => ({ type: 'GRID_COLUMN_DRAG_END' }),
             columnGeometryUpdate: (original, host) => ({ column, left, width }) => ({ type: 'GRID_COLUMN_GEOMETRY_UPDATE', payload: { column, left, width } })
         },
         reducers: {
             columnOrder: () => createReducer([], {
                 'GRID_COLUMN_ORDER_CHANGE': orderChangeReducer
-            }),
-            draggingColumn: () => createReducer(null, {
-                'GRID_COLUMN_DRAG_START': columnDragStart,
-                'GRID_COLUMN_DRAG_END': columnDragEnd
             }),
             columnGeometries: () => createReducer([], {
                 'GRID_COLUMN_GEOMETRY_UPDATE': columnGeometryUpdateReducer

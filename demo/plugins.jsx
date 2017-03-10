@@ -24,6 +24,7 @@ import GridFilterRow from '../src/plugins/Filtering/GridFilterRow';
 import GridFilteringState from '../src/plugins/Filtering/GridFilteringState';
 import GridColumnReordering from '../src/plugins/ColumnReordering/GridColumnReordering';
 import GridColumnOrderState from '../src/plugins/ColumnReordering/GridColumnOrderState';
+import DragContext from '../src/plugins/DragAndDrop/DragContext';
 
 import { connectIoC } from '../src/plugins/pluggable';
 
@@ -178,6 +179,8 @@ export class PluginsDemo extends React.PureComponent {
 
                         <GridSortingState />
                         <GridHeaderRowSorting />
+
+                        <DragContext />
 
                         <GridColumnOrderState />
                         <GridColumnReordering />
