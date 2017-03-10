@@ -9,17 +9,13 @@ const filterFor = (columnName, filters) => {
     return filter ? filter.value : '';
 };
 
-export const GridFilterCellView = ({ column, filterChange, filters }) => {
-    return (
-        <th className="grid-filter-row-cell">
-            <input
-                type="text"
-                value={filterFor(column.field, filters)}
-                onChange={(e) => filterChange({ column, value: e.target.value })}
-                style={{ width: '100%' }}/>
-        </th>
-    );
-};
+const GridFilterCellView = ({ column, filterChange, filters }) => (
+    <input
+        type="text"
+        value={filterFor(column.field, filters)}
+        onChange={(e) => filterChange({ column, value: e.target.value })}
+        style={{ width: '100%' }}/>
+);
 
 let GridFilterCellContainer = connectIoC(
     connect(
@@ -40,43 +36,20 @@ let GridFilterCellContainer = connectIoC(
     })
 );
 
-export const GridFilterRowView = ({ columns, cellComponent }) => {
-    let Cell = cellComponent;
-    return (
-        <tr className="grid-filter-row">
-            {columns.map((column, index) => <Cell key={index} column={column} />)}
-        </tr>
-    );
-};
-
-let GridFilterRowContainer = connectIoC(
-    GridFilterRowView,
-    ioc => ({
-        cellComponent: ioc.components.GridFilterCell
-    })
-);
-
-const renderRow = (rowContext, originalRender, host) => {
-    let { row } = rowContext;
-    let { components } = host;
-    let { GridFilterRow } = components;
-    if(row.type === 'filter') {
-        return <GridFilterRow {...rowContext} />
+const renderCellContent = ({ row, column }, original) => {
+    if(row.type === 'filter' && !column.type) {
+        return <GridFilterCellContainer row={row} column={column} />
     }
-    return originalRender(rowContext);
+    return original({ row, column });
 };
 
-export const gridHeaderSortingPlugin = () => {
+export default asPluginComponent(() => {
     return {
         components: {
-            GridFilterRow: original => GridFilterRowContainer,
-            GridFilterCell: original => GridFilterCellContainer,
-            renderRow: (original, host) => rowContext => renderRow(rowContext, original, host)
+            renderCellContent: (original, host) => ({ row, column }) => renderCellContent({ row, column }, original)
         },
         selectors: {
             tableRowsSelector: (original, host) => state => [original(state)[0], { type: 'filter' }, ...original(state).slice(1)]
         }
     };
-}
-
-export default asPluginComponent(gridHeaderSortingPlugin);
+});

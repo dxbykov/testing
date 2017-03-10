@@ -2,53 +2,20 @@ import React from 'react';
 
 import { asPluginComponent } from './pluggable';
 
-export const GridHeaderCellView = ({ column }) => {
-    return (
-        <th className="grid-header-row-cell">{column.field}</th>
-    );
-};
-
-export const GridHeaderRowView = ({ columns, cellComponent }) => {
-    let Cell = cellComponent;
-    return (
-        <tr className="grid-header-row">
-            {columns.map((column, index) => <Cell key={index} column={column} />)}
-        </tr>
-    );
-};
-
-export const GridHeaderRowContainer = ({ columns }, { gridHost }) => {
-    let { GridHeaderCell } = gridHost.components;
-    return (
-        <GridHeaderRowView  columns={columns} cellComponent={GridHeaderCell} />
-    );
-};
-
-GridHeaderRowContainer.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
-
-const renderRow = (rowContext, originalRender, host) => {
-    let { row } = rowContext;
-    let { components } = host;
-    let { GridHeaderRow } = components;
-    if(row.type === 'header') {
-        return <GridHeaderRow {...rowContext} />
+const renderCellContent = ({ row, column }, original) => {
+    if(row.type === 'header' && !column.type) {
+        return column.field;
     }
-    return originalRender(rowContext);
+    return original({ row, column });
 };
 
-export const gridHeaderRowPlugin = () => {
+export default asPluginComponent(() => {
     return {
         components: {
-            GridHeaderRow: original => GridHeaderRowContainer,
-            GridHeaderCell: original => GridHeaderCellView,
-            renderRow: (original, host) => rowContext => renderRow(rowContext, original, host)
+            renderCellContent: (original, host) => ({ row, column }) => renderCellContent({ row, column }, original)
         },
         selectors: {
             tableRowsSelector: (original, host) => state => [{ type: 'header' }, ...original(state)]
         }
     };
-}
-
-export default asPluginComponent(gridHeaderRowPlugin);
+});

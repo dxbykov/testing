@@ -8,14 +8,13 @@ import GridLayout from '../src/plugins/GridLayout';
 import GridHeader from '../src/plugins/GridHeader';
 import GridGroupPanel from '../src/plugins/GridGroupPanel';
 import GridBody from '../src/plugins/GridBody';
-import GridTableView from '../src/plugins/GridTableView';
+import GridTableView from '../src/plugins/TableView/GridTableView';
 import GridAutoColumns from '../src/plugins/GridAutoColumns';
 import GridHeaderRow from '../src/plugins/GridHeaderRow';
 import GridCore from '../src/plugins/GridCore';
 import GridDataRow from '../src/plugins/GridDataRow';
 import GridHeaderRowSorting from '../src/plugins/Sorting/GridHeaderSorting';
 import GridSortingState from '../src/plugins/Sorting/GridSortingState';
-import GridEditColumn from '../src/plugins/Editing/GridEditColumn';
 import GridEditState from '../src/plugins/Editing/GridEditState';
 import GridEditRow from '../src/plugins/Editing/GridEditRow';
 import GridFilterRow from '../src/plugins/Filtering/GridFilterRow';
@@ -167,9 +166,8 @@ export class PluginsDemo extends React.PureComponent {
                         <GridFilterRow />
                         <GridFilteringState />
 
-                        <GridEditColumn position="right" />
+                        <GridEditRow position="right" />
                         <GridEditState />
-                        <GridEditRow />
 
                         <GridSortingState />
                         <GridHeaderRowSorting />

@@ -33,7 +33,7 @@ const enhanceTableRowsSelector = (original, { selectors }) => state => {
     return original(state).map(row => {
         if(editingIds.indexOf(row.id) > -1) {
             return {
-                type: 'editing',
+                state: 'editing',
                 ...Object.assign({}, row, editedCells[row.id] || {})
             }
         }
@@ -60,6 +60,7 @@ export const gridHeaderSortingPlugin = () => {
             editingRowsSelector: (original, host) => state => state.editingRows,
             editedCellsSelector: (original, host) => state => state.editedCells,
             rowsSelector: (original, host) => enhanceRowsSelector(original, host),
+            rowEditCommandsSelector: () => (state, { rowId }) => state.editingRows.indexOf(rowId) !== -1 ? ['Save', 'Cancel'] : ['Edit']
         },
         actionCreators: {
             startRowEdit: (original, host) => ({ row }) => ({ type: 'GRID_START_EDIT_ROW', payload: { row } }),
