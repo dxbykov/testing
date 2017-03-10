@@ -12,7 +12,7 @@ export const GridHeaderRowView = ({ columns, cellComponent }) => {
     let Cell = cellComponent;
     return (
         <tr className="grid-header-row">
-            {columns.map((column, index) => <Cell key={index} column={column} />)}
+            {columns.map((column, index) => <Cell key={column.field || column.type} column={column} />)}
         </tr>
     );
 };

@@ -2,38 +2,44 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { asPluginComponent, connectIoC } from '../pluggable';
 
-export const GridHeaderCellWithDraggingView = ({ geometry, onDragStart, onDragEnd, onGeometryUpdate, children }) => {
-    return (
-        <th 
-            ref={ref => {
-                if(!ref) return;
+class GridHeaderCellWithDraggingView extends React.PureComponent {
+    componentWillUnmount() {
+        let { onGeometryUpdate } = this.props;
 
-                let { left, width } = ref.getBoundingClientRect();
-                if(geometry.left !== left || geometry.width !== width) {
-                    onGeometryUpdate({ left, width });
-                }
-            }}
-            draggable={true}
-            className="grid-header-row-cell"
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}>
-            { children }
-        </th>
-    );
-};
+        onGeometryUpdate({ left: 0, width: 0 });
+    }
+    render() {
+        let { column, onDragStart, onDragEnd, children } = this.props;
 
-const geometryFor = (columnName, geometries) => {
-    if(!geometries.length)
-        return { left: 0, width: 0 };
-    let geometry = geometries.filter(s => s.column === columnName)[0];
-    return geometry ? { left: geometry.left, width: geometry.width } : { left: 0, width: 0 };
-};
+        return (
+            <th 
+                ref={ref => {
+                    if(!ref) return;
 
-export const GridHeaderCellWithDraggingContainer = connectIoC(
+                    this.root = ref;
+
+                    let { onGeometryUpdate } = this.props;
+                    let { left, width } = this.root.getBoundingClientRect();
+
+                    if(left !== this.left || width !== this.width) {
+                        this.left = left;
+                        this.width = width;
+                        onGeometryUpdate({ left, width });
+                    }
+                }}
+                draggable={true}
+                className="grid-header-row-cell"
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}>
+                { children }
+            </th>
+        );
+    }
+}
+
+const GridHeaderCellWithDraggingContainer = connectIoC(
     connect(
-        (state, props) => ({
-            geometry: geometryFor(props.column.field, state.columnGeometries)
-        }),
+        (state, props) => ({}),
         (dispatch, props) => ({
             onDragStart: args => {
                 let { column } = props;
@@ -56,49 +62,45 @@ export const GridHeaderCellWithDraggingContainer = connectIoC(
     })
 );
 
-export const GridTableViewWithDraggingView = ({ draggingColumn, columnGeometries, columns, onColumnOrderChange, children }) => {
+const GridTableViewWithDraggingView = ({ draggingColumn, columnGeometries, columns, onColumnOrderChange, children }) => {
     return (
         <div
             onDragOver={e => draggingColumn && e.preventDefault()}
             onDrop={e => {
-                let destinationName = columnGeometries.find(g => g.left <= e.pageX && g.left + g.width >= e.pageX).column;
-                if(!destinationName) return;
-                let start = columns.findIndex(c => c.field === draggingColumn);
-                let end = columns.findIndex(c => c.field === destinationName);
-                onColumnOrderChange({ column: draggingColumn, diff: end - start, columns })
+                let destination = columnGeometries.find(g => g.left <= e.pageX && g.left + g.width >= e.pageX);
+                if(!destination) return;
+                onColumnOrderChange({ column: draggingColumn, destination: destination.column, columns })
             }}>
             { children }
         </div>
     );
 };
 
-export const GridTableViewWithDraggingContainer = connectIoC(
+const GridTableViewWithDraggingContainer = connectIoC(
     connect(
         (state, props) => ({
-            columns: props.tableColumnsSelector(state),
+            columns: props.columnsSelector(state),
             columnGeometries: state.columnGeometries,
             draggingColumn: state.draggingColumn
         }),
         (dispatch, props) => ({
             onColumnOrderChange: args => {
-                let { column, diff, columns } = args;
-                dispatch(props.reorderColumn({ column, diff, columns }));
+                let { column, destination, columns } = args;
+                dispatch(props.reorderColumn({ column, destination, columns }));
             }
         })
     )(GridTableViewWithDraggingView), 
     ioc => ({
-        tableColumnsSelector: ioc.selectors.tableColumnsSelector,
+        columnsSelector: ioc.selectors.columnsSelector,
         reorderColumn: ioc.actionCreators.reorderColumn
     })
 );
 
-export const gridHeaderSortingPlugin = () => {
+export default asPluginComponent(() => {
     return {
         components: {
             GridHeaderCell: (original) => (props) => <GridHeaderCellWithDraggingContainer {...props}>{original(props)}</GridHeaderCellWithDraggingContainer>,
             GridTableView: (original) => (props) => <GridTableViewWithDraggingContainer {...props}>{original(props)}</GridTableViewWithDraggingContainer>
         }
     };
-}
-
-export default asPluginComponent(gridHeaderSortingPlugin);
+});
