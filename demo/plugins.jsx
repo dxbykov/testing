@@ -6,7 +6,9 @@ import './magic.css';
 import { generateColumns, generateRows } from './demoData';
 import GridLayout from '../src/plugins/GridLayout';
 import GridHeader from '../src/plugins/GridHeader';
-import GridGroupPanel from '../src/plugins/GridGroupPanel';
+import GridGroupPanel from '../src/plugins/GroupPanel/GridGroupPanel';
+import GridGroupState from '../src/plugins/GroupPanel/GridGroupState';
+import GridGroupPanelDragging from '../src/plugins/GroupPanel/GridGroupPanelDragging';
 import GridBody from '../src/plugins/GridBody';
 import GridTableView from '../src/plugins/GridTableView';
 import GridAutoColumns from '../src/plugins/GridAutoColumns';
@@ -20,8 +22,8 @@ import GridEditState from '../src/plugins/Editing/GridEditState';
 import GridEditRow from '../src/plugins/Editing/GridEditRow';
 import GridFilterRow from '../src/plugins/Filtering/GridFilterRow';
 import GridFilteringState from '../src/plugins/Filtering/GridFilteringState';
-import GridColumnReordering from '../src/plugins/ColumnReordering/GridColumnReordering'
-import GridColumnOrderState from '../src/plugins/ColumnReordering/GridColumnOrderState'
+import GridColumnReordering from '../src/plugins/ColumnReordering/GridColumnReordering';
+import GridColumnOrderState from '../src/plugins/ColumnReordering/GridColumnOrderState';
 
 import { connectIoC } from '../src/plugins/pluggable';
 
@@ -162,7 +164,6 @@ export class PluginsDemo extends React.PureComponent {
                         <GridHeader />
                         <GridBody />
 
-                        <GridGroupPanel />
                         <GridTableView />
                         <GridDataRow />
 
@@ -180,6 +181,10 @@ export class PluginsDemo extends React.PureComponent {
 
                         <GridColumnOrderState />
                         <GridColumnReordering />
+
+                        <GridGroupState />
+                        <GridGroupPanel />
+                        <GridGroupPanelDragging />
 
                         <GridAutoColumns />
                     </Plugins>

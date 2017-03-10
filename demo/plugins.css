@@ -45,3 +45,12 @@
     border: solid 1px blue;
     padding: 5px 10px;
 }
+
+.grid-group-panel {
+    min-height: 20px;
+}
+.grid-group-item {
+    display: inline-block;
+    padding: 5px;
+    border: 1px solid black;
+}

@@ -59,8 +59,8 @@ export const GridHeaderCellWithDraggingContainer = connectIoC(
 export const GridTableViewWithDraggingView = ({ draggingColumn, columnGeometries, columns, onColumnOrderChange, children }) => {
     return (
         <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
+            onDragOver={e => draggingColumn && e.preventDefault()}
+            onDrop={e => {
                 let destinationName = columnGeometries.find(g => g.left <= e.pageX && g.left + g.width >= e.pageX).column;
                 if(!destinationName) return;
                 let start = columns.findIndex(c => c.field === draggingColumn);

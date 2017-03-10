@@ -32,7 +32,7 @@ const createfilterRowsSelector = (original) => state => {
     return filter(original(state), state.columnFilters);
 }
 
-export const gridHeaderSortingPlugin = () => {
+export default asPluginComponent(() => {
     return {
         selectors: {
             rowsSelector: (original, host) => createfilterRowsSelector(original, host)
@@ -46,6 +46,4 @@ export const gridHeaderSortingPlugin = () => {
             })
         }
     };
-}
-
-export default asPluginComponent(gridHeaderSortingPlugin);
+});

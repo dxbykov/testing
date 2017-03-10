@@ -65,7 +65,7 @@ const reorder = (columns, orders) => {
     });
 };
 
-export const gridColumnOrderStatePlugin = () => {
+export default asPluginComponent(() => {
     return {
         selectors: {
             tableColumnsSelector: (original, host) => (state) => reorder(original(state), state.columnOrder)
@@ -89,6 +89,4 @@ export const gridColumnOrderStatePlugin = () => {
             })
         }
     };
-}
-
-export default asPluginComponent(gridColumnOrderStatePlugin);
+});
