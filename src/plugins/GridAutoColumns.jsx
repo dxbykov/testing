@@ -5,7 +5,7 @@ import { asPluginComponent } from './pluggable';
 // TODO use reselect here
 const createColumnsSelector = (original, { selectors }) => state => {
     let columns = original && original(state);
-    let props = selectors.propsSelector();
+    let props = selectors.rootPropsSelector();
     if(columns.length) {
         return columns; 
     }

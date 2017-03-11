@@ -22,8 +22,21 @@ export class PluginsDemo extends React.PureComponent {
         super(props)
 
         this.state = {
-            rows: generateRows(5)
+            rows: generateRows(5),
+            columnSortings: [ { column: 'name', direction: 'asc' } ]
         }
+
+        this.onSortByColumn = this.onSortByColumn.bind(this);
+    }
+
+    onSortByColumn({ column }) {
+        let sorting = this.state.columnSortings.filter(s => s.column == column.field)[0];
+        this.setState({ columnSortings: [
+            {
+                column: column.field,
+                direction: (sorting && sorting.direction == 'asc') ? 'desc' : 'asc'
+            }
+        ]});
     }
 
     render() {
@@ -38,8 +51,24 @@ export class PluginsDemo extends React.PureComponent {
                 <h1>With Local Sorting</h1>
                 <Grid rows={rows}>
                     <PluginGroup>
-                        <GridSortingState />
                         <GridHeaderRowSorting />
+                        <GridSortingState />
+                        <LocalDataSorting />
+                    </PluginGroup>
+                </Grid>
+
+                <h1>Controlled State / Sync Grids</h1>
+                <Grid rows={rows}>
+                    <PluginGroup>
+                        <GridHeaderRowSorting/>
+                        <GridSortingState onSortByColumn={this.onSortByColumn} columnSortings={this.state.columnSortings} />
+                        <LocalDataSorting />
+                    </PluginGroup>
+                </Grid>
+                <Grid rows={rows}>
+                    <PluginGroup>
+                        <GridHeaderRowSorting />
+                        <GridSortingState columnSortings={this.state.columnSortings}/>
                         <LocalDataSorting />
                     </PluginGroup>
                 </Grid>
@@ -58,6 +87,22 @@ export class PluginsDemo extends React.PureComponent {
                         <GridFilterRow />
                         <GridFilteringState />
                         <LocalDataFiltering />
+                    </PluginGroup>
+                </Grid>
+
+                <h1>Complex Local Data</h1>
+                <Grid rows={rows}>
+                    <PluginGroup>
+                        <GridHeaderRowSorting />
+                        <GridSortingState />
+
+                        <GridFilterRow />
+                        <GridFilteringState />
+
+                        <GridEditRow />
+                        <GridEditState />
+
+                        <LocalData />
                     </PluginGroup>
                 </Grid>
             </div>

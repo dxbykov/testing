@@ -11,8 +11,8 @@ export const GridGroupPanelView = () => {
 };
 
 
-export const gridGroupPanelPlugin = (config) => {
-    let targetSlot = config.slot || 'headerSlot';
+export const gridGroupPanelPlugin = (propsSelector) => {
+    let targetSlot = propsSelector().slot || 'headerSlot';
 
     let result = {
         slots: {

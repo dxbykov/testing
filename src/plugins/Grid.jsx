@@ -1,5 +1,5 @@
 import React from 'react';
-import { createStore } from 'redux';
+import { createStore, applyMiddleware, compose } from 'redux';
 import { combineReducers } from 'redux';
 import { Provider } from 'react-redux';
 import { connectIoC } from './pluggable';
@@ -60,21 +60,53 @@ class DefaultGridConfig extends React.PureComponent {
     }
 }
 
+const createPluginEventsMiddleware = host => {
+    return function firePluginEvents({ getState }) {
+        let { events } = host;
+        return next => action => {
+            let { [action.type]: handler } = events;
+            if(handler) {
+                handler(action);
+            }
+            return next(action)
+        }
+    }
+};
+
 export default class Grid extends React.PureComponent {
     constructor(props) {
         super(props);
 
         this.host = {
+            components: {},
             selectors: {
-                propsSelector: state => this.props
+                rootPropsSelector: state => this.props
             },
-            reducers: {}
+            actionCreators: {},
+            reducers: {
+                forceUpdate: (state = {}, action) => action.type === 'FORCE_UPDATE' ? {} : state
+            },
+            events: {},
+            forcePluginsUpdate: () => {
+                this.stateStore.dispatch({ type: 'FORCE_UPDATE' });
+            }
         };
+
+        this.stateStore = createStore(
+            (state = {}) => state,
+            compose(
+                applyMiddleware(
+                    createPluginEventsMiddleware(this.host)
+                ),
+                window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+            )
+        );
+
     }
     getChildContext() {
         return {
             gridHost: this.host,
-            stateStore: createStore((state = {}) => state, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__())
+            stateStore: this.stateStore
         }
     }
     render() {

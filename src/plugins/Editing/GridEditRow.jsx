@@ -84,10 +84,10 @@ const renderCellContent = ({ row, column }, original) => {
     return original({ row, column });
 };
 
-export default asPluginComponent(({ position }) => {
+export default asPluginComponent((propsSelector) => {
     return {
         selectors: {
-            tableColumnsSelector: (original) => enhanceTableColumnsSelector(original, position)
+            tableColumnsSelector: (original) => enhanceTableColumnsSelector(original, propsSelector().position)
         },
         components: {
             renderCellContent: (original, host) => ({ row, column }) => renderCellContent({ row, column }, original)

@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'react-redux';
 
 import { asPluginComponent, createReducer } from '../pluggable';
 
@@ -16,10 +17,10 @@ const sortChangeReducer = (state, action) => {
     return calcSortings(action.payload.column.field, state);
 };
 
-export const gridHeaderSortingPlugin = () => {
+export const gridSortingStatePlugin = (propsSelector, host) => {
     return {
         selectors: {
-            columnSortingsSelector: (original, host) => state => state.columnSortings || []
+            columnSortingsSelector: (original, host) => state => propsSelector().columnSortings || state.columnSortings || []
         },
         actionCreators: {
             sotrByColumn: (original, host) => ({ column }) => ({ type: 'GRID_COLUMN_SORT_CHANGE', payload: { column } })
@@ -28,8 +29,11 @@ export const gridHeaderSortingPlugin = () => {
             columnSortings: () => createReducer([], {
                 'GRID_COLUMN_SORT_CHANGE': sortChangeReducer
             })
+        },
+        events: {
+            'GRID_COLUMN_SORT_CHANGE': () => action => propsSelector().onSortByColumn && propsSelector().onSortByColumn(action.payload)
         }
     };
 }
 
-export default asPluginComponent(gridHeaderSortingPlugin);
+export default asPluginComponent(gridSortingStatePlugin);

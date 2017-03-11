@@ -32,8 +32,8 @@ const GridTableView = connectIoC(
     })
 )
 
-export default asPluginComponent((config) => {
-    let targetSlot = config.slot || 'bodySlot';
+export default asPluginComponent((propsSelector) => {
+    let targetSlot = propsSelector().slot || 'bodySlot';
 
     let result = {
         selectors: {

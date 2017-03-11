@@ -4,7 +4,7 @@ import { asPluginComponent } from './pluggable';
 
 // TODO use reselect here
 const createRowsSelector = ({ selectors }) => state => {
-    let props = selectors.propsSelector();
+    let props = selectors.rootPropsSelector();
     return props.rows || [];
 }
 
@@ -12,7 +12,7 @@ export const gridCorePlugin = () => {
     return {
         selectors: {
             rowsSelector: (original, host) => createRowsSelector(host),
-            columnsSelector: (original, host) => state => host.selectors.propsSelector().columns || []
+            columnsSelector: (original, host) => state => host.selectors.rootPropsSelector().columns || []
         }
     };
 }
@@ -20,7 +20,7 @@ export const gridCorePlugin = () => {
 //TODO think of interface declaration, strict injection of imports
 gridCorePlugin.Imports = {
     selectors: {
-        propsSelector: React.PropTypes.func.isRequired
+        rootPropsSelector: React.PropTypes.func.isRequired
     }
 };
 
