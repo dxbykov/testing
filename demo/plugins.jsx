@@ -11,9 +11,10 @@ import GridEditState from '../src/plugins/Editing/GridEditState';
 import GridEditRow from '../src/plugins/Editing/GridEditRow';
 import GridFilterRow from '../src/plugins/Filtering/GridFilterRow';
 import GridFilteringState from '../src/plugins/Filtering/GridFilteringState';
-import LocalData from '../src/plugins/Data/LocalData';
 import LocalDataFiltering from '../src/plugins/Data/LocalDataFiltering';
 import LocalDataSorting from '../src/plugins/Data/LocalDataSorting';
+import LocalData from '../src/plugins/Data/LocalData';
+import RemoteData from '../src/plugins/Data/RemoteData';
 
 import './plugins.css';
 
@@ -28,6 +29,7 @@ export class PluginsDemo extends React.PureComponent {
 
         this.onSortByColumn = this.onSortByColumn.bind(this);
         this.onSaveChanges = this.onSaveChanges.bind(this);
+        this.onRequestData = this.onRequestData.bind(this);
     }
 
     onSortByColumn({ column }) {
@@ -48,6 +50,10 @@ export class PluginsDemo extends React.PureComponent {
                 return row;
         });
         this.setState({ rows });
+    }
+
+    onRequestData(params) {
+        console.log(params);
     }
 
     render() {
@@ -116,6 +122,23 @@ export class PluginsDemo extends React.PureComponent {
                         <LocalData />
                     </PluginGroup>
                 </Grid>
+
+                <h1>Complex Remote Data</h1>
+                <Grid rows={rows}>
+                    <PluginGroup>
+                        <GridHeaderRowSorting />
+                        <GridSortingState />
+
+                        <GridFilterRow />
+                        <GridFilteringState />
+
+                        <GridEditRow />
+                        <GridEditState onSaveChanges={this.onSaveChanges} />
+
+                        <RemoteData onRequestData={this.onRequestData} />
+                    </PluginGroup>
+                </Grid>
+
             </div>
         )
     }

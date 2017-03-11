@@ -60,15 +60,21 @@ class DefaultGridConfig extends React.PureComponent {
     }
 }
 
+const fireEvent = (action, events, postfix = '') => {
+    let { [action.type + postfix]: handler } = events;
+    if(handler) {
+        handler(action);
+    }
+};
+
 const createPluginEventsMiddleware = host => {
     return function firePluginEvents({ getState }) {
         let { events } = host;
         return next => action => {
-            let { [action.type]: handler } = events;
-            if(handler) {
-                handler(action);
-            }
-            return next(action)
+            fireEvent(action, events);
+            let result = next(action);
+            fireEvent(action, events, '_AFTER');
+            return result;
         }
     }
 };

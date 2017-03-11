@@ -21,7 +21,7 @@ export const asPluginComponent = plugin => React.createClass({
     },
     componentWillMount: function() {
         const { gridHost } = this.context;
-        addPluginToHost(plugin(() => this.props), gridHost);
+        addPluginToHost(plugin(() => this.props, gridHost), gridHost);
     },
     componentWillReceiveProps: function(nextProps) {
         const { gridHost } = this.context;

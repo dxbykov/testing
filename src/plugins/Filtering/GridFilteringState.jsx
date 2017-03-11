@@ -19,6 +19,9 @@ const filterChangeReducer = (state, action) => {
 
 export const gridHeaderSortingPlugin = () => {
     return {
+        selectors: {
+            columnFiltersSelector: () => state => state.columnFilters
+        },
         actionCreators: {
             filterColumn: (original, host) => ({ column, value }) => ({ type: 'GRID_COLUMN_FILTER_CHANGE', payload: { column, value } })
         },
