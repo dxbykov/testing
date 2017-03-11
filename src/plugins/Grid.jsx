@@ -3,6 +3,14 @@ import { createStore } from 'redux';
 import { combineReducers } from 'redux';
 import { Provider } from 'react-redux';
 import { connectIoC } from './pluggable';
+import PluginGroup from './PluginGroup';
+import GridCore from './GridCore';
+import GridLayout from './GridLayout';
+import GridBody from './GridBody';
+import GridTableView from './TableView/GridTableView';
+import GridDataRow from './GridDataRow';
+import GridHeaderRow from './GridHeaderRow';
+import GridAutoColumns from './GridAutoColumns';
 
 class GridRoot extends React.PureComponent {
     constructor(props, context) {
@@ -36,6 +44,21 @@ GridRoot = connectIoC(GridRoot, ioc => {
     };
 });
 
+class DefaultGridConfig extends React.PureComponent {
+    render() {
+        return (
+            <PluginGroup>
+                <GridCore />
+                <GridLayout />
+                <GridBody />
+                <GridTableView />
+                <GridDataRow />
+                <GridHeaderRow />
+                <GridAutoColumns />
+            </PluginGroup>
+        );
+    }
+}
 
 export default class Grid extends React.PureComponent {
     constructor(props) {
@@ -55,7 +78,7 @@ export default class Grid extends React.PureComponent {
         }
     }
     render() {
-        return <div>{this.props.children}<GridRoot /></div>
+        return <div><DefaultGridConfig />{this.props.children}<GridRoot /></div>
     }
 };
 Grid.propTypes = {

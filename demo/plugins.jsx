@@ -2,15 +2,9 @@ import React from 'react';
 import './magic.css';
 import { generateColumns, generateRows } from './demoData';
 import Grid from '../src/plugins/Grid';
-import GridLayout from '../src/plugins/GridLayout';
+import PluginGroup from '../src/plugins/PluginGroup';
 import GridHeader from '../src/plugins/GridHeader';
 import GridGroupPanel from '../src/plugins/GridGroupPanel';
-import GridBody from '../src/plugins/GridBody';
-import GridTableView from '../src/plugins/TableView/GridTableView';
-import GridAutoColumns from '../src/plugins/GridAutoColumns';
-import GridHeaderRow from '../src/plugins/GridHeaderRow';
-import GridCore from '../src/plugins/GridCore';
-import GridDataRow from '../src/plugins/GridDataRow';
 import GridHeaderRowSorting from '../src/plugins/Sorting/GridHeaderSorting';
 import GridSortingState from '../src/plugins/Sorting/GridSortingState';
 import GridEditState from '../src/plugins/Editing/GridEditState';
@@ -18,48 +12,10 @@ import GridEditRow from '../src/plugins/Editing/GridEditRow';
 import GridFilterRow from '../src/plugins/Filtering/GridFilterRow';
 import GridFilteringState from '../src/plugins/Filtering/GridFilteringState';
 import LocalData from '../src/plugins/Data/LocalData';
+import LocalDataFiltering from '../src/plugins/Data/LocalDataFiltering';
+import LocalDataSorting from '../src/plugins/Data/LocalDataSorting';
 
 import './plugins.css';
-
-
-class Plugins extends React.PureComponent {
-    render() {
-        return <div style={{display: 'none'}}>{this.props.children}</div>;
-    }
-}
-
-class DefaultGridConfig extends React.PureComponent {
-    render() {
-        return (
-            <Plugins>
-                <GridCore />
-                <GridLayout />
-                <GridBody />
-                <GridTableView />
-                <GridDataRow />
-
-                <GridHeaderRow />
-                <GridHeaderRowSorting />
-
-                <GridSortingState />
-            </Plugins>
-        );
-    }
-}
-
-class CustomGridConfig extends React.PureComponent {
-    render() {
-        return (
-            <Plugins>
-                <GridCore />
-                <GridLayout />
-                <GridBody />
-                <GridTableView />
-                <GridDataRow />
-            </Plugins>
-        );
-    }
-}
 
 export class PluginsDemo extends React.PureComponent {
     constructor(props) {
@@ -75,46 +31,34 @@ export class PluginsDemo extends React.PureComponent {
 
         return (
             <div>
-                <h1>Default Separate Grid Config</h1>
+                <h1>Default Grid</h1>
                 <Grid rows={rows}>
-                    <DefaultGridConfig />
-                    <GridAutoColumns />
                 </Grid>
 
-                <h1>Inline Plugins Declaration</h1>
+                <h1>With Local Sorting</h1>
                 <Grid rows={rows}>
-                    <Plugins>
-                        <GridCore />
-                        <GridLayout />
-                        <GridHeader />
-                        <GridBody />
-
-                        <GridGroupPanel />
-                        <GridTableView />
-                        <GridDataRow />
-
-                        <GridHeaderRow />
-
-                        <GridFilterRow />
-                        <GridFilteringState />
-
-                        <GridEditRow position="right" />
-                        <GridEditState />
-
-                        <LocalData />
-
+                    <PluginGroup>
                         <GridSortingState />
                         <GridHeaderRowSorting />
-
-                        <GridAutoColumns />
-                    </Plugins>
+                        <LocalDataSorting />
+                    </PluginGroup>
                 </Grid>
 
-                <h1>Custom Separate Grid Config</h1>
-                <Grid
-                    rows={rows}
-                    columns={[{ field: 'id' }, { field: 'name' }]}>
-                    <CustomGridConfig />
+                <h1>With Local Editing</h1>
+                <Grid rows={rows}>
+                    <PluginGroup>
+                        <GridEditRow position="right" />
+                        <GridEditState />
+                    </PluginGroup>
+                </Grid>
+
+                <h1>With Local Filtering</h1>
+                <Grid rows={rows}>
+                    <PluginGroup>
+                        <GridFilterRow />
+                        <GridFilteringState />
+                        <LocalDataFiltering />
+                    </PluginGroup>
                 </Grid>
             </div>
         )
