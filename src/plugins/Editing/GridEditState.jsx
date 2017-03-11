@@ -3,18 +3,18 @@ import React from 'react';
 import { asPluginComponent, createReducer } from '../pluggable';
 
 const startEditRowReducer = (state, action) => {
-    return [...state, action.payload.row.id];
+    return [...state, action.payload.rowId];
 };
 
 const stopEditRowReducer = (state, action) => {
     let nextState = state.slice()
-    nextState.splice(state.indexOf(action.payload.row.id), 1);
+    nextState.splice(state.indexOf(action.payload.rowId), 1);
     return nextState;
 };
 
 const cancelRowChangesReducer = (state, action) => {
     let nextState = Object.assign({}, state);
-    delete nextState[action.payload.row.id];
+    delete nextState[action.payload.rowId];
     return nextState;
 };
 
@@ -53,7 +53,12 @@ const enhanceRowsSelector = (original, { selectors }) => state => {
     });
 };
 
-export const gridHeaderSortingPlugin = () => {
+const getPatch = (rowId, selectors) => {
+    let { editedCellsSelector, rootStateSelector } = selectors;
+    return editedCellsSelector(rootStateSelector())[rowId];
+};
+
+export const gridHeaderSortingPlugin = (propsSelector) => {
     return {
         selectors: {
             tableRowsSelector: (original, host) => enhanceTableRowsSelector(original, host),
@@ -63,9 +68,9 @@ export const gridHeaderSortingPlugin = () => {
             rowEditCommandsSelector: () => (state, { rowId }) => state.editingRows.indexOf(rowId) !== -1 ? ['Save', 'Cancel'] : ['Edit']
         },
         actionCreators: {
-            startRowEdit: (original, host) => ({ row }) => ({ type: 'GRID_START_EDIT_ROW', payload: { row } }),
-            saveRowChanges: (original, host) => ({ row }) => ({ type: 'GRID_SAVE_ROW_CHANGES', payload: { row } }),
-            cancelRowChanges: (original, host) => ({ row }) => ({ type: 'GRID_CANCEL_ROW_CHANGES', payload: { row } }),
+            startRowEdit: (original, host) => ({ rowId }) => ({ type: 'GRID_START_EDIT_ROW', payload: { rowId } }),
+            saveRowChanges: (original, host) => ({ rowId }) => ({ type: 'GRID_SAVE_ROW_CHANGES', payload: { rowId, patch: getPatch(rowId, host.selectors) } }),
+            cancelRowChanges: (original, host) => ({ rowId }) => ({ type: 'GRID_CANCEL_ROW_CHANGES', payload: { rowId } }),
             cellValueChangeEdit: (original, host) => (args) => ({ type: 'GRID_CELL_VALUE_CHANGE', payload: args }),
         },
         reducers: {
@@ -76,8 +81,12 @@ export const gridHeaderSortingPlugin = () => {
             }),
             editedCells: () => createReducer({}, {
                 'GRID_CANCEL_ROW_CHANGES': cancelRowChangesReducer,
+                'GRID_SAVE_ROW_CHANGES': cancelRowChangesReducer,
                 'GRID_CELL_VALUE_CHANGE': cellValueChangeReducer,
             })
+        },
+        events: {
+            'GRID_SAVE_ROW_CHANGES': () => action => propsSelector().onSaveChanges && propsSelector().onSaveChanges(action.payload),
         }
     };
 }

@@ -80,7 +80,8 @@ export default class Grid extends React.PureComponent {
         this.host = {
             components: {},
             selectors: {
-                rootPropsSelector: state => this.props
+                rootPropsSelector: state => this.props,
+                rootStateSelector: () => this.stateStore.getState()
             },
             actionCreators: {},
             reducers: {

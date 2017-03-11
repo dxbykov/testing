@@ -42,16 +42,17 @@ const GridDataCommandCellViewContainer = connectIoC(
                 let { actionCreators } = props;
                 let { startRowEdit, saveRowChanges, cancelRowChanges } = actionCreators;
                 let { row, command } = args;
+                let rowId = row.id;
 
                 switch(command) {
                     case 'Edit':
-                        dispatch(startRowEdit({ row }));
+                        dispatch(startRowEdit({ rowId }));
                     break;
                     case 'Save':
-                        dispatch(saveRowChanges({ row }));
+                        dispatch(saveRowChanges({ rowId }));
                     break;
                     case 'Cancel':
-                        dispatch(cancelRowChanges({ row }));
+                        dispatch(cancelRowChanges({ rowId }));
                     break;
                 }            
             }

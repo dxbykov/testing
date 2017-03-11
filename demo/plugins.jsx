@@ -27,6 +27,7 @@ export class PluginsDemo extends React.PureComponent {
         }
 
         this.onSortByColumn = this.onSortByColumn.bind(this);
+        this.onSaveChanges = this.onSaveChanges.bind(this);
     }
 
     onSortByColumn({ column }) {
@@ -37,6 +38,16 @@ export class PluginsDemo extends React.PureComponent {
                 direction: (sorting && sorting.direction == 'asc') ? 'desc' : 'asc'
             }
         ]});
+    }
+
+    onSaveChanges({ rowId, patch }) {
+        let rows = this.state.rows.map(row => {
+            if(row.id === rowId) 
+                return Object.assign({}, row, patch);
+            else
+                return row;
+        });
+        this.setState({ rows });
     }
 
     render() {
@@ -77,7 +88,7 @@ export class PluginsDemo extends React.PureComponent {
                 <Grid rows={rows}>
                     <PluginGroup>
                         <GridEditRow position="right" />
-                        <GridEditState />
+                        <GridEditState onSaveChanges={this.onSaveChanges} />
                     </PluginGroup>
                 </Grid>
 
@@ -100,7 +111,7 @@ export class PluginsDemo extends React.PureComponent {
                         <GridFilteringState />
 
                         <GridEditRow />
-                        <GridEditState />
+                        <GridEditState onSaveChanges={this.onSaveChanges} />
 
                         <LocalData />
                     </PluginGroup>
