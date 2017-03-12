@@ -26,8 +26,8 @@ const cellValueChangeReducer = (state, action) => {
     return nextState;
 };
 
-const enhanceTableRowsSelector = (original, { selectors }) => state => {
-    let { editingRowsSelector, editedCellsSelector } = selectors;
+const enhanceTableRowsSelector = (original, imports) => state => {
+    let { editingRowsSelector, editedCellsSelector } = imports().selectors;
     let editingIds = editingRowsSelector(state);
     let editedCells = editedCellsSelector(state);
     return original(state).map(row => {
@@ -41,8 +41,8 @@ const enhanceTableRowsSelector = (original, { selectors }) => state => {
     });
 }
 
-const enhanceRowsSelector = (original, { selectors }) => state => {
-    let { editingRowsSelector, editedCellsSelector } = selectors;
+const enhanceRowsSelector = (original, imports) => state => {
+    let { editingRowsSelector, editedCellsSelector } = imports().selectors;
     let editingIds = editingRowsSelector(state);
     let editedCells = editedCellsSelector(state);
     return original(state).map(row => {
@@ -53,40 +53,49 @@ const enhanceRowsSelector = (original, { selectors }) => state => {
     });
 };
 
-const getPatch = (rowId, selectors) => {
-    let { editedCellsSelector, rootStateSelector } = selectors;
+const getPatch = (rowId, imports) => {
+    let { editedCellsSelector, rootStateSelector } = imports().selectors;
     return editedCellsSelector(rootStateSelector())[rowId];
 };
 
-export const gridHeaderSortingPlugin = (propsSelector) => {
+export const gridHeaderSortingPlugin = (propsSelector, __toRemove, imports) => {
     return {
-        selectors: {
-            tableRowsSelector: (original, host) => enhanceTableRowsSelector(original, host),
-            editingRowsSelector: (original, host) => state => state.editingRows,
-            editedCellsSelector: (original, host) => state => state.editedCells,
-            rowsSelector: (original, host) => enhanceRowsSelector(original, host),
-            rowEditCommandsSelector: () => (state, { rowId }) => state.editingRows.indexOf(rowId) !== -1 ? ['Save', 'Cancel'] : ['Edit']
+        exports: {
+            selectors: {
+                tableRowsSelector: original => enhanceTableRowsSelector(original, imports),
+                editingRowsSelector: original => state => state.editingRows,
+                editedCellsSelector: original => state => state.editedCells,
+                rowsSelector: original => enhanceRowsSelector(original, imports),
+                rowEditCommandsSelector: () => (state, { rowId }) => state.editingRows.indexOf(rowId) !== -1 ? ['Save', 'Cancel'] : ['Edit']
+            },
+            actionCreators: {
+                startRowEdit: original => ({ rowId }) => ({ type: 'GRID_START_EDIT_ROW', payload: { rowId } }),
+                saveRowChanges: original => ({ rowId }) => ({ type: 'GRID_SAVE_ROW_CHANGES', payload: { rowId, patch: getPatch(rowId, imports) } }),
+                cancelRowChanges: original => ({ rowId }) => ({ type: 'GRID_CANCEL_ROW_CHANGES', payload: { rowId } }),
+                cellValueChangeEdit: original => (args) => ({ type: 'GRID_CELL_VALUE_CHANGE', payload: args }),
+            },
+            reducers: {
+                editingRows: () => createReducer([], {
+                    'GRID_START_EDIT_ROW': startEditRowReducer,
+                    'GRID_SAVE_ROW_CHANGES': stopEditRowReducer,
+                    'GRID_CANCEL_ROW_CHANGES': stopEditRowReducer
+                }),
+                editedCells: () => createReducer({}, {
+                    'GRID_CANCEL_ROW_CHANGES': cancelRowChangesReducer,
+                    'GRID_SAVE_ROW_CHANGES': cancelRowChangesReducer,
+                    'GRID_CELL_VALUE_CHANGE': cellValueChangeReducer,
+                })
+            },
+            events: {
+                'GRID_SAVE_ROW_CHANGES': () => action => propsSelector().onSaveChanges && propsSelector().onSaveChanges(action.payload),
+            }
         },
-        actionCreators: {
-            startRowEdit: (original, host) => ({ rowId }) => ({ type: 'GRID_START_EDIT_ROW', payload: { rowId } }),
-            saveRowChanges: (original, host) => ({ rowId }) => ({ type: 'GRID_SAVE_ROW_CHANGES', payload: { rowId, patch: getPatch(rowId, host.selectors) } }),
-            cancelRowChanges: (original, host) => ({ rowId }) => ({ type: 'GRID_CANCEL_ROW_CHANGES', payload: { rowId } }),
-            cellValueChangeEdit: (original, host) => (args) => ({ type: 'GRID_CELL_VALUE_CHANGE', payload: args }),
-        },
-        reducers: {
-            editingRows: () => createReducer([], {
-                'GRID_START_EDIT_ROW': startEditRowReducer,
-                'GRID_SAVE_ROW_CHANGES': stopEditRowReducer,
-                'GRID_CANCEL_ROW_CHANGES': stopEditRowReducer
-            }),
-            editedCells: () => createReducer({}, {
-                'GRID_CANCEL_ROW_CHANGES': cancelRowChangesReducer,
-                'GRID_SAVE_ROW_CHANGES': cancelRowChangesReducer,
-                'GRID_CELL_VALUE_CHANGE': cellValueChangeReducer,
-            })
-        },
-        events: {
-            'GRID_SAVE_ROW_CHANGES': () => action => propsSelector().onSaveChanges && propsSelector().onSaveChanges(action.payload),
+        imports: {
+            selectors: {
+                rootStateSelector: React.PropTypes.func.isRequired,
+                editedCellsSelector: React.PropTypes.func.isRequired,
+                editingRowsSelector: React.PropTypes.func.isRequired
+            }
         }
     };
 }

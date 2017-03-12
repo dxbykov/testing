@@ -1,27 +1,57 @@
 import React from 'react';
 
 const addPluginToHost = (plugin, host) => {
-    Object.keys(plugin).forEach(extensionType => {
+    let exports = plugin.exports || plugin;
+
+    Object.keys(exports).forEach(extensionType => {
         if(!host[extensionType]) {
             host[extensionType] = {};
         }
         
-        Object.keys(plugin[extensionType]).forEach(key => {
+        Object.keys(exports[extensionType]).forEach(key => {
             let original = host[extensionType][key],
-                enhancer = plugin[extensionType][key];
+                enhancer = exports[extensionType][key];
 
             host[extensionType][key] = enhancer(original, host);
         });
     });
 };
 
-export const asPluginComponent = plugin => React.createClass({
+const filterObjectByObject = (source, filter) => {
+    if(typeof filter === 'function') {//TODO add type check in development env
+        return source;
+    }
+
+    let result = {};
+
+    Object.keys(filter).forEach(key => {
+        result[key] = filterObjectByObject(source[key], filter[key]);
+    });
+
+    return result;
+};
+
+export const asPluginComponent = pluginCtor => React.createClass({
     contextTypes: {
         gridHost: React.PropTypes.object.isRequired
     },
+    getImports: function() {
+        if(!this.imports) {
+            throw new Error('Unable to access plugin imports during the initialization stage');
+        }
+        return this.imports;
+    },
+    initImports: function(imports) {
+        const { gridHost } = this.context;
+        //TODO dev mode: return undefined if imports are not specified (to reduce bugs)
+        //TODO prod mode: return gridHost if imports are not specified (to increase performance)
+        this.imports = imports ? filterObjectByObject(gridHost, imports) : gridHost;
+    },
     componentWillMount: function() {
         const { gridHost } = this.context;
-        addPluginToHost(plugin(() => this.props, gridHost), gridHost);
+        let plugin = pluginCtor(() => this.props, gridHost, () => this.getImports());
+        addPluginToHost(plugin, gridHost);
+        this.initImports(plugin.imports);
     },
     componentWillReceiveProps: function(nextProps) {
         const { gridHost } = this.context;
