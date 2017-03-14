@@ -84,7 +84,6 @@ export class FilterRow extends React.PureComponent {
             },
             templateExtenders: {
                 tableViewCell: ({ column, row }, original) => {
-                    let { filters, filtersChange } = this.props;
                     if(row.type === 'filter' && !column.type) {
                         return (
                             <input
@@ -163,7 +162,7 @@ const sortingsHelper = {
 };
 
 // UI
-export class HeaderRowSorting extends React.PureComponent {
+export class SortingState extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
 
@@ -174,14 +173,42 @@ export class HeaderRowSorting extends React.PureComponent {
                     return sortingsHelper.sort(rows, sortings);
                 },
             },
+            getters: {
+                sortingFor: ({ columnName }) => {
+                    let { sortings } = this.props;
+                    return sortingsHelper.directionFor(columnName, sortings);
+                }
+            },
+            actions: {
+                applySorting: ({ columnName, value }) => {
+                    let { sortings, sortingsChange } = this.props;
+                    sortingsChange(sortingsHelper.calcSortings(columnName, sortings))
+                    gridHost.forceUpdate();
+                }
+            }
+        }
+        gridHost.register(this.plugin);
+    }
+    render() {
+        return null
+    }
+};
+SortingState.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+}
+
+export class HeaderRowSorting extends React.PureComponent {
+    componentWillMount() {
+        let { gridHost } = this.context;
+
+        this.plugin = {
             templateExtenders: {
                 tableViewCell: ({ column, row }, original) => {
                     if(row.type === 'heading' && !column.type) {
-                        let { sortings, sortingsChange } = this.props;
-                        let direction = sortingsHelper.directionFor(column.name, sortings);
+                        let direction = gridHost.getter('sortingFor')({ columnName: column.name });
                         return (
                             <div 
-                                onClick={() => { sortingsChange(sortingsHelper.calcSortings(column.name, sortings)); gridHost.forceUpdate(); }}
+                                onClick={() => gridHost.action('applySorting')({ columnName: column.name })}
                                 style={{ width: '100%', height: '100%' }}>
                                 {original} [{ direction ? (direction === 'desc' ? '↑' : '↓') : '#'}]
                             </div>
@@ -539,9 +566,7 @@ export class MagicDemo extends React.PureComponent {
                     columns={columns}>
                     
                     <HeaderRow/>
-                    <HeaderRowSorting
-                        sortings={sortings}
-                        sortingsChange={sortings => this.setState({ sortings })}/>
+                    <HeaderRowSorting/>
 
                     <FilterRow/>
 
@@ -554,6 +579,9 @@ export class MagicDemo extends React.PureComponent {
                         template={(row) => <div>Detail for {row.name}</div>}/>
 
                         
+                    <SortingState
+                        sortings={sortings}
+                        sortingsChange={sortings => this.setState({ sortings })}/>
                     <FilterState
                         filters={filters}
                         filtersChange={filters => this.setState({ filters })}/>
