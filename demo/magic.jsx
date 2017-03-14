@@ -474,7 +474,7 @@ export class Connector extends React.PureComponent {
     render() {
         let { children, mappings } = this.props;
 
-        return children(mappings());
+        return React.cloneElement(children, mappings());
     }
 };
 Connector.contextTypes = {
@@ -498,34 +498,38 @@ export class GridTableView extends React.Component {
                 tableViewCell: ({ row, column }) => (
                     row[column.name]
                 ),
-                tableView: () => (
-                    <Connector
-                        mappings={() => ({
-                            rows: ((headerRows, bodyRows) => [...headerRows, ...bodyRows])(gridHost.getter('tableHeaderRows')(), gridHost.getter('tableBodyRows')()),
-                            columns: gridHost.getter('tableColumns')(),
-                        })}>
-                        {({ rows, columns }) => (
-                            <table style={{ borderCollapse: 'collapse' }}>
-                                {rows.map((row, rowIndex) => 
-                                    <tr key={row.id}>
-                                        {columns.map((column, columnIndex) => {
-                                            let info = gridHost.getter('tableCellInfo')({ column, row, columnIndex, rowIndex });
-                                            if(info.skip) return null
-                                            return (
-                                                <td
-                                                    key={column.name}
-                                                    style={{ width: (column.width || 100) + 'px' }}
-                                                    colSpan={info.colspan || 0}>
-                                                    {gridHost.template('tableViewCell')({ row, column })}
-                                                </td>
-                                            );
-                                        })}
-                                    </tr>
-                                )}
-                            </table>
-                        )}
-                    </Connector>
-                ),
+                tableView: () => {
+                    let StaticTable = ({ rows, columns }) => (
+                        <table style={{ borderCollapse: 'collapse' }}>
+                            {rows.map((row, rowIndex) => 
+                                <tr key={row.id}>
+                                    {columns.map((column, columnIndex) => {
+                                        let info = gridHost.getter('tableCellInfo')({ column, row, columnIndex, rowIndex });
+                                        if(info.skip) return null
+                                        return (
+                                            <td
+                                                key={column.name}
+                                                style={{ width: (column.width || 100) + 'px' }}
+                                                colSpan={info.colspan || 0}>
+                                                {gridHost.template('tableViewCell')({ row, column })}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            )}
+                        </table>
+                    );
+
+                    return (
+                        <Connector
+                            mappings={() => ({
+                                rows: ((headerRows, bodyRows) => [...headerRows, ...bodyRows])(gridHost.getter('tableHeaderRows')(), gridHost.getter('tableBodyRows')()),
+                                columns: gridHost.getter('tableColumns')(),
+                            })}>
+                            <StaticTable/>
+                        </Connector>
+                    )
+                },
             },
         }
     }
