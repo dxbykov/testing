@@ -36,7 +36,7 @@ const filterHelpers = {
 };
 
 // UI
-export class FilterRow extends React.PureComponent {
+export class FilterState extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
 
@@ -46,6 +46,38 @@ export class FilterRow extends React.PureComponent {
                     let { filters } = this.props;
                     return filterHelpers.filter(rows, filters);
                 },
+            },
+            getters: {
+                filterFor: ({ columnName }) => {
+                    let { filters } = this.props;
+                    return filterHelpers.filterFor(columnName, filters);
+                }
+            },
+            actions: {
+                applyFilter: ({ columnName, value }) => {
+                    let { filters, filtersChange } = this.props;
+                    filtersChange(filterHelpers.calcFilters(columnName, value, filters));
+                    gridHost.forceUpdate();
+                }
+            }
+        }
+        gridHost.register(this.plugin);
+    }
+    render() {
+        return null
+    }
+};
+FilterState.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+}
+
+
+export class FilterRow extends React.PureComponent {
+    componentWillMount() {
+        let { gridHost } = this.context;
+
+        this.plugin = {
+            getterExtenders: {
                 tableRows: (_, rows) => {
                     return [{ type: 'filter' }].concat(rows)
                 },
@@ -57,8 +89,8 @@ export class FilterRow extends React.PureComponent {
                         return (
                             <input
                                 type="text"
-                                value={filterHelpers.filterFor(column.name, filters)}
-                                onChange={(e) => { filtersChange(filterHelpers.calcFilters(column.name, e.target.value, filters)); gridHost.forceUpdate(); }}
+                                value={gridHost.getter('filterFor')({ columnName: column.name })}
+                                onChange={(e) => gridHost.action('applyFilter')({ columnName: column.name, value: e.target.value })}
                                 style={{ width: '100%' }}/>
                         );
                     }
@@ -261,7 +293,8 @@ export class MasterDetail extends React.PureComponent {
                 tableColumns: (_, columns) => {
                     return [{ type: 'detail', width: 20 }].concat(columns)
                 },
-                tableCellInfo: ({ row, columnIndex, columns }, original) => {            
+                tableCellInfo: ({ row, columnIndex }, original) => {
+                    let columns = gridHost.getter('tableColumns')();          
                     if(row.type === 'detailRow') {
                         if(columnIndex !== 0) {
                             return { skip: true };
@@ -353,6 +386,14 @@ export class Grid extends React.PureComponent {
                     return result;
                 };
             },
+            action: (name) => {
+                let action = null;
+                this.plugins.forEach(plugin => {
+                    if(plugin.actions && plugin.actions[name])
+                        action = plugin.actions[name];
+                });
+                return action;
+            },
 
             forceUpdate: () => this.updateSubscribers.forEach(subscription => subscription()),
             subscribeUpdate: (subscription) => this.updateSubscribers.push(subscription)
@@ -440,7 +481,7 @@ export class GridTableView extends React.Component {
                                 {rows.map((row, rowIndex) => 
                                     <tr key={row.id}>
                                         {columns.map((column, columnIndex) => {
-                                            let info = gridHost.getter('tableCellInfo')({ column, row, columnIndex, rowIndex, rows, columns });
+                                            let info = gridHost.getter('tableCellInfo')({ column, row, columnIndex, rowIndex });
                                             if(info.skip) return null
                                             return (
                                                 <td
@@ -495,9 +536,7 @@ export class MagicDemo extends React.PureComponent {
                 <Grid
                     rows={rows}
                     columns={columns}>
-                    <FilterRow
-                        filters={filters}
-                        filtersChange={filters => this.setState({ filters })}/>
+                    <FilterRow/>
                     <HeaderRow/>
                     <HeaderRowSorting
                         sortings={sortings}
@@ -509,6 +548,11 @@ export class MagicDemo extends React.PureComponent {
                         expanded={expandedRows}
                         expandedChange={expandedRows => this.setState({ expandedRows })}
                         template={(row) => <div>Detail for {row.name}</div>}/>
+
+                        
+                    <FilterState
+                        filters={filters}
+                        filtersChange={filters => this.setState({ filters })}/>
                 </Grid>
             </div>
         )
