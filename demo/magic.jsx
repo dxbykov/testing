@@ -78,8 +78,8 @@ export class FilterRow extends React.PureComponent {
 
         this.plugin = {
             getterExtenders: {
-                tableRows: (_, rows) => {
-                    return [{ type: 'filter' }].concat(rows)
+                tableHeaderRows: (_, rows) => {
+                    return [...rows, { type: 'filter' }]
                 },
             },
             templateExtenders: {
@@ -115,11 +115,11 @@ export class HeaderRow extends React.PureComponent {
 
         this.plugin = {
             getterExtenders: {
-                tableRows: (_, rows) => {
+                tableHeaderRows: (_, rows) => {
                     return [gridHost.getter('columns')().reduce((accum, c) => {
                         accum[c.name] = c.title;
                         return accum;
-                    }, { type: 'heading' })].concat(rows)
+                    }, { type: 'heading' }), ...rows]
                 },
             }
         }
@@ -280,7 +280,7 @@ export class MasterDetail extends React.PureComponent {
 
         this.plugin = {
             getterExtenders: {
-                tableRows: (_, rows) => {
+                tableBodyRows: (_, rows) => {
                     let { expanded } = this.props;
                     expanded.forEach(e => {
                         let index = rows.findIndex(row => row.id === e);
@@ -462,7 +462,8 @@ export class GridTableView extends React.Component {
 
         this.plugin = {
             getters: {
-                tableRows: () => gridHost.getter('rows')(),
+                tableHeaderRows: () => [],
+                tableBodyRows: () => gridHost.getter('rows')(),
                 tableColumns: () => gridHost.getter('columns')(),
                 tableCellInfo: () => ({}), // NO WATCH
             },
@@ -473,7 +474,7 @@ export class GridTableView extends React.Component {
                 tableView: () => (
                     <Connector
                         mappings={() => ({
-                            rows: gridHost.getter('tableRows')(),
+                            rows: ((headerRows, bodyRows) => [...headerRows, ...bodyRows])(gridHost.getter('tableHeaderRows')(), gridHost.getter('tableBodyRows')()),
                             columns: gridHost.getter('tableColumns')(),
                         })}>
                         {({ rows, columns }) => (
@@ -536,11 +537,14 @@ export class MagicDemo extends React.PureComponent {
                 <Grid
                     rows={rows}
                     columns={columns}>
-                    <FilterRow/>
+                    
                     <HeaderRow/>
                     <HeaderRowSorting
                         sortings={sortings}
                         sortingsChange={sortings => this.setState({ sortings })}/>
+
+                    <FilterRow/>
+
                     <Selection
                         selection={selection}
                         selectionChange={selection => this.setState({ selection })}/>
