@@ -198,6 +198,9 @@ SortingState.contextTypes = {
 }
 
 export class HeaderRowSorting extends React.PureComponent {
+    constructor(props, context) {
+        super(props, context);
+    }
     componentWillMount() {
         let { gridHost } = this.context;
 
@@ -302,6 +305,28 @@ Selection.contextTypes = {
 }
 
 export class MasterDetail extends React.PureComponent {
+    constructor(props, context) {
+        super(props, context);
+
+        this.state = {
+            animating: []
+        }
+    }
+    componentWillReceiveProps(nextProps) {
+        let collapsed = this.props.expanded.filter(e => nextProps.expanded.indexOf(e) === -1);
+        let expanded = nextProps.expanded.filter(e => this.props.expanded.indexOf(e) === -1);
+
+        this.setState({ animating: this.state.animating.concat(collapsed).concat(expanded) });
+
+        setTimeout(() => {
+            this.setState({ 
+                animating: this.state.animating.filter(a => !(collapsed.indexOf(a) !== -1 || expanded.indexOf(a) !== -1))
+            })
+
+            let { gridHost } = this.context;
+            gridHost.forceUpdate();
+        }, 800);
+    }
     componentWillMount() {
         let { gridHost } = this.context;
 
@@ -309,9 +334,10 @@ export class MasterDetail extends React.PureComponent {
             getterExtenders: {
                 tableBodyRows: (_, rows) => {
                     let { expanded } = this.props;
-                    expanded.forEach(e => {
+                    let { animating } = this.state;
+                    [...expanded, ...animating].filter((value, index, self) => self.indexOf(value) === index).forEach(e => {
                         let index = rows.findIndex(row => row.id === e);
-                        if(index >= 0) {
+                        if(index !== -1) {
                             rows.splice(rows.findIndex(row => row.id === e) + 1, 0, { type: 'detailRow', for: e })
                         }
                     })
@@ -334,9 +360,15 @@ export class MasterDetail extends React.PureComponent {
             templateExtenders: {
                 tableViewCell: ({ column, row }, original) => {
                     let { expanded, expandedChange, template } = this.props;
+                    let { animating } = this.state;
                     let rows = gridHost.getter('rows')();
                     if(row.type === 'detailRow') {
-                        return template ? template(rows.find(r => r.id === row.for)) : <div>Hello detail!</div>
+                        return (
+                            <div>
+                                {template ? template(rows.find(r => r.id === row.for)) : <div>Hello detail!</div>}
+                                {animating.indexOf(row.for) > -1 ? 'Animating' : null}
+                            </div>
+                        )
                     }
                     if(column.type === 'detail' && row.type === 'heading') {
                         return null;
@@ -509,7 +541,10 @@ export class GridTableView extends React.Component {
                                         return (
                                             <td
                                                 key={column.name}
-                                                style={{ width: (column.width || 100) + 'px' }}
+                                                style={{ 
+                                                    padding: 0,
+                                                    width: (column.width || 100) + 'px' 
+                                                }}
                                                 colSpan={info.colspan || 0}>
                                                 {gridHost.template('tableViewCell')({ row, column })}
                                             </td>
