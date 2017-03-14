@@ -22,44 +22,59 @@ const filterHelpers = {
             return '';
         let filter = filters.filter(s => s.column === columnName)[0];
         return filter ? filter.value : '';
-    },
-    calcFilters: (columnName, value, prevFilters) => {
-        let filterIndex = prevFilters.findIndex(f => { return f.column == columnName; });
-        let result = prevFilters.slice();
-        if(filterIndex > -1) {
-            result.splice(filterIndex, 1, { column: columnName, value: value });
-        } else {
-            result.push({ column: columnName, value: value })
-        }
-        return result;
-    },
+    }
 };
 
 // UI
 export class FilterState extends React.PureComponent {
+    constructor(props, context) {
+        super(props, context);
+
+        this.state = {
+            filters: props.defaultFilters || []
+        };
+    }
     componentWillMount() {
         let { gridHost } = this.context;
 
         this.plugin = {
             getterExtenders: {
                 rows: (_, rows) => {
-                    let { filters } = this.props;
+                    let filters = gridHost.getter('filters')();
                     return filterHelpers.filter(rows, filters);
                 },
             },
             getters: {
+                filters: () => this.props.filters || this.state.filters,
                 filterFor: ({ columnName }) => {
-                    let { filters } = this.props;
+                    let filters = gridHost.getter('filters')();
                     return filterHelpers.filterFor(columnName, filters);
                 }
             },
             actions: {
-                applyFilter: ({ columnName, value }) => {
-                    let { filters, filtersChange } = this.props;
-                    filtersChange(filterHelpers.calcFilters(columnName, value, filters));
-                    gridHost.forceUpdate();
+                setColumnFilter: ({ columnName, value }) => {
+                    let { filtersChange } = this.props;
+                    let onFiltersChange = filters => {
+                        this.setState({ filters });
+                        filtersChange && filtersChange(filters);
+                    };
+                    let filters = gridHost.getter('filters')();
+                    gridHost.dispatch('setColumnFilter')(filters, { columnName, value }, onFiltersChange);
                 }
-            }
+            },
+            reducers: {
+                setColumnFilter: (state, payload) => {
+                    let { columnName, value } = payload;
+                    let filterIndex = state.findIndex(f => { return f.column == columnName; });
+                    let nextState = state.slice();
+                    if(filterIndex > -1) {
+                        nextState.splice(filterIndex, 1, { column: columnName, value: value });
+                    } else {
+                        nextState.push({ column: columnName, value: value })
+                    }
+                    return nextState;
+                }
+            }            
         }
         gridHost.register(this.plugin);
     }
@@ -89,7 +104,7 @@ export class FilterRow extends React.PureComponent {
                             <input
                                 type="text"
                                 value={gridHost.getter('filterFor')({ columnName: column.name })}
-                                onChange={(e) => gridHost.action('applyFilter')({ columnName: column.name, value: e.target.value })}
+                                onChange={(e) => gridHost.action('setColumnFilter')({ columnName: column.name, value: e.target.value })}
                                 style={{ width: '100%' }}/>
                         );
                     }
@@ -423,7 +438,24 @@ export class Grid extends React.PureComponent {
             },
 
             forceUpdate: () => this.updateSubscribers.forEach(subscription => subscription()),
-            subscribeUpdate: (subscription) => this.updateSubscribers.push(subscription)
+            subscribeUpdate: (subscription) => this.updateSubscribers.push(subscription),
+            dispatch: (actionType) => {
+                let reducer = null;
+                this.plugins.forEach(plugin => {
+                    if(plugin.reducers && plugin.reducers[actionType])
+                        reducer = plugin.reducers[actionType];
+                });
+                return (state, payload, setState) => {
+                    let result = reducer(state, payload);
+
+                    if(result !== state) {
+                        setState(result);
+                        this.host.forceUpdate();
+                    }
+
+                    console.log({ type: actionType, payload, state, nextState: result });
+                };
+            },
         };
     }
     getChildContext() {
@@ -589,6 +621,31 @@ export class MagicDemo extends React.PureComponent {
                     <FilterState
                         filters={filters}
                         filtersChange={filters => this.setState({ filters })}/>
+                </Grid>
+
+                <h2>Uncontrolled with default filters</h2>
+                <Grid
+                    rows={rows}
+                    columns={columns}>
+                    
+                    <HeaderRow/>
+                    <HeaderRowSorting/>
+
+                    <FilterRow/>
+                    <FilterState defaultFilters={[ { column: 'name', value: 'She' } ]}/>
+
+                    <Selection
+                        selection={selection}
+                        selectionChange={selection => this.setState({ selection })}/>
+                    <MasterDetail
+                        expanded={expandedRows}
+                        expandedChange={expandedRows => this.setState({ expandedRows })}
+                        template={(row) => <div>Detail for {row.name}</div>}/>
+
+                        
+                    <SortingState
+                        sortings={sortings}
+                        sortingsChange={sortings => this.setState({ sortings })}/>
                 </Grid>
             </div>
         )
