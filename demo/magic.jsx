@@ -71,24 +71,6 @@ export class Grid extends React.PureComponent {
             },
 
             forceUpdate: () => this.plugins.forEach(plugin => plugin.onUpdate && plugin.onUpdate()),
-
-            dispatch: (actionType) => {
-                let reducer = null;
-                this.plugins.forEach(plugin => {
-                    if(plugin.reducers && plugin.reducers[actionType])
-                        reducer = plugin.reducers[actionType];
-                });
-                return (state, payload, setState) => {
-                    let result = reducer(state, payload);
-
-                    if(result !== state) {
-                        setState(result);
-                        this.host.forceUpdate();
-                    }
-
-                    console.log({ type: actionType, payload, state, nextState: result });
-                };
-            },
         };
     }
     getChildContext() {
@@ -277,6 +259,38 @@ GetterExtender.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 };
 
+export class Action extends React.PureComponent {
+    componentWillMount() {
+        let { gridHost } = this.context;
+        let { register, getter, forceUpdate } = gridHost;
+        let { name } = this.props;
+
+        this.plugin = {
+            actions: {
+                [name]: (params) => {
+                    let { action } = this.props;
+                    action(params, getter)
+                    forceUpdate();
+                }
+            }
+        };
+
+        register(this.plugin);
+    }
+    componentWillUnmount() {
+        let { gridHost } = this.context;
+        let { unregister } = gridHost;
+
+        unregister(this.plugin)
+    }
+    render() {
+        return null;
+    }
+};
+Action.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+};
+
 
 
 // Plugins
@@ -298,52 +312,38 @@ const filterHelpers = {
             return '';
         let filter = filters.filter(s => s.column === columnName)[0];
         return filter ? filter.value : '';
+    },
+    calcFilters: ({ columnName, value }, filters) => {
+        let filterIndex = filters.findIndex(f => { return f.column == columnName; });
+        let nextState = filters.slice();
+        if(filterIndex > -1) {
+            nextState.splice(filterIndex, 1, { column: columnName, value: value });
+        } else {
+            nextState.push({ column: columnName, value: value })
+        }
+        return nextState;
     }
 };
 
 // UI
 export class FilterState extends React.PureComponent {
-    constructor(props, context) {
-        super(props, context);
+    constructor(props) {
+        super(props);
 
         this.state = {
             filters: props.defaultFilters || []
         };
     }
-    componentWillMount() {
-        let { gridHost } = this.context;
-
-        this.plugin = {
-            actions: {
-                setColumnFilter: ({ columnName, value }) => {
-                    let { filtersChange } = this.props;
-                    let onFiltersChange = filters => {
-                        this.setState({ filters });
-                        filtersChange && filtersChange(filters);
-                    };
-                    let filters = gridHost.getter('filters')();
-                    gridHost.dispatch('setColumnFilter')(filters, { columnName, value }, onFiltersChange);
-                }
-            },
-            reducers: {
-                setColumnFilter: (state, payload) => {
-                    let { columnName, value } = payload;
-                    let filterIndex = state.findIndex(f => { return f.column == columnName; });
-                    let nextState = state.slice();
-                    if(filterIndex > -1) {
-                        nextState.splice(filterIndex, 1, { column: columnName, value: value });
-                    } else {
-                        nextState.push({ column: columnName, value: value })
-                    }
-                    return nextState;
-                }
-            }            
-        }
-        gridHost.register(this.plugin);
-    }
     render() {
         return (
             <div>
+                <Action name="setColumnFilter" action={({ columnName, value }, getter) => {
+                    let { filtersChange } = this.props;
+                    let filters = filterHelpers.calcFilters({ columnName, value }, getter('filters')());
+                    this.setState({ filters });
+                    filtersChange && filtersChange(filters);
+                }} />
+
                 <GetterExtender name="rows" value={(rows, getter) => filterHelpers.filter(rows, getter('filters')())}/>
 
                 <Getter name="filters" value={this.props.filters || this.state.filters} />
@@ -352,9 +352,6 @@ export class FilterState extends React.PureComponent {
         )
     }
 };
-FilterState.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
 
 
 export class FilterRow extends React.PureComponent {
@@ -437,25 +434,13 @@ const sortingsHelper = {
 
 // UI
 export class SortingState extends React.PureComponent {
-    componentWillMount() {
-        let { gridHost } = this.context;
-
-        this.plugin = {
-            actions: {
-                applySorting: ({ columnName, value }) => {
-                    let { sortings, sortingsChange } = this.props;
-                    sortingsChange(sortingsHelper.calcSortings(columnName, sortings))
-                    gridHost.forceUpdate();
-                }
-            }
-        }
-        gridHost.register(this.plugin);
-    }
     render() {
-        let { sortings } = this.props;
+        let { sortings, sortingsChange } = this.props;
         
         return (
             <div>
+                <Action name="applySorting" action={({ columnName, value }) => sortingsChange(sortingsHelper.calcSortings(columnName, sortings))} />
+
                 <GetterExtender name="rows" value={(rows) => sortingsHelper.sort(rows, sortings)}/>
 
                 <Getter name="sortingFor" value={(_, { columnName }) => sortingsHelper.directionFor(columnName, sortings)} />
@@ -463,9 +448,6 @@ export class SortingState extends React.PureComponent {
         )
     }
 };
-SortingState.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
 
 export class HeaderRowSorting extends React.PureComponent {
     render() {
@@ -589,7 +571,7 @@ export class MasterDetail extends React.PureComponent {
 
                 let { gridHost } = this.context;
                 gridHost.forceUpdate();
-            }, 800);
+            }, 200);
         }
     }
     render() {
