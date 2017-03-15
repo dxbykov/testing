@@ -18,6 +18,8 @@ export class Grid extends React.PureComponent {
             },
         }];
 
+        this.subscriptions = [];
+
         this.host = {
             register: (plugin) => this.plugins.push(plugin),
             unregister: (plugin) => this.plugins.splice(this.plugins.indexOf(plugin), 1),
@@ -70,7 +72,9 @@ export class Grid extends React.PureComponent {
                 return action;
             },
 
-            forceUpdate: () => this.plugins.forEach(plugin => plugin.onUpdate && plugin.onUpdate()),
+            forceUpdate: () => this.subscriptions.forEach(subscription => subscription()),
+            subscribe: (fn) => this.subscriptions.push(fn),
+            unsubscribe: (fn) => this.subscriptions.splice(this.plugins.indexOf(fn), 1),
         };
     }
     getChildContext() {
@@ -83,8 +87,10 @@ export class Grid extends React.PureComponent {
 
         return (
             <div>
-                {children}
-                <GridTableView />
+                <div id='plugins-root' style={{ display: 'none' }}>
+                    {children}
+                    <GridTableView />
+                </div>
                 <RootRenderer />
             </div>
         )
@@ -115,19 +121,17 @@ RootRenderer.contextTypes = {
 export class Connector extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
-        let { register } = gridHost;
+        let { subscribe } = gridHost;
 
-        this.plugin = {
-            onUpdate: () => this.forceUpdate()
-        };
+        this.plugin = () => this.forceUpdate()
 
-        register(this.plugin);
+        subscribe(this.plugin);
     }
     componentWillUnmount() {
         let { gridHost } = this.context;
-        let { unregister } = gridHost;
+        let { unsubscribe } = gridHost;
 
-        unregister(this.plugin)
+        unsubscribe(this.plugin)
     }
     render() {
         let { gridHost } = this.context;
@@ -706,7 +710,7 @@ export class MagicDemo extends React.PureComponent {
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(20),
+            rows: generateRows(100),
             sortings: [{ column: 'id', direction: 'asc' }],
             selection: [1, 3, 18],
             expandedRows: [3],
@@ -745,7 +749,7 @@ export class MagicDemo extends React.PureComponent {
                         filtersChange={filters => this.setState({ filters })}/>
                 </Grid>
 
-                <h2>Uncontrolled with default filters</h2>
+                {/*<h2>Uncontrolled with default filters</h2>
                 <Grid
                     rows={rows}
                     columns={columns}>
@@ -768,7 +772,7 @@ export class MagicDemo extends React.PureComponent {
                     <SortingState
                         sortings={sortings}
                         sortingsChange={sortings => this.setState({ sortings })}/>
-                </Grid>
+                </Grid>*/}
             </div>
         )
     }
