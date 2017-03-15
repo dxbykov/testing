@@ -74,7 +74,7 @@ export class Grid extends React.PureComponent {
 
             forceUpdate: () => this.subscriptions.forEach(subscription => subscription()),
             subscribe: (fn) => this.subscriptions.push(fn),
-            unsubscribe: (fn) => this.subscriptions.splice(this.plugins.indexOf(fn), 1),
+            unsubscribe: (fn) => this.subscriptions.splice(this.subscriptions.indexOf(fn), 1),
         };
     }
     getChildContext() {
@@ -88,8 +88,8 @@ export class Grid extends React.PureComponent {
         return (
             <div>
                 <div id='plugins-root' style={{ display: 'none' }}>
-                    {children}
                     <GridTableView />
+                    {children}
                 </div>
                 <RootRenderer />
             </div>
@@ -288,7 +288,7 @@ export class Action extends React.PureComponent {
                 [name]: (params) => {
                     let { action } = this.props;
                     action(params, getter)
-                    //forceUpdate();
+                    forceUpdate();
                 }
             }
         };
@@ -379,26 +379,26 @@ export class FilterRow extends React.PureComponent {
                 <GetterExtender name="tableHeaderRows" value={(rows, getter) => [...rows, { type: 'filter' }]}/>
 
                 <TemplateExtender name="tableViewCell">
-                    {({ column, row }, original) => (
-                        <Connector
-                            mappings={(getter, action) => ({
-                                filter: getter('filterFor')({ columnName: column.name }),
-                                changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value })
-                            })}>
-                                {({ filter, changeFilter }) => {
-                                    if(row.type === 'filter' && !column.type) {
-                                        return (
+                    {({ column, row }, original) => {
+                        if(row.type === 'filter' && !column.type) {
+                            return (
+                                <Connector
+                                    mappings={(getter, action) => ({
+                                        filter: getter('filterFor')({ columnName: column.name }),
+                                        changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value })
+                                    })}>
+                                        {({ filter, changeFilter }) => (
                                             <input
                                                 type="text"
                                                 value={filter}
                                                 onChange={(e) => changeFilter(e.target.value)}
                                                 style={{ width: '100%' }}/>
-                                        );
-                                    }
-                                    return original;
-                                }}
-                        </Connector>
-                    )}
+                                        )}
+                                </Connector>
+                            );
+                        }
+                        return original;
+                    }}
                 </TemplateExtender>
             </div>
         )
@@ -472,26 +472,26 @@ export class HeaderRowSorting extends React.PureComponent {
         return (
             <div>
                 <TemplateExtender name="tableViewCell">
-                    {({ column, row }, original) => (
-                        <Connector
-                            mappings={(getter, action) => ({
-                                direction: getter('sortingFor')({ columnName: column.name }),
-                                changeDirection: () => action('applySorting')({ columnName: column.name })
-                            })}>
-                                {({ direction, changeDirection }) => {
-                                    if(row.type === 'heading' && !column.type) {
-                                        return (
+                    {({ column, row }, original) => {
+                        if(row.type === 'heading' && !column.type) {
+                            return (
+                                <Connector
+                                    mappings={(getter, action) => ({
+                                        direction: getter('sortingFor')({ columnName: column.name }),
+                                        changeDirection: () => action('applySorting')({ columnName: column.name })
+                                    })}>
+                                        {({ direction, changeDirection }) => (
                                             <div 
                                                 onClick={changeDirection}
                                                 style={{ width: '100%', height: '100%' }}>
                                                 {original} [{ direction ? (direction === 'desc' ? '↑' : '↓') : '#'}]
                                             </div>
-                                        );
-                                    }
-                                    return original;
-                                }}
-                        </Connector>
-                    )}
+                                        )}
+                                </Connector>
+                            );
+                        }
+                        return original;
+                    }}
                 </TemplateExtender>
             </div>
         )
@@ -525,41 +525,51 @@ const selectionHelpers = {
 // UI
 export class Selection extends React.PureComponent {
     render() {
+        let { selection, selectionChange } = this.props;
+
         return (
             <div>
                 <GetterExtender name="tableColumns" value={(columns) => [{ type: 'select', width: 20 }].concat(columns)}/>
 
                 <TemplateExtender name="tableViewCell">
-                    {({ column, row }, original) => (
-                        <Connector
-                            mappings={(getter) => ({
-                                rows: getter('rows')(),
-                            })}>
-                                {({ rows, forceUpdate }) => {
-                                    let { selection, selectionChange } = this.props;
-                                    if(column.type === 'select' && row.type === 'heading') {
-                                        return (
-                                            <input
-                                                type='checkbox'
-                                                checked={selection.length === rows.length}
-                                                ref={(ref) => { ref && (ref.indeterminate = selection.length !== rows.length && selection.length !== 0)}}
-                                                onClick={() => selectionChange(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id))}
-                                                style={{ margin: '0' }}/>
-                                        );
-                                    }
-                                    if(column.type === 'select' && !row.type) {
-                                        return (
-                                            <input
-                                                type='checkbox'
-                                                checked={selection.indexOf(row.id) > -1}
-                                                onClick={() => selectionChange(selectionHelpers.calcSelection(selection, row.id))}
-                                                style={{ margin: '0' }}/>
-                                        );
-                                    }
-                                    return original;
-                                }}
-                        </Connector>
-                    )}
+                    {({ column, row }, original) => {
+                        if(column.type === 'select' && row.type === 'heading') {
+                            return (
+                                <Connector
+                                    mappings={(getter) => ({
+                                        rows: getter('rows')(),
+                                        selection,
+                                        selectionChange
+                                    })}>
+                                    {({ rows }) => (
+                                        <input
+                                            type='checkbox'
+                                            checked={selection.length === rows.length}
+                                            ref={(ref) => { ref && (ref.indeterminate = selection.length !== rows.length && selection.length !== 0)}}
+                                            onChange={() => selectionChange(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id))}
+                                            style={{ margin: '0' }}/>
+                                    )}
+                                </Connector>
+                            );
+                        }
+                        if(column.type === 'select' && !row.type) {
+                            return (
+                                <Connector
+                                    mappings={(getter) => ({
+                                        rows: getter('rows')(),
+                                    })}>
+                                    {({ rows }) => (
+                                        <input
+                                            type='checkbox'
+                                            checked={selection.indexOf(row.id) > -1}
+                                            onChange={() => selectionChange(selectionHelpers.calcSelection(selection, row.id))}
+                                            style={{ margin: '0' }}/>
+                                    )}
+                                </Connector>
+                            );
+                        }
+                        return original;
+                    }}
                 </TemplateExtender>
             </div>
         )
@@ -615,39 +625,39 @@ export class MasterDetail extends React.PureComponent {
                 }}/>
 
                 <TemplateExtender name="tableViewCell">
-                    {({ column, row }, original) => (
-                        <Connector
-                            mappings={(getter) => ({
-                                rows: getter('rows')(),
-                            })}>
-                                {({ rows }) => {
-                                    let { expanded, expandedChange, template } = this.props;
-                                    let { animating } = this.state;
-                                    if(row.type === 'detailRow') {
-                                        return (
+                    {({ column, row }, original) => {
+                        let { expanded, expandedChange, template } = this.props;
+                        let { animating } = this.state;
+                        if(row.type === 'detailRow') {
+                            return (
+                                <Connector
+                                    mappings={(getter) => ({
+                                        rows: getter('rows')(),
+                                    })}>
+                                        {({ rows }) => (
                                             <div>
                                                 {template ? template(rows.find(r => r.id === row.for)) : <div>Hello detail!</div>}
                                                 {animating.indexOf(row.for) > -1 ? 'Animating' : null}
                                             </div>
-                                        )
-                                    }
-                                    if(column.type === 'detail' && row.type === 'heading') {
-                                        return null;
-                                    }
-                                    if(column.type === 'detail' && !row.type) {
-                                        return (
-                                            <div
-                                                style={{ width: '100%', height: '100%' }}
-                                                onClick={() => expandedChange(selectionHelpers.calcSelection(expanded, row.id))}>
-                                                {expanded.indexOf(row.id) > -1 ? '-' : '+'}
-                                            </div>
-                                        );
-                                    }
-                                    
-                                    return original;
-                                }}
-                        </Connector>
-                    )}
+                                        )}
+                                </Connector>
+                            )
+                        }
+                        if(column.type === 'detail' && row.type === 'heading') {
+                            return null;
+                        }
+                        if(column.type === 'detail' && !row.type) {
+                            return (
+                                <div
+                                    style={{ width: '100%', height: '100%' }}
+                                    onClick={() => expandedChange(selectionHelpers.calcSelection(expanded, row.id))}>
+                                    {expanded.indexOf(row.id) > -1 ? '-' : '+'}
+                                </div>
+                            );
+                        }
+                        
+                        return original;
+                    }}
                 </TemplateExtender>
             </div>
         )
@@ -660,25 +670,27 @@ MasterDetail.contextTypes = {
 
 const StaticTable = ({ rows, columns, getCellInfo, cellContentTemplate }) => (
     <table style={{ borderCollapse: 'collapse' }}>
-        {rows.map((row, rowIndex) => 
-            <tr key={row.id}>
-                {columns.map((column, columnIndex) => {
-                    let info = getCellInfo({ column, row, columnIndex, rowIndex });
-                    if(info.skip) return null
-                    return (
-                        <td
-                            key={column.name}
-                            style={{ 
-                                padding: 0,
-                                width: (column.width || 100) + 'px' 
-                            }}
-                            colSpan={info.colspan || 0}>
-                            {cellContentTemplate({ row, column })}
-                        </td>
-                    );
-                })}
-            </tr>
-        )}
+        <tbody>
+            {rows.map((row, rowIndex) => 
+                <tr key={row.id}>
+                    {columns.map((column, columnIndex) => {
+                        let info = getCellInfo({ column, row, columnIndex, rowIndex });
+                        if(info.skip) return null
+                        return (
+                            <td
+                                key={column.name}
+                                style={{ 
+                                    padding: 0,
+                                    width: (column.width || 100) + 'px' 
+                                }}
+                                colSpan={info.colspan || 0}>
+                                {cellContentTemplate({ row, column })}
+                            </td>
+                        );
+                    })}
+                </tr>
+            )}
+        </tbody>
     </table>
 );
 
