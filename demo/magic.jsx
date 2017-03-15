@@ -288,7 +288,6 @@ export class Action extends React.PureComponent {
                 [name]: (params) => {
                     let { action } = this.props;
                     action(params, getter)
-                    // forceUpdate();
                 }
             }
         };
