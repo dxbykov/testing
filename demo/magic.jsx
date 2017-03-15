@@ -5,6 +5,220 @@ import './magic.css';
 import { generateColumns, generateRows } from './demoData';
 
 
+// Host
+
+export class Grid extends React.PureComponent {
+    constructor(props) {
+        super(props);
+
+        this.plugins = [{
+            getters: {
+                rows: () => props.rows,
+                columns: () => props.columns,
+            },
+        }];
+
+        this.host = {
+            register: (plugin) => this.plugins.push(plugin),
+            unregister: (plugin) => this.plugins.splice(this.plugins.indexOf(plugin), 1),
+
+            template: (name) => {
+                let template = null;
+                this.plugins.forEach(plugin => {
+                    if(plugin.templates && plugin.templates[name])
+                        template = plugin.templates[name];
+                });
+                return (params) => {
+                    let result = React.isValidElement(template) ? React.cloneElement(template, params) : template(params);
+                    
+                    this.plugins.forEach(plugin => {
+                        if(plugin.templateExtenders && plugin.templateExtenders[name]) {
+                            let templateExtender = plugin.templateExtenders[name];
+                            
+                            result = React.isValidElement(templateExtender)
+                                ? React.cloneElement(templateExtender, Object.assign({ original: result }, params))
+                                : templateExtender(params, result);
+                        }
+                    });
+
+                    return result;
+                };
+            },
+            getter: (name) => {
+                let getter = null;
+                this.plugins.forEach(plugin => {
+                    if(plugin.getters && plugin.getters[name])
+                        getter = plugin.getters[name];
+                });
+                return (params) => {
+                    let result = getter(params);
+
+                    this.plugins.forEach(plugin => {
+                        if(plugin.getterExtenders && plugin.getterExtenders[name])
+                            result = plugin.getterExtenders[name](params, result);
+                    });
+
+                    return result;
+                };
+            },
+            action: (name) => {
+                let action = null;
+                this.plugins.forEach(plugin => {
+                    if(plugin.actions && plugin.actions[name])
+                        action = plugin.actions[name];
+                });
+                return action;
+            },
+
+            forceUpdate: () => this.plugins.forEach(plugin => plugin.onUpdate && plugin.onUpdate()),
+
+            dispatch: (actionType) => {
+                let reducer = null;
+                this.plugins.forEach(plugin => {
+                    if(plugin.reducers && plugin.reducers[actionType])
+                        reducer = plugin.reducers[actionType];
+                });
+                return (state, payload, setState) => {
+                    let result = reducer(state, payload);
+
+                    if(result !== state) {
+                        setState(result);
+                        this.host.forceUpdate();
+                    }
+
+                    console.log({ type: actionType, payload, state, nextState: result });
+                };
+            },
+        };
+    }
+    getChildContext() {
+        return {
+            gridHost: this.host
+        }
+    }
+    render() {
+        let { children } = this.props;
+
+        return (
+            <div>
+                {children}
+                <GridTableView />
+                <RootRenderer />
+            </div>
+        )
+    }
+};
+Grid.propTypes = {
+    rows: React.PropTypes.array.isRequired,
+    columns: React.PropTypes.array.isRequired,
+};
+Grid.childContextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+};
+
+export class RootRenderer extends React.PureComponent {
+    render() {
+        let { gridHost } = this.context;
+        let { template } = gridHost;
+
+        return template('tableView')()
+    }
+}
+RootRenderer.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+};
+
+// Components
+
+export class Connector extends React.PureComponent {
+    componentWillMount() {
+        let { gridHost } = this.context;
+        let { register } = gridHost;
+
+        this.plugin = {
+            onUpdate: () => this.forceUpdate()
+        };
+
+        register(this.plugin);
+    }
+    componentWillUnmount() {
+        let { gridHost } = this.context;
+        let { unregister } = gridHost;
+
+        unregister(this.plugin)
+    }
+    render() {
+        let { gridHost } = this.context;
+        let { children, mappings } = this.props;
+
+        let mapped = mappings(gridHost);
+        return React.isValidElement(children) ? React.cloneElement(children, mapped) : children(mapped);
+    }
+};
+Connector.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+};
+
+export class Template extends React.PureComponent {
+    componentWillMount() {
+        let { gridHost } = this.context;
+        let { register } = gridHost;
+        let { children, name } = this.props;
+
+        this.plugin = {
+            templates: {
+                [name]: children
+            }
+        };
+
+        register(this.plugin);
+    }
+    componentWillUnmount() {
+        let { gridHost } = this.context;
+        let { unregister } = gridHost;
+
+        unregister(this.plugin)
+    }
+    render() {
+        return null;
+    }
+};
+Template.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+};
+
+export class TemplateExtender extends React.PureComponent {
+    componentWillMount() {
+        let { gridHost } = this.context;
+        let { register } = gridHost;
+        let { children, name } = this.props;
+
+        this.plugin = {
+            templateExtenders: {
+                [name]: children
+            }
+        };
+
+        register(this.plugin);
+    }
+    componentWillUnmount() {
+        let { gridHost } = this.context;
+        let { unregister } = gridHost;
+
+        unregister(this.plugin)
+    }
+    render() {
+        return null;
+    }
+};
+TemplateExtender.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+};
+
+
+
+// Plugins
+
 // Core
 const filterHelpers = {
     filter: (rows, filters) => {
@@ -97,25 +311,36 @@ export class FilterRow extends React.PureComponent {
                     return [...rows, { type: 'filter' }]
                 },
             },
-            templateExtenders: {
-                tableViewCell: ({ column, row }, original) => {
-                    if(row.type === 'filter' && !column.type) {
-                        return (
-                            <input
-                                type="text"
-                                value={gridHost.getter('filterFor')({ columnName: column.name })}
-                                onChange={(e) => gridHost.action('setColumnFilter')({ columnName: column.name, value: e.target.value })}
-                                style={{ width: '100%' }}/>
-                        );
-                    }
-                    return original;
-                }
-            },
         }
         gridHost.register(this.plugin);
     }
     render() {
-        return null
+        return (
+            <div>
+                <TemplateExtender name="tableViewCell">
+                    {({ column, row }, original) => (
+                        <Connector
+                            mappings={(gridHost) => ({
+                                filterFor: gridHost.getter('filterFor'),
+                                setColumnFilter: gridHost.action('setColumnFilter')
+                            })}>
+                                {({ filterFor, setColumnFilter }) => {
+                                    if(row.type === 'filter' && !column.type) {
+                                        return (
+                                            <input
+                                                type="text"
+                                                value={filterFor({ columnName: column.name })}
+                                                onChange={(e) => setColumnFilter({ columnName: column.name, value: e.target.value })}
+                                                style={{ width: '100%' }}/>
+                                        );
+                                    }
+                                    return original;
+                                }}
+                        </Connector>
+                    )}
+                </TemplateExtender>
+            </div>
+        )
     }
 };
 FilterRow.contextTypes = {
@@ -213,39 +438,36 @@ SortingState.contextTypes = {
 }
 
 export class HeaderRowSorting extends React.PureComponent {
-    constructor(props, context) {
-        super(props, context);
-    }
-    componentWillMount() {
-        let { gridHost } = this.context;
-
-        this.plugin = {
-            templateExtenders: {
-                tableViewCell: ({ column, row }, original) => {
-                    if(row.type === 'heading' && !column.type) {
-                        let direction = gridHost.getter('sortingFor')({ columnName: column.name });
-                        return (
-                            <div 
-                                onClick={() => gridHost.action('applySorting')({ columnName: column.name })}
-                                style={{ width: '100%', height: '100%' }}>
-                                {original} [{ direction ? (direction === 'desc' ? '↑' : '↓') : '#'}]
-                            </div>
-                        );
-                    }
-                    return original;
-                }
-            },
-        }
-        gridHost.register(this.plugin);
-    }
     render() {
-        return null
+        return (
+            <div>
+                <TemplateExtender name="tableViewCell">
+                    {({ column, row }, original) => (
+                        <Connector
+                            mappings={(gridHost) => ({
+                                sortingFor: gridHost.getter('sortingFor'),
+                                applySorting: gridHost.action('applySorting')
+                            })}>
+                                {({ sortingFor, applySorting }) => {
+                                    if(row.type === 'heading' && !column.type) {
+                                        let direction = sortingFor({ columnName: column.name });
+                                        return (
+                                            <div 
+                                                onClick={() => applySorting({ columnName: column.name })}
+                                                style={{ width: '100%', height: '100%' }}>
+                                                {original} [{ direction ? (direction === 'desc' ? '↑' : '↓') : '#'}]
+                                            </div>
+                                        );
+                                    }
+                                    return original;
+                                }}
+                        </Connector>
+                    )}
+                </TemplateExtender>
+            </div>
+        )
     }
 };
-HeaderRowSorting.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
-
 
 
 // Core
@@ -282,37 +504,47 @@ export class Selection extends React.PureComponent {
                     return [{ type: 'select', width: 20 }].concat(columns);
                 },
             },
-            templateExtenders: {
-                tableViewCell: ({ column, row }, original) => {
-                    let { selection, selectionChange } = this.props;
-                    let rows = gridHost.getter('rows')();
-                    if(column.type === 'select' && row.type === 'heading') {
-                        return (
-                            <input
-                                type='checkbox'
-                                checked={selection.length === rows.length}
-                                ref={(ref) => { ref && (ref.indeterminate = selection.length !== rows.length && selection.length !== 0)}}
-                                onClick={() => { selectionChange(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id)); gridHost.forceUpdate(); }}
-                                style={{ margin: '0' }}/>
-                        );
-                    }
-                    if(column.type === 'select' && !row.type) {
-                        return (
-                            <input
-                                type='checkbox'
-                                checked={selection.indexOf(row.id) > -1}
-                                onClick={() => { selectionChange(selectionHelpers.calcSelection(selection, row.id)); gridHost.forceUpdate(); }}
-                                style={{ margin: '0' }}/>
-                        );
-                    }
-                    return original;
-                }
-            },
         }
         gridHost.register(this.plugin);
     }
     render() {
-        return null
+        return (
+            <div>
+                <TemplateExtender name="tableViewCell">
+                    {({ column, row }, original) => (
+                        <Connector
+                            mappings={(gridHost) => ({
+                                rows: gridHost.getter('rows')(),
+                                forceUpdate: gridHost.forceUpdate, // TODO: remove
+                            })}>
+                                {({ rows, forceUpdate }) => {
+                                    let { selection, selectionChange } = this.props;
+                                    if(column.type === 'select' && row.type === 'heading') {
+                                        return (
+                                            <input
+                                                type='checkbox'
+                                                checked={selection.length === rows.length}
+                                                ref={(ref) => { ref && (ref.indeterminate = selection.length !== rows.length && selection.length !== 0)}}
+                                                onClick={() => { selectionChange(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id)); forceUpdate(); }}
+                                                style={{ margin: '0' }}/>
+                                        );
+                                    }
+                                    if(column.type === 'select' && !row.type) {
+                                        return (
+                                            <input
+                                                type='checkbox'
+                                                checked={selection.indexOf(row.id) > -1}
+                                                onClick={() => { selectionChange(selectionHelpers.calcSelection(selection, row.id)); forceUpdate(); }}
+                                                style={{ margin: '0' }}/>
+                                        );
+                                    }
+                                    return original;
+                                }}
+                        </Connector>
+                    )}
+                </TemplateExtender>
+            </div>
+        )
     }
 };
 Selection.contextTypes = {
@@ -372,178 +604,80 @@ export class MasterDetail extends React.PureComponent {
                     return original;
                 }
             },
-            templateExtenders: {
-                tableViewCell: ({ column, row }, original) => {
-                    let { expanded, expandedChange, template } = this.props;
-                    let { animating } = this.state;
-                    let rows = gridHost.getter('rows')();
-                    if(row.type === 'detailRow') {
-                        return (
-                            <div>
-                                {template ? template(rows.find(r => r.id === row.for)) : <div>Hello detail!</div>}
-                                {animating.indexOf(row.for) > -1 ? 'Animating' : null}
-                            </div>
-                        )
-                    }
-                    if(column.type === 'detail' && row.type === 'heading') {
-                        return null;
-                    }
-                    if(column.type === 'detail' && !row.type) {
-                        return (
-                            <div
-                                style={{ width: '100%', height: '100%' }}
-                                onClick={() => { expandedChange(selectionHelpers.calcSelection(expanded, row.id)); gridHost.forceUpdate(); }}>
-                                {expanded.indexOf(row.id) > -1 ? '-' : '+'}
-                            </div>
-                        );
-                    }
-                    return original;
-                }
-            },
         }
         gridHost.register(this.plugin);
     }
     render() {
-        return null
+        return (
+            <div>
+                <TemplateExtender name="tableViewCell">
+                    {({ column, row }, original) => (
+                        <Connector
+                            mappings={(gridHost) => ({
+                                rows: gridHost.getter('rows')(),
+                                forceUpdate: gridHost.forceUpdate,
+                            })}>
+                                {({ rows, forceUpdate }) => {
+                                    let { expanded, expandedChange, template } = this.props;
+                                    let { animating } = this.state;
+                                    if(row.type === 'detailRow') {
+                                        return (
+                                            <div>
+                                                {template ? template(rows.find(r => r.id === row.for)) : <div>Hello detail!</div>}
+                                                {animating.indexOf(row.for) > -1 ? 'Animating' : null}
+                                            </div>
+                                        )
+                                    }
+                                    if(column.type === 'detail' && row.type === 'heading') {
+                                        return null;
+                                    }
+                                    if(column.type === 'detail' && !row.type) {
+                                        return (
+                                            <div
+                                                style={{ width: '100%', height: '100%' }}
+                                                onClick={() => { expandedChange(selectionHelpers.calcSelection(expanded, row.id)); forceUpdate(); }}>
+                                                {expanded.indexOf(row.id) > -1 ? '-' : '+'}
+                                            </div>
+                                        );
+                                    }
+                                    
+                                    return original;
+                                }}
+                        </Connector>
+                    )}
+                </TemplateExtender>
+            </div>
+        )
     }
 };
 MasterDetail.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
 
-export class Grid extends React.PureComponent {
-    constructor(props) {
-        super(props);
 
-        this.plugins = [{
-            getters: {
-                rows: () => props.rows,
-                columns: () => props.columns,
-            },
-        }];
-
-        this.updateSubscribers = [];
-
-        this.host = {
-            register: (plugin) => this.plugins.push(plugin),
-            template: (name) => {
-                let template = null;
-                this.plugins.forEach(plugin => {
-                    if(plugin.templates && plugin.templates[name])
-                        template = plugin.templates[name];
-                });
-                return (params) => {
-                    let result = template(params);
-
-                    this.plugins.forEach(plugin => {
-                        if(plugin.templateExtenders && plugin.templateExtenders[name])
-                            result = plugin.templateExtenders[name](params, result);
-                    });
-
-                    return result;
-                };
-            },
-            getter: (name) => {
-                let getter = null;
-                this.plugins.forEach(plugin => {
-                    if(plugin.getters && plugin.getters[name])
-                        getter = plugin.getters[name];
-                });
-                return (params) => {
-                    let result = getter(params);
-
-                    this.plugins.forEach(plugin => {
-                        if(plugin.getterExtenders && plugin.getterExtenders[name])
-                            result = plugin.getterExtenders[name](params, result);
-                    });
-
-                    return result;
-                };
-            },
-            action: (name) => {
-                let action = null;
-                this.plugins.forEach(plugin => {
-                    if(plugin.actions && plugin.actions[name])
-                        action = plugin.actions[name];
-                });
-                return action;
-            },
-
-            forceUpdate: () => this.updateSubscribers.forEach(subscription => subscription()),
-            subscribeUpdate: (subscription) => this.updateSubscribers.push(subscription),
-            dispatch: (actionType) => {
-                let reducer = null;
-                this.plugins.forEach(plugin => {
-                    if(plugin.reducers && plugin.reducers[actionType])
-                        reducer = plugin.reducers[actionType];
-                });
-                return (state, payload, setState) => {
-                    let result = reducer(state, payload);
-
-                    if(result !== state) {
-                        setState(result);
-                        this.host.forceUpdate();
-                    }
-
-                    console.log({ type: actionType, payload, state, nextState: result });
-                };
-            },
-        };
-    }
-    getChildContext() {
-        return {
-            gridHost: this.host
-        }
-    }
-    render() {
-        let { children } = this.props;
-
-        return (
-            <div>
-                {children}
-                <GridTableView />
-                <RootRenderer />
-            </div>
-        )
-    }
-};
-Grid.propTypes = {
-    rows: React.PropTypes.array.isRequired,
-    columns: React.PropTypes.array.isRequired,
-};
-Grid.childContextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
-
-export class RootRenderer extends React.PureComponent {
-    render() {
-        let { gridHost } = this.context;
-        let { template } = gridHost;
-
-        return template('tableView')()
-    }
-}
-RootRenderer.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
-
-export class Connector extends React.PureComponent {
-    componentWillMount() {
-        let { gridHost } = this.context;
-        let { subscribeUpdate } = gridHost;
-
-        subscribeUpdate(() => this.forceUpdate())
-    }
-
-    render() {
-        let { children, mappings } = this.props;
-
-        return React.cloneElement(children, mappings());
-    }
-};
-Connector.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
+const StaticTable = ({ rows, columns, getCellInfo, cellContentTemplate }) => (
+    <table style={{ borderCollapse: 'collapse' }}>
+        {rows.map((row, rowIndex) => 
+            <tr key={row.id}>
+                {columns.map((column, columnIndex) => {
+                    let info = getCellInfo({ column, row, columnIndex, rowIndex });
+                    if(info.skip) return null
+                    return (
+                        <td
+                            key={column.name}
+                            style={{ 
+                                padding: 0,
+                                width: (column.width || 100) + 'px' 
+                            }}
+                            colSpan={info.colspan || 0}>
+                            {cellContentTemplate({ row, column })}
+                        </td>
+                    );
+                })}
+            </tr>
+        )}
+    </table>
+);
 
 export class GridTableView extends React.Component {
     constructor(props, context) {
@@ -558,46 +692,6 @@ export class GridTableView extends React.Component {
                 tableColumns: () => gridHost.getter('columns')(),
                 tableCellInfo: () => ({}), // NO WATCH
             },
-            templates: {
-                tableViewCell: ({ row, column }) => (
-                    row[column.name]
-                ),
-                tableView: () => {
-                    let StaticTable = ({ rows, columns }) => (
-                        <table style={{ borderCollapse: 'collapse' }}>
-                            {rows.map((row, rowIndex) => 
-                                <tr key={row.id}>
-                                    {columns.map((column, columnIndex) => {
-                                        let info = gridHost.getter('tableCellInfo')({ column, row, columnIndex, rowIndex });
-                                        if(info.skip) return null
-                                        return (
-                                            <td
-                                                key={column.name}
-                                                style={{ 
-                                                    padding: 0,
-                                                    width: (column.width || 100) + 'px' 
-                                                }}
-                                                colSpan={info.colspan || 0}>
-                                                {gridHost.template('tableViewCell')({ row, column })}
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
-                            )}
-                        </table>
-                    );
-
-                    return (
-                        <Connector
-                            mappings={() => ({
-                                rows: ((headerRows, bodyRows) => [...headerRows, ...bodyRows])(gridHost.getter('tableHeaderRows')(), gridHost.getter('tableBodyRows')()),
-                                columns: gridHost.getter('tableColumns')(),
-                            })}>
-                            <StaticTable/>
-                        </Connector>
-                    )
-                },
-            },
         }
     }
     componentWillMount() {
@@ -606,12 +700,32 @@ export class GridTableView extends React.Component {
         gridHost.register(this.plugin)
     }
     render() {
-        return null
+        return (
+            <div>
+                <Template name="tableView">
+                    <Connector
+                        mappings={(gridHost) => ({
+                            rows: ((headerRows, bodyRows) => [...headerRows, ...bodyRows])(gridHost.getter('tableHeaderRows')(), gridHost.getter('tableBodyRows')()),
+                            columns: gridHost.getter('tableColumns')(),
+                            getCellInfo: gridHost.getter('tableCellInfo'),
+                            cellContentTemplate: gridHost.template('tableViewCell'),
+                        })}>
+                        <StaticTable/>
+                    </Connector>
+                </Template>
+                <Template name="tableViewCell">
+                    {({ row, column }) => (row[column.name] !== undefined ? <span>{row[column.name]}</span> : null)}
+                </Template>
+            </div>
+        )
     }
 }
 GridTableView.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 }
+
+
+// Demo
 
 export class MagicDemo extends React.PureComponent {
     constructor(props) {
