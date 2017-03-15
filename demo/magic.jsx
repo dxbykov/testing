@@ -215,6 +215,68 @@ TemplateExtender.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 };
 
+export class Getter extends React.PureComponent {
+    componentWillMount() {
+        let { gridHost } = this.context;
+        let { register } = gridHost;
+        let { name } = this.props;
+
+        this.plugin = {
+            getters: {
+                [name]: (params) => {
+                    let { value } = this.props;
+                    return typeof value === "function" ? value(gridHost.getter, params) : value
+                }
+            }
+        };
+
+        register(this.plugin);
+    }
+    componentWillUnmount() {
+        let { gridHost } = this.context;
+        let { unregister } = gridHost;
+
+        unregister(this.plugin)
+    }
+    render() {
+        return null;
+    }
+};
+Getter.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+};
+
+export class GetterExtender extends React.PureComponent {
+    componentWillMount() {
+        let { gridHost } = this.context;
+        let { register } = gridHost;
+        let { name } = this.props;
+
+        this.plugin = {
+            getterExtenders: {
+                [name]: (params, original) => {
+                    let { value } = this.props;
+                    return typeof value === "function" ? value(original, gridHost.getter, params) : value
+                }
+            }
+        };
+
+        register(this.plugin);
+    }
+    componentWillUnmount() {
+        let { gridHost } = this.context;
+        let { unregister } = gridHost;
+
+        unregister(this.plugin)
+    }
+    render() {
+        return null;
+    }
+};
+GetterExtender.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+};
+
 
 
 // Plugins
@@ -252,19 +314,6 @@ export class FilterState extends React.PureComponent {
         let { gridHost } = this.context;
 
         this.plugin = {
-            getterExtenders: {
-                rows: (_, rows) => {
-                    let filters = gridHost.getter('filters')();
-                    return filterHelpers.filter(rows, filters);
-                },
-            },
-            getters: {
-                filters: () => this.props.filters || this.state.filters,
-                filterFor: ({ columnName }) => {
-                    let filters = gridHost.getter('filters')();
-                    return filterHelpers.filterFor(columnName, filters);
-                }
-            },
             actions: {
                 setColumnFilter: ({ columnName, value }) => {
                     let { filtersChange } = this.props;
@@ -293,7 +342,14 @@ export class FilterState extends React.PureComponent {
         gridHost.register(this.plugin);
     }
     render() {
-        return null
+        return (
+            <div>
+                <GetterExtender name="rows" value={(rows, getter) => filterHelpers.filter(rows, getter('filters')())}/>
+
+                <Getter name="filters" value={this.props.filters || this.state.filters} />
+                <Getter name="filterFor" value={(getter, { columnName }) => filterHelpers.filterFor(columnName, getter('filters')())} />
+            </div>
+        )
     }
 };
 FilterState.contextTypes = {
@@ -302,21 +358,11 @@ FilterState.contextTypes = {
 
 
 export class FilterRow extends React.PureComponent {
-    componentWillMount() {
-        let { gridHost } = this.context;
-
-        this.plugin = {
-            getterExtenders: {
-                tableHeaderRows: (_, rows) => {
-                    return [...rows, { type: 'filter' }]
-                },
-            },
-        }
-        gridHost.register(this.plugin);
-    }
     render() {
         return (
             <div>
+                <GetterExtender name="tableHeaderRows" value={(rows, getter) => [...rows, { type: 'filter' }]}/>
+
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => (
                         <Connector
@@ -343,34 +389,22 @@ export class FilterRow extends React.PureComponent {
         )
     }
 };
-FilterRow.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
 
 
 export class HeaderRow extends React.PureComponent {
-    componentWillMount() {
-        let { gridHost } = this.context;
-
-        this.plugin = {
-            getterExtenders: {
-                tableHeaderRows: (_, rows) => {
-                    return [gridHost.getter('columns')().reduce((accum, c) => {
+    render() {
+        return (
+            <div>
+                <GetterExtender name="tableHeaderRows" value={(rows, getter) => {
+                    return [getter('columns')().reduce((accum, c) => {
                         accum[c.name] = c.title;
                         return accum;
                     }, { type: 'heading' }), ...rows]
-                },
-            }
-        }
-        gridHost.register(this.plugin);
-    }
-    render() {
-        return null
+                }}/>
+            </div>
+        )
     }
 };
-HeaderRow.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
 
 
 // Core
@@ -407,18 +441,6 @@ export class SortingState extends React.PureComponent {
         let { gridHost } = this.context;
 
         this.plugin = {
-            getterExtenders: {
-                rows: (_, rows) => {
-                    let { sortings } = this.props;
-                    return sortingsHelper.sort(rows, sortings);
-                },
-            },
-            getters: {
-                sortingFor: ({ columnName }) => {
-                    let { sortings } = this.props;
-                    return sortingsHelper.directionFor(columnName, sortings);
-                }
-            },
             actions: {
                 applySorting: ({ columnName, value }) => {
                     let { sortings, sortingsChange } = this.props;
@@ -430,7 +452,15 @@ export class SortingState extends React.PureComponent {
         gridHost.register(this.plugin);
     }
     render() {
-        return null
+        let { sortings } = this.props;
+        
+        return (
+            <div>
+                <GetterExtender name="rows" value={(rows) => sortingsHelper.sort(rows, sortings)}/>
+
+                <Getter name="sortingFor" value={(_, { columnName }) => sortingsHelper.directionFor(columnName, sortings)} />
+            </div>
+        )
     }
 };
 SortingState.contextTypes = {
@@ -445,15 +475,14 @@ export class HeaderRowSorting extends React.PureComponent {
                     {({ column, row }, original) => (
                         <Connector
                             mappings={(gridHost) => ({
-                                sortingFor: gridHost.getter('sortingFor'),
-                                applySorting: gridHost.action('applySorting')
+                                direction: gridHost.getter('sortingFor')({ columnName: column.name }),
+                                changeDirection: () => gridHost.action('applySorting')({ columnName: column.name })
                             })}>
-                                {({ sortingFor, applySorting }) => {
+                                {({ direction, changeDirection }) => {
                                     if(row.type === 'heading' && !column.type) {
-                                        let direction = sortingFor({ columnName: column.name });
                                         return (
                                             <div 
-                                                onClick={() => applySorting({ columnName: column.name })}
+                                                onClick={changeDirection}
                                                 style={{ width: '100%', height: '100%' }}>
                                                 {original} [{ direction ? (direction === 'desc' ? '↑' : '↓') : '#'}]
                                             </div>
@@ -495,21 +524,11 @@ const selectionHelpers = {
 
 // UI
 export class Selection extends React.PureComponent {
-    componentWillMount() {
-        let { gridHost } = this.context;
-
-        this.plugin = {
-            getterExtenders: {
-                tableColumns: (_, columns) => {
-                    return [{ type: 'select', width: 20 }].concat(columns);
-                },
-            },
-        }
-        gridHost.register(this.plugin);
-    }
     render() {
         return (
             <div>
+                <GetterExtender name="tableColumns" value={(columns) => [{ type: 'select', width: 20 }].concat(columns)}/>
+
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => (
                         <Connector
@@ -547,9 +566,6 @@ export class Selection extends React.PureComponent {
         )
     }
 };
-Selection.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
 
 export class MasterDetail extends React.PureComponent {
     constructor(props, context) {
@@ -565,21 +581,21 @@ export class MasterDetail extends React.PureComponent {
 
         this.setState({ animating: this.state.animating.concat(collapsed).concat(expanded) });
 
-        setTimeout(() => {
-            this.setState({ 
-                animating: this.state.animating.filter(a => !(collapsed.indexOf(a) !== -1 || expanded.indexOf(a) !== -1))
-            })
+        if(collapsed.length || expanded.length) {
+            setTimeout(() => {
+                this.setState({ 
+                    animating: this.state.animating.filter(a => !(collapsed.indexOf(a) !== -1 || expanded.indexOf(a) !== -1))
+                })
 
-            let { gridHost } = this.context;
-            gridHost.forceUpdate();
-        }, 800);
+                let { gridHost } = this.context;
+                gridHost.forceUpdate();
+            }, 800);
+        }
     }
-    componentWillMount() {
-        let { gridHost } = this.context;
-
-        this.plugin = {
-            getterExtenders: {
-                tableBodyRows: (_, rows) => {
+    render() {
+        return (
+            <div>
+                <GetterExtender name="tableBodyRows" value={(rows) => {
                     let { expanded } = this.props;
                     let { animating } = this.state;
                     [...expanded, ...animating].filter((value, index, self) => self.indexOf(value) === index).forEach(e => {
@@ -589,12 +605,10 @@ export class MasterDetail extends React.PureComponent {
                         }
                     })
                     return rows
-                },
-                tableColumns: (_, columns) => {
-                    return [{ type: 'detail', width: 20 }].concat(columns)
-                },
-                tableCellInfo: ({ row, columnIndex }, original) => {
-                    let columns = gridHost.getter('tableColumns')();          
+                }}/>
+                <GetterExtender name="tableColumns" value={(columns) => [{ type: 'detail', width: 20 }].concat(columns)}/>
+                <GetterExtender name="tableCellInfo" value={(original, getter, { row, columnIndex }) => {
+                    let columns = getter('tableColumns')();          
                     if(row.type === 'detailRow') {
                         if(columnIndex !== 0) {
                             return { skip: true };
@@ -602,14 +616,8 @@ export class MasterDetail extends React.PureComponent {
                         return { colspan: columns.length };
                     }
                     return original;
-                }
-            },
-        }
-        gridHost.register(this.plugin);
-    }
-    render() {
-        return (
-            <div>
+                }}/>
+
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => (
                         <Connector
@@ -680,28 +688,14 @@ const StaticTable = ({ rows, columns, getCellInfo, cellContentTemplate }) => (
 );
 
 export class GridTableView extends React.Component {
-    constructor(props, context) {
-        super(props, context);
-
-        let { gridHost } = context;
-
-        this.plugin = {
-            getters: {
-                tableHeaderRows: () => [],
-                tableBodyRows: () => gridHost.getter('rows')(),
-                tableColumns: () => gridHost.getter('columns')(),
-                tableCellInfo: () => ({}), // NO WATCH
-            },
-        }
-    }
-    componentWillMount() {
-        let { gridHost } = this.context;
-
-        gridHost.register(this.plugin)
-    }
     render() {
         return (
             <div>
+                <Getter name="tableHeaderRows" value={[]}/>
+                <Getter name="tableBodyRows" value={(getter) => getter('rows')()}/>
+                <Getter name="tableColumns" value={(getter) => getter('columns')()}/>
+                <Getter name="tableCellInfo" value={{}}/>
+
                 <Template name="tableView">
                     <Connector
                         mappings={(gridHost) => ({
@@ -719,9 +713,6 @@ export class GridTableView extends React.Component {
             </div>
         )
     }
-}
-GridTableView.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
 }
 
 
