@@ -193,6 +193,12 @@ export class TemplateExtender extends React.PureComponent {
 
         unregister(this.plugin)
     }
+    componentDidUpdate() {
+        let { gridHost } = this.context;
+        let { forceUpdate } = gridHost;
+
+        forceUpdate();
+    }
     render() {
         return null;
     }
@@ -520,7 +526,6 @@ export class Selection extends React.PureComponent {
                         <Connector
                             mappings={(gridHost) => ({
                                 rows: gridHost.getter('rows')(),
-                                forceUpdate: gridHost.forceUpdate, // TODO: remove
                             })}>
                                 {({ rows, forceUpdate }) => {
                                     let { selection, selectionChange } = this.props;
@@ -530,7 +535,7 @@ export class Selection extends React.PureComponent {
                                                 type='checkbox'
                                                 checked={selection.length === rows.length}
                                                 ref={(ref) => { ref && (ref.indeterminate = selection.length !== rows.length && selection.length !== 0)}}
-                                                onClick={() => { selectionChange(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id)); forceUpdate(); }}
+                                                onClick={() => selectionChange(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id))}
                                                 style={{ margin: '0' }}/>
                                         );
                                     }
@@ -539,7 +544,7 @@ export class Selection extends React.PureComponent {
                                             <input
                                                 type='checkbox'
                                                 checked={selection.indexOf(row.id) > -1}
-                                                onClick={() => { selectionChange(selectionHelpers.calcSelection(selection, row.id)); forceUpdate(); }}
+                                                onClick={() => selectionChange(selectionHelpers.calcSelection(selection, row.id))}
                                                 style={{ margin: '0' }}/>
                                         );
                                     }
@@ -572,9 +577,6 @@ export class MasterDetail extends React.PureComponent {
                 this.setState({ 
                     animating: this.state.animating.filter(a => !(collapsed.indexOf(a) !== -1 || expanded.indexOf(a) !== -1))
                 })
-
-                let { gridHost } = this.context;
-                gridHost.forceUpdate();
             }, 200);
         }
     }
@@ -629,7 +631,7 @@ export class MasterDetail extends React.PureComponent {
                                         return (
                                             <div
                                                 style={{ width: '100%', height: '100%' }}
-                                                onClick={() => { expandedChange(selectionHelpers.calcSelection(expanded, row.id)); forceUpdate(); }}>
+                                                onClick={() => expandedChange(selectionHelpers.calcSelection(expanded, row.id))}>
                                                 {expanded.indexOf(row.id) > -1 ? '-' : '+'}
                                             </div>
                                         );
@@ -710,7 +712,7 @@ export class MagicDemo extends React.PureComponent {
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(100),
+            rows: generateRows(50),
             sortings: [{ column: 'id', direction: 'asc' }],
             selection: [1, 3, 18],
             expandedRows: [3],
