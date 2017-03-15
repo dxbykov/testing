@@ -288,7 +288,7 @@ export class Action extends React.PureComponent {
                 [name]: (params) => {
                     let { action } = this.props;
                     action(params, getter)
-                    forceUpdate();
+                    // forceUpdate();
                 }
             }
         };
@@ -525,21 +525,18 @@ const selectionHelpers = {
 // UI
 export class Selection extends React.PureComponent {
     render() {
-        let { selection, selectionChange } = this.props;
-
         return (
             <div>
                 <GetterExtender name="tableColumns" value={(columns) => [{ type: 'select', width: 20 }].concat(columns)}/>
 
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => {
+                        let { selection, selectionChange } = this.props;
                         if(column.type === 'select' && row.type === 'heading') {
                             return (
                                 <Connector
                                     mappings={(getter) => ({
                                         rows: getter('rows')(),
-                                        selection,
-                                        selectionChange
                                     })}>
                                     {({ rows }) => (
                                         <input
@@ -731,7 +728,7 @@ export class MagicDemo extends React.PureComponent {
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(100),
+            rows: generateRows(20),
             sortings: [{ column: 'id', direction: 'asc' }],
             selection: [1, 3, 18],
             expandedRows: [3],
