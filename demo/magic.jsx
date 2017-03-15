@@ -106,15 +106,9 @@ Grid.childContextTypes = {
 
 export class RootRenderer extends React.PureComponent {
     render() {
-        let { gridHost } = this.context;
-        let { template } = gridHost;
-
-        return template('tableView')()
+        return <TemplatePlaceholder name="tableView" />
     }
 }
-RootRenderer.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
 
 // Components
 
@@ -136,12 +130,26 @@ export class Connector extends React.PureComponent {
     render() {
         let { gridHost } = this.context;
         let { children, mappings } = this.props;
+        let { getter, action } = gridHost;
 
-        let mapped = mappings(gridHost);
+        let mapped = mappings(getter, action);
         return React.isValidElement(children) ? React.cloneElement(children, mapped) : children(mapped);
     }
 };
 Connector.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+};
+
+export class TemplatePlaceholder extends React.PureComponent {
+    render() {
+        let { gridHost } = this.context;
+        let { template } = gridHost;
+        let { params, name } = this.props;
+
+        return template(name)(params);
+    }
+};
+TemplatePlaceholder.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 };
 
@@ -280,7 +288,7 @@ export class Action extends React.PureComponent {
                 [name]: (params) => {
                     let { action } = this.props;
                     action(params, getter)
-                    forceUpdate();
+                    //forceUpdate();
                 }
             }
         };
@@ -373,17 +381,17 @@ export class FilterRow extends React.PureComponent {
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => (
                         <Connector
-                            mappings={(gridHost) => ({
-                                filterFor: gridHost.getter('filterFor'),
-                                setColumnFilter: gridHost.action('setColumnFilter')
+                            mappings={(getter, action) => ({
+                                filter: getter('filterFor')({ columnName: column.name }),
+                                changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value })
                             })}>
-                                {({ filterFor, setColumnFilter }) => {
+                                {({ filter, changeFilter }) => {
                                     if(row.type === 'filter' && !column.type) {
                                         return (
                                             <input
                                                 type="text"
-                                                value={filterFor({ columnName: column.name })}
-                                                onChange={(e) => setColumnFilter({ columnName: column.name, value: e.target.value })}
+                                                value={filter}
+                                                onChange={(e) => changeFilter(e.target.value)}
                                                 style={{ width: '100%' }}/>
                                         );
                                     }
@@ -466,9 +474,9 @@ export class HeaderRowSorting extends React.PureComponent {
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => (
                         <Connector
-                            mappings={(gridHost) => ({
-                                direction: gridHost.getter('sortingFor')({ columnName: column.name }),
-                                changeDirection: () => gridHost.action('applySorting')({ columnName: column.name })
+                            mappings={(getter, action) => ({
+                                direction: getter('sortingFor')({ columnName: column.name }),
+                                changeDirection: () => action('applySorting')({ columnName: column.name })
                             })}>
                                 {({ direction, changeDirection }) => {
                                     if(row.type === 'heading' && !column.type) {
@@ -524,8 +532,8 @@ export class Selection extends React.PureComponent {
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => (
                         <Connector
-                            mappings={(gridHost) => ({
-                                rows: gridHost.getter('rows')(),
+                            mappings={(getter) => ({
+                                rows: getter('rows')(),
                             })}>
                                 {({ rows, forceUpdate }) => {
                                     let { selection, selectionChange } = this.props;
@@ -609,11 +617,10 @@ export class MasterDetail extends React.PureComponent {
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => (
                         <Connector
-                            mappings={(gridHost) => ({
-                                rows: gridHost.getter('rows')(),
-                                forceUpdate: gridHost.forceUpdate,
+                            mappings={(getter) => ({
+                                rows: getter('rows')(),
                             })}>
-                                {({ rows, forceUpdate }) => {
+                                {({ rows }) => {
                                     let { expanded, expandedChange, template } = this.props;
                                     let { animating } = this.state;
                                     if(row.type === 'detailRow') {
@@ -686,11 +693,11 @@ export class GridTableView extends React.Component {
 
                 <Template name="tableView">
                     <Connector
-                        mappings={(gridHost) => ({
-                            rows: ((headerRows, bodyRows) => [...headerRows, ...bodyRows])(gridHost.getter('tableHeaderRows')(), gridHost.getter('tableBodyRows')()),
-                            columns: gridHost.getter('tableColumns')(),
-                            getCellInfo: gridHost.getter('tableCellInfo'),
-                            cellContentTemplate: gridHost.template('tableViewCell'),
+                        mappings={(getter) => ({
+                            rows: ((headerRows, bodyRows) => [...headerRows, ...bodyRows])(getter('tableHeaderRows')(), getter('tableBodyRows')()),
+                            columns: getter('tableColumns')(),
+                            getCellInfo: getter('tableCellInfo'),
+                            cellContentTemplate: ({ row, column }) => <TemplatePlaceholder name="tableViewCell" params={{ row, column }} />,
                         })}>
                         <StaticTable/>
                     </Connector>
@@ -712,7 +719,7 @@ export class MagicDemo extends React.PureComponent {
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(50),
+            rows: generateRows(100),
             sortings: [{ column: 'id', direction: 'asc' }],
             selection: [1, 3, 18],
             expandedRows: [3],
