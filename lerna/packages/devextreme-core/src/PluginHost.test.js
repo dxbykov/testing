@@ -36,7 +36,7 @@ describe('PluginHost', () => {
         };
         
         host.register(plugin);
-        host.broadcast('update');
+        host.broadcast('onMessage', 'update');
         expect(plugin.onMessage.mock.calls.length).toBe(1);
         expect(plugin.onMessage.mock.calls[0].length).toBe(1);
         expect(plugin.onMessage.mock.calls[0][0]).toBe('update');
@@ -44,9 +44,7 @@ describe('PluginHost', () => {
 
     test('#get', () => {
         let plugin = {
-            exports: {
-                something: 123
-            }
+            something: 123
         };
         
         host.register(plugin);
@@ -55,19 +53,13 @@ describe('PluginHost', () => {
 
     test('#get with extender', () => {
         let plugin1 = {
-            exports: {
-                something: '1'
-            }
+            something: '1'
         };
         let plugin2 = {
-            exports: {
-                somethingExtender: original => original + '2'
-            }
+            somethingExtender: original => original + '2'
         };
         let plugin3 = {
-            exports: {
-                somethingExtender: original => original + '3'
-            }
+            somethingExtender: original => original + '3'
         };
         
         host.register(plugin1);

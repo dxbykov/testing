@@ -1,21 +1,12 @@
 import { dataGridCorePlugin } from './core';
-import { PluginHost } from '@devexpress/devextreme-core';
 
 describe('dataGridCorePlugin', () => {
-    let host;
-
-    beforeEach(() => {
-        host = new PluginHost();
-    });
-
     test('#rowsGetter', () => {
         let gridProps = { rows: [] },
             propsGetter = () => gridProps,
             plugin = dataGridCorePlugin(propsGetter);
 
-        host.register(plugin);
-
-        expect(host.get('rowsGetter')()).toBe(gridProps.rows);
+        expect(plugin.rowsGetter()).toBe(gridProps.rows);
     });
 
     test('#columnsGetter', () => {
@@ -23,9 +14,7 @@ describe('dataGridCorePlugin', () => {
             propsGetter = () => gridProps,
             plugin = dataGridCorePlugin(propsGetter);
 
-        host.register(plugin);
-
-        expect(host.get('columnsGetter')()).toBe(gridProps.columns);
+        expect(plugin.columnsGetter()).toBe(gridProps.columns);
     });
 
     test('#columnsGetter unspecified columns', () => {
@@ -33,9 +22,7 @@ describe('dataGridCorePlugin', () => {
             propsGetter = () => gridProps,
             plugin = dataGridCorePlugin(propsGetter);
 
-        host.register(plugin);
-
-        expect(host.get('columnsGetter')().length).toBe(0);
+        expect(plugin.columnsGetter().length).toBe(0);
     });
 
     test('#columnsGetter auto columns', () => {
@@ -43,9 +30,7 @@ describe('dataGridCorePlugin', () => {
             propsGetter = () => gridProps,
             plugin = dataGridCorePlugin(propsGetter);
 
-        host.register(plugin);
-
-        let columns = host.get('columnsGetter')();
+        let columns = plugin.columnsGetter();
         expect(columns.length).toBe(2);
         expect(columns[0].name).toBe('field1');
         expect(columns[1].name).toBe('field2');

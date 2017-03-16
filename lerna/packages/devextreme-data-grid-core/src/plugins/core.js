@@ -12,9 +12,7 @@ function getColumns(propsGetter) {
 
 export const dataGridCorePlugin = (propsGetter) => {
     return {
-        exports: {
-            rowsGetter: () => propsGetter().rows,
-            columnsGetter: () => getColumns(propsGetter)
-        }
+        rowsGetter: () => propsGetter().rows,
+        columnsGetter: () => getColumns(propsGetter)
     }
 };
