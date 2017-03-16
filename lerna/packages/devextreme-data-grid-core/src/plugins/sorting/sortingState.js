@@ -8,15 +8,26 @@ function toggleColumnSorting(state, columnName) {
     ];    
 }
 
-export const dataGridSortingStatePlugin = (propsGetter = () => ({})) => {
-    let state = [];
+const nope = () => ({});
+
+export const dataGridSortingStatePlugin = (options = {}) => {
+    let { hostGetter = nope, propsGetter = nope } = options;
+    let state = propsGetter().defaultSortings || [];
+
+    const setState = nextState => {
+        if(state !== nextState) {
+            state = nextState;
+            const broadcast = hostGetter().broadcast;
+            broadcast && broadcast('forceUpdate');
+        }
+    };
 
     return {
-        sortingsGetter: () => state,
+        sortingsGetter: () => propsGetter().sortings || state,
         toggleColumnSortingAction: columnName => {
             let { onToggleColumnSorting, onSortingsChanged } = propsGetter();
             onToggleColumnSorting && onToggleColumnSorting(columnName);
-            state = toggleColumnSorting(state, columnName);
+            setState(toggleColumnSorting(state, columnName));
             onSortingsChanged && onSortingsChanged(state);
         }
     }

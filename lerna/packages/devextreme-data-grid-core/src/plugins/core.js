@@ -10,7 +10,11 @@ function getColumns(propsGetter) {
     return columns || [];
 }
 
-export const dataGridCorePlugin = (propsGetter) => {
+const nope = () => ({});
+
+export const dataGridCorePlugin = (options = {}) => {
+    let { propsGetter = nope } = options;
+    
     return {
         rowsGetter: () => propsGetter().rows,
         columnsGetter: () => getColumns(propsGetter)

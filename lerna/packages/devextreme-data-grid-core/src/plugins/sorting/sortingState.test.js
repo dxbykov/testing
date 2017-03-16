@@ -1,10 +1,30 @@
 import { dataGridSortingStatePlugin as sortPlugin } from './sortingState';
 
 describe('dataGridSortingStatePlugin', () => {
+    
     test('#sortingsGetter', () => {
         let plugin = sortPlugin();
         expect(plugin.sortingsGetter().length).toBe(0);
     });
+
+    test('#sortingsGetter with controlled state', () => {
+        let props = { sortings: [] },
+            plugin = sortPlugin({ propsGetter: () => props });
+        
+        expect(plugin.sortingsGetter()).toBe(props.sortings);
+        plugin.toggleColumnSortingAction('field1');
+        expect(plugin.sortingsGetter()).toBe(props.sortings);
+    });
+
+    test('#sortingsGetter uncontrolled with default state', () => {
+        let props = { defaultSortings: [] },
+            plugin = sortPlugin({ propsGetter: () => props });
+        
+        expect(plugin.sortingsGetter()).toBe(props.defaultSortings);
+        plugin.toggleColumnSortingAction('field1');
+        expect(plugin.sortingsGetter()).not.toBe(props.defaultSortings);
+    });
+
 
     test('#toggleColumnSortingAction changes state', () => {
         let plugin = sortPlugin();
@@ -29,7 +49,7 @@ describe('dataGridSortingStatePlugin', () => {
                 onToggleColumnSorting: jest.fn(),
                 onSortingsChanged: jest.fn()
             },
-            plugin = sortPlugin(() => props);
+            plugin = sortPlugin({ propsGetter: () => props });
 
         plugin.toggleColumnSortingAction('field1');
         expect(props.onToggleColumnSorting.mock.calls.length).toBe(1);
@@ -44,6 +64,17 @@ describe('dataGridSortingStatePlugin', () => {
         let sortings = plugin.sortingsGetter();
         plugin.toggleColumnSortingAction('field1');
         expect(sortings).not.toBe(plugin.sortingsGetter());
+    });
+
+    test('#toggleColumnSortingAction notifies host on state change', () => {
+        let host = {
+                broadcast: jest.fn()
+            },
+            plugin = sortPlugin({ hostGetter: () => host });
+        
+        plugin.toggleColumnSortingAction('field1');
+        expect(host.broadcast.mock.calls.length).toBe(1);
+        expect(host.broadcast.mock.calls[0][0]).toBe('forceUpdate');
     });
 
 });
