@@ -4,6 +4,22 @@ import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
 
+function memoize( fn ) {
+    return function () {
+        var args = Array.prototype.slice.call(arguments),
+            hash = "",
+            i = args.length;
+        var currentArg = null;
+        while (i--) {
+            currentArg = args[i];
+            hash += (currentArg === Object(currentArg)) ?
+            JSON.stringify(currentArg) : currentArg;
+            fn.memoize || (fn.memoize = {});
+        }
+        return (hash in fn.memoize) ? fn.memoize[hash] :
+        fn.memoize[hash] = fn.apply(this, args);
+    };
+}
 
 // Host
 
@@ -19,6 +35,8 @@ export class Grid extends React.PureComponent {
         }];
 
         this.subscriptions = [];
+
+        this.getters = [];
 
         this.host = {
             register: (plugin) => this.plugins.push(plugin),
@@ -47,21 +65,25 @@ export class Grid extends React.PureComponent {
                 };
             },
             getter: (name) => {
-                let getter = null;
-                this.plugins.forEach(plugin => {
-                    if(plugin.getters && plugin.getters[name])
-                        getter = plugin.getters[name];
-                });
-                return (params) => {
-                    let result = getter(params);
+                if(!this.getters[name]) {
+                    this.getters[name] = (params) => {
+                        let getter = null;
+                        this.plugins.forEach(plugin => {
+                            if(plugin.getters && plugin.getters[name])
+                                getter = plugin.getters[name];
+                        });
 
-                    this.plugins.forEach(plugin => {
-                        if(plugin.getterExtenders && plugin.getterExtenders[name])
-                            result = plugin.getterExtenders[name](params, result);
-                    });
+                        let result = getter(params);
 
-                    return result;
-                };
+                        this.plugins.forEach(plugin => {
+                            if(plugin.getterExtenders && plugin.getterExtenders[name])
+                                result = plugin.getterExtenders[name](params, result);
+                        });
+
+                        return result;
+                    }
+                }
+                return this.getters[name];
             },
             action: (name) => {
                 let action = null;
@@ -84,7 +106,7 @@ export class Grid extends React.PureComponent {
     }
     render() {
         let { children } = this.props;
-
+        
         return (
             <div>
                 <div id='plugins-root' style={{ display: 'none' }}>
@@ -238,6 +260,12 @@ export class Getter extends React.PureComponent {
 
         unregister(this.plugin)
     }
+    componentDidUpdate() {
+        let { gridHost } = this.context;
+        let { forceUpdate } = gridHost;
+
+        forceUpdate();
+    }
     render() {
         return null;
     }
@@ -268,6 +296,12 @@ export class GetterExtender extends React.PureComponent {
         let { unregister } = gridHost;
 
         unregister(this.plugin)
+    }
+    componentDidUpdate() {
+        let { gridHost } = this.context;
+        let { forceUpdate } = gridHost;
+
+        forceUpdate();
     }
     render() {
         return null;
@@ -350,6 +384,8 @@ export class FilterState extends React.PureComponent {
         this.state = {
             filters: props.defaultFilters || []
         };
+
+        this.mRows = memoize((rows, filters) => filterHelpers.filter(rows, filters))
     }
     render() {
         return (
@@ -361,7 +397,7 @@ export class FilterState extends React.PureComponent {
                     filtersChange && filtersChange(filters);
                 }} />
 
-                <GetterExtender name="rows" value={(rows, getter) => filterHelpers.filter(rows, getter('filters')())}/>
+                <GetterExtender name="rows" value={(rows, getter) => (this.mRows)(rows, getter('filters')())}/>
 
                 <Getter name="filters" value={this.props.filters || this.state.filters} />
                 <Getter name="filterFor" value={(getter, { columnName }) => filterHelpers.filterFor(columnName, getter('filters')())} />
@@ -372,10 +408,15 @@ export class FilterState extends React.PureComponent {
 
 
 export class FilterRow extends React.PureComponent {
+    constructor(props) {
+        super(props)
+
+        this.mTableHeaderRows = memoize((rows) => [...rows, { type: 'filter' }]);
+    }
     render() {
         return (
             <div>
-                <GetterExtender name="tableHeaderRows" value={(rows, getter) => [...rows, { type: 'filter' }]}/>
+                <GetterExtender name="tableHeaderRows" value={this.mTableHeaderRows}/>
 
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => {
@@ -406,15 +447,20 @@ export class FilterRow extends React.PureComponent {
 
 
 export class HeaderRow extends React.PureComponent {
+    constructor(props) {
+        super(props)
+
+        this.mTableHeaderRows = memoize((rows, columns) => {
+            return [columns.reduce((accum, c) => {
+                accum[c.name] = c.title;
+                return accum;
+            }, { type: 'heading' }), ...rows]
+        });
+    }
     render() {
         return (
             <div>
-                <GetterExtender name="tableHeaderRows" value={(rows, getter) => {
-                    return [getter('columns')().reduce((accum, c) => {
-                        accum[c.name] = c.title;
-                        return accum;
-                    }, { type: 'heading' }), ...rows]
-                }}/>
+                <GetterExtender name="tableHeaderRows" value={(rows, getter) => (this.mTableHeaderRows)(rows, getter('columns')())}/>
             </div>
         )
     }
@@ -451,6 +497,11 @@ const sortingsHelper = {
 
 // UI
 export class SortingState extends React.PureComponent {
+    constructor(props) {
+        super(props)
+
+        this.mRows = memoize((rows, sortings) => sortingsHelper.sort(rows, sortings));
+    }
     render() {
         let { sortings, sortingsChange } = this.props;
         
@@ -458,13 +509,21 @@ export class SortingState extends React.PureComponent {
             <div>
                 <Action name="applySorting" action={({ columnName, value }) => sortingsChange(sortingsHelper.calcSortings(columnName, sortings))} />
 
-                <GetterExtender name="rows" value={(rows) => sortingsHelper.sort(rows, sortings)}/>
+                <GetterExtender name="rows" value={(rows) => (this.mRows)(rows, sortings)}/>
 
                 <Getter name="sortingFor" value={(_, { columnName }) => sortingsHelper.directionFor(columnName, sortings)} />
             </div>
         )
     }
 };
+
+const SortableCell = ({ direction, changeDirection, children }) => (
+    <div 
+        onClick={changeDirection}
+        style={{ width: '100%', height: '100%' }}>
+        {children} [{ direction ? (direction === 'desc' ? '↑' : '↓') : '#'}]
+    </div>
+);
 
 export class HeaderRowSorting extends React.PureComponent {
     render() {
@@ -479,13 +538,7 @@ export class HeaderRowSorting extends React.PureComponent {
                                         direction: getter('sortingFor')({ columnName: column.name }),
                                         changeDirection: () => action('applySorting')({ columnName: column.name })
                                     })}>
-                                        {({ direction, changeDirection }) => (
-                                            <div 
-                                                onClick={changeDirection}
-                                                style={{ width: '100%', height: '100%' }}>
-                                                {original} [{ direction ? (direction === 'desc' ? '↑' : '↓') : '#'}]
-                                            </div>
-                                        )}
+                                        <SortableCell>{original}</SortableCell>
                                 </Connector>
                             );
                         }
@@ -522,29 +575,53 @@ const selectionHelpers = {
 };
 
 // UI
+const SelectCell = ({ selected, changeSelected }) => (
+    <input
+        type='checkbox'
+        checked={selected}
+        onChange={changeSelected}
+        style={{ margin: '0' }}/>
+);
+const SelectAllCell = ({ allSelected, someSelected, toggleAll }) => (
+    <input
+        type='checkbox'
+        checked={allSelected}
+        ref={(ref) => { ref && (ref.indeterminate = someSelected)}}
+        onChange={toggleAll}
+        style={{ margin: '0' }}/>
+);
+
 export class Selection extends React.PureComponent {
+    constructor(props) {
+        super(props);
+
+        this.changeSelected = (rowId) => {
+            let { selection, selectionChange } = this.props;
+            selectionChange(selectionHelpers.calcSelection(selection, rowId))
+        }
+        this.toggleAllSelected = (rowId, rows) => {
+            let { selection, selectionChange } = this.props;
+            selectionChange(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id))
+        }
+        
+        this.mColumns = memoize((columns) => [{ type: 'select', width: 20 }, ...columns]);
+    }
     render() {
         return (
             <div>
-                <GetterExtender name="tableColumns" value={(columns) => [{ type: 'select', width: 20 }].concat(columns)}/>
+                <GetterExtender name="tableColumns" value={this.mColumns}/>
 
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => {
-                        let { selection, selectionChange } = this.props;
                         if(column.type === 'select' && row.type === 'heading') {
                             return (
                                 <Connector
                                     mappings={(getter) => ({
-                                        rows: getter('rows')(),
+                                        allSelected: this.props.selection.length === getter('rows')().length,
+                                        someSelected: this.props.selection.length !== getter('rows')().length && this.props.selection.length !== 0,
+                                        toggleAll: () => this.toggleAllSelected(row.id, getter('rows')()),
                                     })}>
-                                    {({ rows }) => (
-                                        <input
-                                            type='checkbox'
-                                            checked={selection.length === rows.length}
-                                            ref={(ref) => { ref && (ref.indeterminate = selection.length !== rows.length && selection.length !== 0)}}
-                                            onChange={() => selectionChange(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id))}
-                                            style={{ margin: '0' }}/>
-                                    )}
+                                    <SelectAllCell/>
                                 </Connector>
                             );
                         }
@@ -552,15 +629,10 @@ export class Selection extends React.PureComponent {
                             return (
                                 <Connector
                                     mappings={(getter) => ({
-                                        rows: getter('rows')(),
+                                        selected: this.props.selection.indexOf(row.id) > -1,
+                                        changeSelected: () => this.changeSelected(row.id),
                                     })}>
-                                    {({ rows }) => (
-                                        <input
-                                            type='checkbox'
-                                            checked={selection.indexOf(row.id) > -1}
-                                            onChange={() => selectionChange(selectionHelpers.calcSelection(selection, row.id))}
-                                            style={{ margin: '0' }}/>
-                                    )}
+                                    <SelectCell/>
                                 </Connector>
                             );
                         }
@@ -579,17 +651,30 @@ export class MasterDetail extends React.PureComponent {
         this.state = {
             animating: []
         }
+        
+        this.mTableBodyRows = memoize((rows, expanded, animating) => {
+            [...expanded, ...animating].filter((value, index, self) => self.indexOf(value) === index).forEach(e => {
+                let index = rows.findIndex(row => row.id === e);
+                if(index !== -1) {
+                    let insertIndex = rows.findIndex(row => row.id === e) + 1
+                    rows = [...rows.slice(0, insertIndex), { type: 'detailRow', for: e }, ...rows.slice(insertIndex)]
+                }
+            })
+            return rows
+        });
+        this.mTableColumns = memoize((columns) => [{ type: 'detail', width: 20 }, ...columns]);
     }
     componentWillReceiveProps(nextProps) {
         let collapsed = this.props.expanded.filter(e => nextProps.expanded.indexOf(e) === -1);
         let expanded = nextProps.expanded.filter(e => this.props.expanded.indexOf(e) === -1);
 
-        this.setState({ animating: this.state.animating.concat(collapsed).concat(expanded) });
+        let changed = [].concat(collapsed).concat(expanded);
 
-        if(collapsed.length || expanded.length) {
+        if(changed.length) {
+            this.setState({ animating: this.state.animating.concat(changed) });
             setTimeout(() => {
                 this.setState({ 
-                    animating: this.state.animating.filter(a => !(collapsed.indexOf(a) !== -1 || expanded.indexOf(a) !== -1))
+                    animating: this.state.animating.filter(a => changed.indexOf(a) === -1)
                 })
             }, 200);
         }
@@ -597,18 +682,8 @@ export class MasterDetail extends React.PureComponent {
     render() {
         return (
             <div>
-                <GetterExtender name="tableBodyRows" value={(rows) => {
-                    let { expanded } = this.props;
-                    let { animating } = this.state;
-                    [...expanded, ...animating].filter((value, index, self) => self.indexOf(value) === index).forEach(e => {
-                        let index = rows.findIndex(row => row.id === e);
-                        if(index !== -1) {
-                            rows.splice(rows.findIndex(row => row.id === e) + 1, 0, { type: 'detailRow', for: e })
-                        }
-                    })
-                    return rows
-                }}/>
-                <GetterExtender name="tableColumns" value={(columns) => [{ type: 'detail', width: 20 }].concat(columns)}/>
+                <GetterExtender name="tableBodyRows" value={(rows) => (this.mTableBodyRows)(rows, this.props.expanded, this.state.animating)}/>
+                <GetterExtender name="tableColumns" value={this.mTableColumns}/>
                 <GetterExtender name="tableCellInfo" value={(original, getter, { row, columnIndex }) => {
                     let columns = getter('tableColumns')();          
                     if(row.type === 'detailRow') {
@@ -622,20 +697,22 @@ export class MasterDetail extends React.PureComponent {
 
                 <TemplateExtender name="tableViewCell">
                     {({ column, row }, original) => {
-                        let { expanded, expandedChange, template } = this.props;
-                        let { animating } = this.state;
                         if(row.type === 'detailRow') {
                             return (
                                 <Connector
                                     mappings={(getter) => ({
                                         rows: getter('rows')(),
                                     })}>
-                                        {({ rows }) => (
-                                            <div>
-                                                {template ? template(rows.find(r => r.id === row.for)) : <div>Hello detail!</div>}
-                                                {animating.indexOf(row.for) > -1 ? 'Animating' : null}
-                                            </div>
-                                        )}
+                                        {({ rows }) => {
+                                            let { expanded, expandedChange, template } = this.props;
+                                            let { animating } = this.state;
+                                            return (
+                                                <div>
+                                                    {template ? template(rows.find(r => r.id === row.for)) : <div>Hello detail!</div>}
+                                                    {animating.indexOf(row.for) > -1 ? 'Animating' : null}
+                                                </div>
+                                            )
+                                        }}
                                 </Connector>
                             )
                         }
@@ -644,11 +721,21 @@ export class MasterDetail extends React.PureComponent {
                         }
                         if(column.type === 'detail' && !row.type) {
                             return (
-                                <div
-                                    style={{ width: '100%', height: '100%' }}
-                                    onClick={() => expandedChange(selectionHelpers.calcSelection(expanded, row.id))}>
-                                    {expanded.indexOf(row.id) > -1 ? '-' : '+'}
-                                </div>
+                                <Connector
+                                    mappings={(getter) => ({
+                                        rows: getter('rows')(),
+                                    })}>
+                                        {() => {
+                                            let { expanded, expandedChange } = this.props;
+                                            return (
+                                                <div
+                                                    style={{ width: '100%', height: '100%' }}
+                                                    onClick={() => expandedChange(selectionHelpers.calcSelection(expanded, row.id))}>
+                                                    {expanded.indexOf(row.id) > -1 ? '-' : '+'}
+                                                </div>
+                                            );
+                                        }}
+                                </Connector>
                             );
                         }
                         
@@ -664,33 +751,65 @@ MasterDetail.contextTypes = {
 }
 
 
-const StaticTable = ({ rows, columns, getCellInfo, cellContentTemplate }) => (
-    <table style={{ borderCollapse: 'collapse' }}>
-        <tbody>
-            {rows.map((row, rowIndex) => 
-                <tr key={row.id}>
-                    {columns.map((column, columnIndex) => {
-                        let info = getCellInfo({ column, row, columnIndex, rowIndex });
-                        if(info.skip) return null
-                        return (
-                            <td
-                                key={column.name}
-                                style={{ 
-                                    padding: 0,
-                                    width: (column.width || 100) + 'px' 
-                                }}
-                                colSpan={info.colspan || 0}>
-                                {cellContentTemplate({ row, column })}
-                            </td>
-                        );
-                    })}
-                </tr>
-            )}
-        </tbody>
-    </table>
-);
+class StaticTableCell extends React.PureComponent {
+    render() {
+        let { row, column, colspan, cellContentTemplate } = this.props;
+        
+        return (
+            <td
+                style={{ 
+                    padding: 0,
+                    width: (column.width || 100) + 'px' 
+                }}
+                colSpan={colspan || 0}>
+                {cellContentTemplate({ row, column })}
+            </td>
+        )
+    }
+};
 
-export class GridTableView extends React.Component {
+class StaticTableRow extends React.PureComponent {
+    render() {
+        let { row, rowIndex, columns, getCellInfo, cellContentTemplate } = this.props;
+        
+        return (
+            <tr>
+                {columns.map((column, columnIndex) => {
+                    let info = getCellInfo({ column, row, columnIndex, rowIndex });
+                    if(info.skip) return null
+                    return (
+                        <StaticTableCell key={column.name} row={row} column={column} colspan={info.colspan} cellContentTemplate={cellContentTemplate} />
+                    );
+                })}
+            </tr>
+        )
+    }
+};
+
+class StaticTable extends React.PureComponent {
+    render() {
+        let { rows, columns, getCellInfo, cellContentTemplate } = this.props;
+        
+        return (
+            <table style={{ borderCollapse: 'collapse' }}>
+                <tbody>
+                    {rows.map((row, rowIndex) => 
+                        <StaticTableRow key={row.id} row={row} rowIndex={rowIndex} columns={columns} getCellInfo={getCellInfo} cellContentTemplate={cellContentTemplate} />
+                    )}
+                </tbody>
+            </table>
+        );
+    }
+};
+
+const cellContentTemplate = ({ row, column }) => <TemplatePlaceholder name="tableViewCell" params={{ row, column }} />;
+
+export class GridTableView extends React.PureComponent {
+    constructor(props) {
+        super(props)
+
+        this.mRows = memoize((headerRows, bodyRows) => [...headerRows, ...bodyRows]);
+    }
     render() {
         return (
             <div>
@@ -702,12 +821,12 @@ export class GridTableView extends React.Component {
                 <Template name="tableView">
                     <Connector
                         mappings={(getter) => ({
-                            rows: ((headerRows, bodyRows) => [...headerRows, ...bodyRows])(getter('tableHeaderRows')(), getter('tableBodyRows')()),
+                            rows: (this.mRows)(getter('tableHeaderRows')(), getter('tableBodyRows')()),
                             columns: getter('tableColumns')(),
                             getCellInfo: getter('tableCellInfo'),
-                            cellContentTemplate: ({ row, column }) => <TemplatePlaceholder name="tableViewCell" params={{ row, column }} />,
+                            cellContentTemplate: cellContentTemplate,
                         })}>
-                        <StaticTable/>
+                        <StaticTable />
                     </Connector>
                 </Template>
                 <Template name="tableViewCell">
@@ -721,20 +840,26 @@ export class GridTableView extends React.Component {
 
 // Demo
 
+const rowTemplate = (row) => <div>Detail for {row.name}</div>
+
 export class MagicDemo extends React.PureComponent {
     constructor(props) {
         super(props)
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(20),
+            rows: generateRows(200),
             sortings: [{ column: 'id', direction: 'asc' }],
             selection: [1, 3, 18],
             expandedRows: [3],
             filters: []
         }
-    }
 
+        this.changeExpandedRows = (expandedRows) => this.setState({ expandedRows })
+        this.changeSelection = (selection) => this.setState({ selection })
+        this.changeSortings = (sortings) => this.setState({ sortings })
+        this.changeFilters = (filters) => this.setState({ filters })
+    }
     render() {
         let { rows, columns, sortings, selection, expandedRows, filters } = this.state;
 
@@ -751,19 +876,19 @@ export class MagicDemo extends React.PureComponent {
 
                     <Selection
                         selection={selection}
-                        selectionChange={selection => this.setState({ selection })}/>
+                        selectionChange={this.changeSelection}/>
                     <MasterDetail
                         expanded={expandedRows}
-                        expandedChange={expandedRows => this.setState({ expandedRows })}
-                        template={(row) => <div>Detail for {row.name}</div>}/>
+                        expandedChange={this.changeExpandedRows}
+                        template={rowTemplate}/>
 
                         
                     <SortingState
                         sortings={sortings}
-                        sortingsChange={sortings => this.setState({ sortings })}/>
+                        sortingsChange={this.changeSortings}/>
                     <FilterState
                         filters={filters}
-                        filtersChange={filters => this.setState({ filters })}/>
+                        filtersChange={this.changeFilters}/>
                 </Grid>
 
                 {/*<h2>Uncontrolled with default filters</h2>
