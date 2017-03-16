@@ -60,28 +60,6 @@ export class Grid extends React.PureComponent {
             register: (plugin) => this.plugins.push(plugin),
             unregister: (plugin) => this.plugins.splice(this.plugins.indexOf(plugin), 1),
 
-            template: (name) => {
-                let template = null;
-                this.plugins.forEach(plugin => {
-                    if(plugin.templates && plugin.templates[name])
-                        template = plugin.templates[name];
-                });
-                return (params) => {
-                    let result = React.isValidElement(template) ? React.cloneElement(template, params) : template(params);
-                    
-                    this.plugins.forEach(plugin => {
-                        if(plugin.templateExtenders && plugin.templateExtenders[name]) {
-                            let templateExtender = plugin.templateExtenders[name];
-                            
-                            result = React.isValidElement(templateExtender)
-                                ? React.cloneElement(templateExtender, Object.assign({ original: result }, params))
-                                : templateExtender(params, result);
-                        }
-                    });
-
-                    return result;
-                };
-            },
             getter: (name) => {
                 if(!this.getters[name]) {
                     this.getters[name] = (params) => {
@@ -203,15 +181,45 @@ Connector.contextTypes = {
 };
 
 export class TemplatePlaceholder extends React.PureComponent {
-    render() {
-        let { gridHost } = this.context;
-        let { template } = gridHost;
-        let { params, name } = this.props;
+    constructor(props, context) {
+        super(props, context);
 
-        return template(name)(params);
+        let { gridHost, templateHost } = context;
+        let { plugins } = gridHost;
+        let { name, params } = props;
+
+        this.params = params || this.context.templateHost && this.context.templateHost.params
+
+        this.templates = name 
+            ? plugins
+                .map(plugin => plugin.templates && plugin.templates[name])
+                .filter(template => !!template)
+                .filter(template => template.predicate ? template.predicate(params) : true)
+                .map(template => template.children)
+                .reverse()
+            : templateHost.templates;
+    }
+    shouldComponentUpdate() {
+        return false;
+    }
+    getChildContext() {
+        return {
+            templateHost: {
+                templates: this.templates.slice(1),
+                params: this.params
+            }
+        }
+    }
+    render() {
+        let template = this.templates[0];
+        return React.isValidElement(template) ? React.cloneElement(template, this.params) : template ? template(this.params) : null;
     }
 };
+TemplatePlaceholder.childContextTypes = {
+    templateHost: React.PropTypes.object.isRequired,
+};
 TemplatePlaceholder.contextTypes = {
+    templateHost: React.PropTypes.object,
     gridHost: React.PropTypes.object.isRequired,
 };
 
@@ -219,39 +227,11 @@ export class Template extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
         let { register } = gridHost;
-        let { children, name } = this.props;
+        let { children, name, predicate } = this.props;
 
         this.plugin = {
             templates: {
-                [name]: children
-            }
-        };
-
-        register(this.plugin);
-    }
-    componentWillUnmount() {
-        let { gridHost } = this.context;
-        let { unregister } = gridHost;
-
-        unregister(this.plugin)
-    }
-    render() {
-        return null;
-    }
-};
-Template.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
-
-export class TemplateExtender extends React.PureComponent {
-    componentWillMount() {
-        let { gridHost } = this.context;
-        let { register } = gridHost;
-        let { children, name } = this.props;
-
-        this.plugin = {
-            templateExtenders: {
-                [name]: children
+                [name]: { predicate, children }
             }
         };
 
@@ -273,7 +253,7 @@ export class TemplateExtender extends React.PureComponent {
         return null;
     }
 };
-TemplateExtender.contextTypes = {
+Template.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 };
 
@@ -458,30 +438,25 @@ export class FilterRow extends React.PureComponent {
             <div>
                 <GetterExtender name="tableHeaderRows" value={this.mTableHeaderRows}/>
 
-                <TemplateExtender name="tableViewCell">
-                    {({ column, row }, original) => {
-                        if(row.type === 'filter' && !column.type) {
-                            return (
-                                <Connector
-                                    mapProps={(getter, action) => ({
-                                        filter: getter('filterFor')({ columnName: column.name }),
-                                    })}
-                                    mapActions={(action) => ({
-                                        changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value }),
-                                    })}>
-                                        {({ filter, changeFilter }) => (
-                                            <input
-                                                type="text"
-                                                value={filter}
-                                                onChange={(e) => changeFilter(e.target.value)}
-                                                style={{ width: '100%' }}/>
-                                        )}
-                                </Connector>
-                            );
-                        }
-                        return original;
-                    }}
-                </TemplateExtender>
+                <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'filter' && !column.type}>
+                    {({ column, row }) => (
+                        <Connector
+                            mapProps={(getter, action) => ({
+                                filter: getter('filterFor')({ columnName: column.name }),
+                            })}
+                            mapActions={(action) => ({
+                                changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value }),
+                            })}>
+                                {({ filter, changeFilter }) => (
+                                    <input
+                                        type="text"
+                                        value={filter}
+                                        onChange={(e) => changeFilter(e.target.value)}
+                                        style={{ width: '100%' }}/>
+                                )}
+                        </Connector>
+                    )}
+                </Template>
             </div>
         )
     }
@@ -571,24 +546,19 @@ export class HeaderRowSorting extends React.PureComponent {
     render() {
         return (
             <div>
-                <TemplateExtender name="tableViewCell">
-                    {({ column, row }, original) => {
-                        if(row.type === 'heading' && !column.type) {
-                            return (
-                                <Connector
-                                    mapProps={(getter) => ({
-                                        direction: getter('sortingFor')({ columnName: column.name }),
-                                    })}
-                                    mapActions={(action) => ({
-                                        changeDirection: () => action('applySorting')({ columnName: column.name }),
-                                    })}>
-                                    <SortableCell>{original}</SortableCell>
-                                </Connector>
-                            );
-                        }
-                        return original;
-                    }}
-                </TemplateExtender>
+                <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'heading' && !column.type}>
+                    {({ column, row }) => (
+                        <Connector
+                            mapProps={(getter) => ({
+                                direction: getter('sortingFor')({ columnName: column.name }),
+                            })}
+                            mapActions={(action) => ({
+                                changeDirection: () => action('applySorting')({ columnName: column.name }),
+                            })}>
+                            <SortableCell><TemplatePlaceholder /></SortableCell>
+                        </Connector>
+                    )}
+                </Template>
             </div>
         )
     }
@@ -657,38 +627,33 @@ export class Selection extends React.PureComponent {
             <div>
                 <GetterExtender name="tableColumns" value={this.mColumns}/>
 
-                <TemplateExtender name="tableViewCell">
-                    {({ column, row }, original) => {
-                        if(column.type === 'select' && row.type === 'heading') {
-                            return (
-                                <Connector
-                                    mapProps={(getter) => ({
-                                        allSelected: this.props.selection.length === getter('rows')().length,
-                                        someSelected: this.props.selection.length !== getter('rows')().length && this.props.selection.length !== 0,
-                                    })}
-                                    mapActions={(action, getter) => ({
-                                        toggleAll: () => this.toggleAllSelected(row.id, getter('rows')()),
-                                    })}>
-                                    <SelectAllCell/>
-                                </Connector>
-                            );
-                        }
-                        if(column.type === 'select' && !row.type) {
-                            return (
-                                <Connector // TODO: remove this?
-                                    mapProps={(getter) => ({
-                                        selected: this.props.selection.indexOf(row.id) > -1,
-                                    })}
-                                    mapActions={(action) => ({
-                                        changeSelected: () => this.changeSelected(row.id),
-                                    })}>
-                                    <SelectCell/>
-                                </Connector>
-                            );
-                        }
-                        return original;
-                    }}
-                </TemplateExtender>
+                <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'select' && row.type === 'heading'}>
+                    {({ column, row }) => (
+                        <Connector
+                            mapProps={(getter) => ({
+                                allSelected: this.props.selection.length === getter('rows')().length,
+                                someSelected: this.props.selection.length !== getter('rows')().length && this.props.selection.length !== 0,
+                            })}
+                            mapActions={(action, getter) => ({
+                                toggleAll: () => this.toggleAllSelected(getter('rows')()),
+                            })}>
+                            <SelectAllCell/>
+                        </Connector>
+                    )}
+                </Template>
+                <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'select' && !row.type}>
+                    {({ column, row }) => (
+                        <Connector // TODO: remove this?
+                            mapProps={(getter) => ({
+                                selected: this.props.selection.indexOf(row.id) > -1,
+                            })}
+                            mapActions={(action) => ({
+                                changeSelected: () => this.changeSelected(row.id),
+                            })}>
+                            <SelectCell/>
+                        </Connector>
+                    )}
+                </Template>
             </div>
         )
     }
@@ -745,54 +710,46 @@ export class MasterDetail extends React.PureComponent {
                     return original;
                 }}/>
 
-                <TemplateExtender name="tableViewCell">
-                    {({ column, row }, original) => {
-                        if(row.type === 'detailRow') {
-                            return (
-                                <Connector
-                                    mapProps={(getter) => ({
-                                        rows: getter('rows')(),
-                                        expanded: this.props.expanded,
-                                        animating: this.state.animating,
-                                    })}>
-                                        {({ rows, expanded, animating }) => {
-                                            let { expandedChange, template } = this.props;
-                                            return (
-                                                <div>
-                                                    {template ? template(rows.find(r => r.id === row.for)) : <div>Hello detail!</div>}
-                                                    {animating.indexOf(row.for) > -1 ? 'Animating' : null}
-                                                </div>
-                                            )
-                                        }}
-                                </Connector>
-                            )
-                        }
-                        if(column.type === 'detail' && row.type === 'heading') {
-                            return null;
-                        }
-                        if(column.type === 'detail' && !row.type) {
-                            return (
-                                <Connector
-                                    mapProps={(getter) => ({
-                                        expanded: this.props.expanded
-                                    })}>
-                                    {({ expanded }) => {
-                                        let { expandedChange } = this.props;
-                                        return (
-                                            <div
-                                                style={{ width: '100%', height: '100%' }}
-                                                onClick={() => expandedChange(selectionHelpers.calcSelection(expanded, row.id))}>
-                                                {expanded.indexOf(row.id) > -1 ? '-' : '+'}
-                                            </div>
-                                        );
-                                    }}
-                                </Connector>
-                            );
-                        }
-                        
-                        return original;
-                    }}
-                </TemplateExtender>
+                <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'detailRow'}>
+                    {({ column, row }) => (
+                        <Connector
+                            mapProps={(getter) => ({
+                                rows: getter('rows')(),
+                                expanded: this.props.expanded,
+                                animating: this.state.animating,
+                            })}>
+                                {({ rows, expanded, animating }) => {
+                                    let { expandedChange, template } = this.props;
+                                    return (
+                                        <div>
+                                            {template ? template(rows.find(r => r.id === row.for)) : <div>Hello detail!</div>}
+                                            {animating.indexOf(row.for) > -1 ? 'Animating' : null}
+                                        </div>
+                                    )
+                                }}
+                        </Connector>
+                    )}
+                </Template>
+                <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'}></Template>
+                <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
+                    {({ column, row }) => (
+                        <Connector
+                            mapProps={(getter) => ({
+                                expanded: this.props.expanded
+                            })}>
+                            {({ expanded }) => {
+                                let { expandedChange } = this.props;
+                                return (
+                                    <div
+                                        style={{ width: '100%', height: '100%' }}
+                                        onClick={() => expandedChange(selectionHelpers.calcSelection(expanded, row.id))}>
+                                        {expanded.indexOf(row.id) > -1 ? '-' : '+'}
+                                    </div>
+                                );
+                            }}
+                        </Connector>
+                    )}
+                </Template>
             </div>
         )
     }
@@ -899,7 +856,7 @@ export class MagicDemo extends React.PureComponent {
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(100),
+            rows: generateRows(200),
             sortings: [{ column: 'id', direction: 'asc' }],
             selection: [1, 3, 18],
             expandedRows: [3],
