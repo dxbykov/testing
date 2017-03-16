@@ -3,22 +3,39 @@ import React from 'react';
 import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
+import { defaultMemoize } from 'reselect'
 
-function memoize( fn ) {
-    return function () {
-        var args = Array.prototype.slice.call(arguments),
-            hash = "",
-            i = args.length;
-        var currentArg = null;
-        while (i--) {
-            currentArg = args[i];
-            hash += (currentArg === Object(currentArg)) ?
-            JSON.stringify(currentArg) : currentArg;
-            fn.memoize || (fn.memoize = {});
-        }
-        return (hash in fn.memoize) ? fn.memoize[hash] :
-        fn.memoize[hash] = fn.apply(this, args);
-    };
+const memoize = defaultMemoize;
+
+function shallowEqual(objA, objB) {
+  if (objA === objB) {
+    return true;
+  }
+
+  const keysA = Object.keys(objA);
+  const keysB = Object.keys(objB);
+
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+
+  // Test for A's keys different from B.
+  const hasOwn = Object.prototype.hasOwnProperty;
+  for (let i = 0; i < keysA.length; i += 1) {
+    if (!hasOwn.call(objB, keysA[i]) ||
+        objA[keysA[i]] !== objB[keysA[i]]) {
+      return false;
+    }
+
+    const valA = objA[keysA[i]];
+    const valB = objB[keysA[i]];
+
+    if (valA !== valB) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 // Host
@@ -39,6 +56,7 @@ export class Grid extends React.PureComponent {
         this.getters = [];
 
         this.host = {
+            plugins: this.plugins,
             register: (plugin) => this.plugins.push(plugin),
             unregister: (plugin) => this.plugins.splice(this.plugins.indexOf(plugin), 1),
 
@@ -135,11 +153,35 @@ export class RootRenderer extends React.PureComponent {
 // Components
 
 export class Connector extends React.PureComponent {
-    componentWillMount() {
+    constructor(props, context) {
+        super(props, context);
+
+        let { mapProps, mapActions } = props;
+        let { getter, action } = context.gridHost;
+
+        this.state = {
+            props: mapProps ? mapProps(getter) : {},
+            actions: mapActions ? mapActions(action, getter) : {}
+        };
+
+        this.a = false;
+    }
+    shouldComponentUpdate(nextProps, nextState) {
+        return this.a && !shallowEqual(this.state.props, nextState.props);
+    }
+    componentDidMount() {
         let { gridHost } = this.context;
         let { subscribe } = gridHost;
 
-        this.plugin = () => this.forceUpdate()
+        this.plugin = () => {
+            let { mapProps } = this.props;
+            let { getter, action } = this.context.gridHost;
+
+            this.a = true;
+            this.setState({ props: mapProps ? mapProps(getter) : {} }, () => {
+                this.a = false;
+            })
+        }
 
         subscribe(this.plugin);
     }
@@ -150,11 +192,9 @@ export class Connector extends React.PureComponent {
         unsubscribe(this.plugin)
     }
     render() {
-        let { gridHost } = this.context;
-        let { children, mappings } = this.props;
-        let { getter, action } = gridHost;
-
-        let mapped = mappings(getter, action);
+        let { children } = this.props;
+        let { props, actions } = this.state;
+        let mapped = Object.assign({}, props, actions);
         return React.isValidElement(children) ? React.cloneElement(children, mapped) : children(mapped);
     }
 };
@@ -423,9 +463,11 @@ export class FilterRow extends React.PureComponent {
                         if(row.type === 'filter' && !column.type) {
                             return (
                                 <Connector
-                                    mappings={(getter, action) => ({
+                                    mapProps={(getter, action) => ({
                                         filter: getter('filterFor')({ columnName: column.name }),
-                                        changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value })
+                                    })}
+                                    mapActions={(action) => ({
+                                        changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value }),
                                     })}>
                                         {({ filter, changeFilter }) => (
                                             <input
@@ -534,11 +576,13 @@ export class HeaderRowSorting extends React.PureComponent {
                         if(row.type === 'heading' && !column.type) {
                             return (
                                 <Connector
-                                    mappings={(getter, action) => ({
+                                    mapProps={(getter) => ({
                                         direction: getter('sortingFor')({ columnName: column.name }),
-                                        changeDirection: () => action('applySorting')({ columnName: column.name })
+                                    })}
+                                    mapActions={(action) => ({
+                                        changeDirection: () => action('applySorting')({ columnName: column.name }),
                                     })}>
-                                        <SortableCell>{original}</SortableCell>
+                                    <SortableCell>{original}</SortableCell>
                                 </Connector>
                             );
                         }
@@ -575,13 +619,15 @@ const selectionHelpers = {
 };
 
 // UI
-const SelectCell = ({ selected, changeSelected }) => (
+const SelectCell = ({ selected, changeSelected }) => {
+    // debugger
+    return (
     <input
         type='checkbox'
         checked={selected}
         onChange={changeSelected}
         style={{ margin: '0' }}/>
-);
+)};
 const SelectAllCell = ({ allSelected, someSelected, toggleAll }) => (
     <input
         type='checkbox'
@@ -599,7 +645,7 @@ export class Selection extends React.PureComponent {
             let { selection, selectionChange } = this.props;
             selectionChange(selectionHelpers.calcSelection(selection, rowId))
         }
-        this.toggleAllSelected = (rowId, rows) => {
+        this.toggleAllSelected = (rows) => {
             let { selection, selectionChange } = this.props;
             selectionChange(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id))
         }
@@ -616,9 +662,11 @@ export class Selection extends React.PureComponent {
                         if(column.type === 'select' && row.type === 'heading') {
                             return (
                                 <Connector
-                                    mappings={(getter) => ({
+                                    mapProps={(getter) => ({
                                         allSelected: this.props.selection.length === getter('rows')().length,
                                         someSelected: this.props.selection.length !== getter('rows')().length && this.props.selection.length !== 0,
+                                    })}
+                                    mapActions={(action, getter) => ({
                                         toggleAll: () => this.toggleAllSelected(row.id, getter('rows')()),
                                     })}>
                                     <SelectAllCell/>
@@ -627,9 +675,11 @@ export class Selection extends React.PureComponent {
                         }
                         if(column.type === 'select' && !row.type) {
                             return (
-                                <Connector
-                                    mappings={(getter) => ({
+                                <Connector // TODO: remove this?
+                                    mapProps={(getter) => ({
                                         selected: this.props.selection.indexOf(row.id) > -1,
+                                    })}
+                                    mapActions={(action) => ({
                                         changeSelected: () => this.changeSelected(row.id),
                                     })}>
                                     <SelectCell/>
@@ -700,12 +750,13 @@ export class MasterDetail extends React.PureComponent {
                         if(row.type === 'detailRow') {
                             return (
                                 <Connector
-                                    mappings={(getter) => ({
+                                    mapProps={(getter) => ({
                                         rows: getter('rows')(),
+                                        expanded: this.props.expanded,
+                                        animating: this.state.animating,
                                     })}>
-                                        {({ rows }) => {
-                                            let { expanded, expandedChange, template } = this.props;
-                                            let { animating } = this.state;
+                                        {({ rows, expanded, animating }) => {
+                                            let { expandedChange, template } = this.props;
                                             return (
                                                 <div>
                                                     {template ? template(rows.find(r => r.id === row.for)) : <div>Hello detail!</div>}
@@ -722,19 +773,19 @@ export class MasterDetail extends React.PureComponent {
                         if(column.type === 'detail' && !row.type) {
                             return (
                                 <Connector
-                                    mappings={(getter) => ({
-                                        rows: getter('rows')(),
+                                    mapProps={(getter) => ({
+                                        expanded: this.props.expanded
                                     })}>
-                                        {() => {
-                                            let { expanded, expandedChange } = this.props;
-                                            return (
-                                                <div
-                                                    style={{ width: '100%', height: '100%' }}
-                                                    onClick={() => expandedChange(selectionHelpers.calcSelection(expanded, row.id))}>
-                                                    {expanded.indexOf(row.id) > -1 ? '-' : '+'}
-                                                </div>
-                                            );
-                                        }}
+                                    {({ expanded }) => {
+                                        let { expandedChange } = this.props;
+                                        return (
+                                            <div
+                                                style={{ width: '100%', height: '100%' }}
+                                                onClick={() => expandedChange(selectionHelpers.calcSelection(expanded, row.id))}>
+                                                {expanded.indexOf(row.id) > -1 ? '-' : '+'}
+                                            </div>
+                                        );
+                                    }}
                                 </Connector>
                             );
                         }
@@ -770,12 +821,12 @@ class StaticTableCell extends React.PureComponent {
 
 class StaticTableRow extends React.PureComponent {
     render() {
-        let { row, rowIndex, columns, getCellInfo, cellContentTemplate } = this.props;
+        let { row, columns, getCellInfo, cellContentTemplate } = this.props;
         
         return (
             <tr>
                 {columns.map((column, columnIndex) => {
-                    let info = getCellInfo({ column, row, columnIndex, rowIndex });
+                    let info = getCellInfo({ column, row, columnIndex });
                     if(info.skip) return null
                     return (
                         <StaticTableCell key={column.name} row={row} column={column} colspan={info.colspan} cellContentTemplate={cellContentTemplate} />
@@ -794,7 +845,7 @@ class StaticTable extends React.PureComponent {
             <table style={{ borderCollapse: 'collapse' }}>
                 <tbody>
                     {rows.map((row, rowIndex) => 
-                        <StaticTableRow key={row.id} row={row} rowIndex={rowIndex} columns={columns} getCellInfo={getCellInfo} cellContentTemplate={cellContentTemplate} />
+                        <StaticTableRow key={row.id} row={row} columns={columns} getCellInfo={getCellInfo} cellContentTemplate={cellContentTemplate} />
                     )}
                 </tbody>
             </table>
@@ -820,7 +871,7 @@ export class GridTableView extends React.PureComponent {
 
                 <Template name="tableView">
                     <Connector
-                        mappings={(getter) => ({
+                        mapProps={(getter) => ({
                             rows: (this.mRows)(getter('tableHeaderRows')(), getter('tableBodyRows')()),
                             columns: getter('tableColumns')(),
                             getCellInfo: getter('tableCellInfo'),
@@ -848,7 +899,7 @@ export class MagicDemo extends React.PureComponent {
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(200),
+            rows: generateRows(100),
             sortings: [{ column: 'id', direction: 'asc' }],
             selection: [1, 3, 18],
             expandedRows: [3],
