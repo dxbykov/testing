@@ -1,0 +1,16 @@
+{
+  "name": "@devexpress/devextreme-react-data-grig-bootstrap",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-jest": "^19.0.0",
+    "jest": "^19.0.2"
+  }
+}
