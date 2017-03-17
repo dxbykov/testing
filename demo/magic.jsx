@@ -202,7 +202,7 @@ export class TemplateConnector extends React.PureComponent {
 
         this.state = {
             props: mapProps ? mapProps(getter, params) : {},
-            actions: mapActions ? mapActions(action, params, getter) : {},
+            actions: mapActions ? mapActions(action, params) : {},
         };
     }
     updateMappings(props) {
@@ -614,21 +614,19 @@ const selectionHelpers = {
 };
 
 // UI
-const SelectCell = ({ selected, changeSelected }) => {
-    // debugger
-    return (
+const SelectCell = ({ selected, changeSelected }) => (
     <input
         type='checkbox'
         checked={selected}
         onChange={changeSelected}
         style={{ margin: '0' }}/>
-)};
-const SelectAllCell = ({ allSelected, someSelected, toggleAll }) => (
+);
+const SelectAllCell = ({ allSelected, someSelected, toggleAll, rows }) => (
     <input
         type='checkbox'
         checked={allSelected}
         ref={(ref) => { ref && (ref.indeterminate = someSelected)}}
-        onChange={toggleAll}
+        onChange={() => toggleAll(rows)}
         style={{ margin: '0' }}/>
 );
 
@@ -660,15 +658,16 @@ export class Selection extends React.PureComponent {
                         const rows = getter('rows')();
 
                         return {
+                            rows,
                             allSelected: selection.length === rows.length,
                             someSelected: selection.length !== rows.length && selection.length !== 0,
                         }
                     }}
-                    connectActions={(action, _, getter) => ({
-                        toggleAll: () => this.toggleAllSelected(getter('rows')()),
+                    connectActions={(action) => ({
+                        toggleAll: (rows) => this.toggleAllSelected(rows),
                     })}>
-                    {({ allSelected, someSelected, toggleAll }) =>
-                        <SelectAllCell allSelected={allSelected} someSelected={someSelected} toggleAll={toggleAll}/>}
+                    {({ allSelected, someSelected, toggleAll, rows }) =>
+                        <SelectAllCell allSelected={allSelected} someSelected={someSelected} toggleAll={toggleAll} rows={rows}/>}
                 </Template>
                 <Template
                     name="tableViewCell"
