@@ -1,5 +1,5 @@
 {
-  "name": "@devexpress/devextreme-react-demos",
+  "name": "@devexpress/dx-react-core",
   "version": "0.0.0",
   "description": "",
   "main": "index.js",
@@ -9,9 +9,6 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@devexpress/devextreme-react-data-grid": "^0.0.0"
-  },
   "devDependencies": {
     "babel-jest": "^19.0.0",
     "jest": "^19.0.2"
