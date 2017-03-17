@@ -1,12 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
 
-//import { Local } from './demo/local'
-import { Local } from './demo/local'
-import { Remote } from './demo/remote'
-import { LegoDemo } from './demo/lego'
-import { MagicDemo } from './demo/magic'
+import { MagicDemo } from './magic'
 
 class App extends React.Component {
     constructor() {
@@ -23,7 +18,6 @@ class App extends React.Component {
     }
 };
 
-// Render your table
 ReactDOM.render(
   <App/>,
   document.getElementById('app')

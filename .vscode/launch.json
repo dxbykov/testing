@@ -21,8 +21,8 @@
             "name" : "Run Jest Tests",
             "type": "node",
             "request": "launch",
-            "program" : "${workspaceRoot}/packages/devextreme-data-grid-core/node_modules/jest/bin/jest.js",
-            "cwd": "${workspaceRoot}/packages/devextreme-data-grid-core/",
+            "program" : "${workspaceRoot}/packages/devextreme-datagrid-core/node_modules/jest/bin/jest.js",
+            "cwd": "${workspaceRoot}/packages/devextreme-datagrid-core/",
             "args": [
                 "--runInBand"
             ],

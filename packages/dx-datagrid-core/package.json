@@ -1,5 +1,5 @@
 {
-  "name": "@devexpress/dx-data-grid-core",
+  "name": "@devexpress/dx-datagrid-core",
   "version": "0.0.0",
   "description": "",
   "main": "dist/index.js",

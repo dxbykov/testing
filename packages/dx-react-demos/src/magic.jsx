@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { PluginHost } from '@devexpress/dx-core'
 import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
@@ -44,56 +45,12 @@ export class Grid extends React.PureComponent {
     constructor(props) {
         super(props);
 
-        this.plugins = [{
-            getters: {
-                rows: () => props.rows,
-                columns: () => props.columns,
-            },
-        }];
+        this.host = new PluginHost();
 
-        this.subscriptions = [];
-
-        this.getters = [];
-
-        this.host = {
-            plugins: this.plugins,
-            register: (plugin) => this.plugins.push(plugin),
-            unregister: (plugin) => this.plugins.splice(this.plugins.indexOf(plugin), 1),
-
-            getter: (name) => {
-                if(!this.getters[name]) {
-                    this.getters[name] = (params) => {
-                        let getter = null;
-                        this.plugins.forEach(plugin => {
-                            if(plugin.getters && plugin.getters[name])
-                                getter = plugin.getters[name];
-                        });
-
-                        let result = getter(params);
-
-                        this.plugins.forEach(plugin => {
-                            if(plugin.getterExtenders && plugin.getterExtenders[name])
-                                result = plugin.getterExtenders[name](params, result);
-                        });
-
-                        return result;
-                    }
-                }
-                return this.getters[name];
-            },
-            action: (name) => {
-                let action = null;
-                this.plugins.forEach(plugin => {
-                    if(plugin.actions && plugin.actions[name])
-                        action = plugin.actions[name];
-                });
-                return action;
-            },
-
-            forceUpdate: () => this.subscriptions.forEach(subscription => subscription()),
-            subscribe: (fn) => this.subscriptions.push(fn),
-            unsubscribe: (fn) => this.subscriptions.splice(this.subscriptions.indexOf(fn), 1),
-        };
+        this.host.register({
+            rowsGetter: () => props.rows,
+            columnsGetter: () => props.columns,
+        });
     }
     getChildContext() {
         return {
@@ -175,7 +132,7 @@ export class TemplatePlaceholder extends React.PureComponent {
 
         let templates = name 
             ? plugins
-                .map(plugin => plugin.templates && plugin.templates[name])
+                .map(plugin => plugin[name + 'Template'])
                 .filter(template => !!template)
                 .filter(template => template.predicate ? template.predicate(params) : true)
                 .reverse()
@@ -198,20 +155,20 @@ export class TemplateConnector extends React.PureComponent {
         super(props, context);
 
         let { mapProps, mapActions, params } = props;
-        let { getter, action } = context.gridHost;
+        let { gridHost } = context;
 
         this.state = {
-            props: mapProps ? mapProps(getter, params) : {},
-            actions: mapActions ? mapActions(action, params) : {},
+            props: mapProps ? mapProps((name) => gridHost.get(name + 'Getter'), params) : {},
+            actions: mapActions ? mapActions((name) => gridHost.get(name + 'Action'), params) : {},
         };
     }
     updateMappings(props) {
         let { mapProps, mapActions, params } = props;
-        let { getter, action } = this.context.gridHost;
+        let { gridHost } = this.context;
 
         this.setState({ 
-            props: mapProps ? mapProps(getter, params) : {},
-            actions: mapActions ? mapActions(action, params, getter) : {},
+            props: mapProps ? mapProps((name) => gridHost.get(name + 'Getter'), params) : {},
+            actions: mapActions ? mapActions((name) => gridHost.get(name + 'Action'), params, (name) => gridHost.get(name + 'Getter')) : {},
         })
     }
     componentWillReceiveProps(nextProps) {
@@ -222,17 +179,17 @@ export class TemplateConnector extends React.PureComponent {
     }
     componentDidMount() {
         let { gridHost } = this.context;
-        let { subscribe } = gridHost;
 
-        this.plugin = () => this.updateMappings(this.props)
+        this.plugin = {
+            reconnect: () => this.updateMappings(this.props)
+        }
 
-        subscribe(this.plugin);
+        gridHost.register(this.plugin);
     }
     componentWillUnmount() {
         let { gridHost } = this.context;
-        let { unsubscribe } = gridHost;
 
-        unsubscribe(this.plugin)
+        gridHost.unregister(this.plugin)
     }
     render() {
         let { content, params } = this.props;
@@ -248,31 +205,27 @@ TemplateConnector.contextTypes = {
 export class Template extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
-        let { register } = gridHost;
         let { name, predicate, connectGetters, connectActions, children } = this.props;
 
         this.plugin = {
-            templates: {
-                [name]: {
-                    predicate,
-                    connectGetters,
-                    connectActions,
-                    children: () => this.props.children,
-                    subscriptions: []
-                }
+            [name + 'Template']: {
+                predicate,
+                connectGetters,
+                connectActions,
+                children: () => this.props.children,
+                subscriptions: []
             }
         };
 
-        register(this.plugin);
+        gridHost.register(this.plugin);
     }
     componentWillUnmount() {
         let { gridHost } = this.context;
-        let { unregister } = gridHost;
 
-        unregister(this.plugin)
+        gridHost.unregister(this.plugin)
     }
     componentDidUpdate() {
-        this.plugin.templates[this.props.name].subscriptions.forEach(subscription => subscription());
+        this.plugin[this.props.name + 'Template'].subscriptions.forEach(subscription => subscription());
     }
     render() {
         return null;
@@ -285,31 +238,26 @@ Template.contextTypes = {
 export class Getter extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
-        let { register } = gridHost;
         let { name } = this.props;
 
         this.plugin = {
-            getters: {
-                [name]: (params) => {
-                    let { value } = this.props;
-                    return typeof value === "function" ? value(gridHost.getter, params) : value
-                }
+            [name + 'Getter']: (params) => {
+                let { value } = this.props;
+                return typeof value === "function" ? value((name) => gridHost.get(name + 'Getter'), params) : value
             }
         };
 
-        register(this.plugin);
+        gridHost.register(this.plugin);
     }
     componentWillUnmount() {
         let { gridHost } = this.context;
-        let { unregister } = gridHost;
 
-        unregister(this.plugin)
+        gridHost.unregister(this.plugin)
     }
     componentDidUpdate() {
         let { gridHost } = this.context;
-        let { forceUpdate } = gridHost;
 
-        forceUpdate();
+        gridHost.broadcast('reconnect');
     }
     render() {
         return null;
@@ -322,31 +270,26 @@ Getter.contextTypes = {
 export class GetterExtender extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
-        let { register } = gridHost;
         let { name } = this.props;
 
         this.plugin = {
-            getterExtenders: {
-                [name]: (params, original) => {
-                    let { value } = this.props;
-                    return typeof value === "function" ? value(original, gridHost.getter, params) : value
-                }
+            [name + 'GetterExtender']: (original) => (params) => {
+                let { value } = this.props;
+                return typeof value === "function" ? value(original(params), (name) => gridHost.get(name + 'Getter'), params) : value
             }
         };
 
-        register(this.plugin);
+        gridHost.register(this.plugin);
     }
     componentWillUnmount() {
         let { gridHost } = this.context;
-        let { unregister } = gridHost;
 
-        unregister(this.plugin)
+        gridHost.unregister(this.plugin)
     }
     componentDidUpdate() {
         let { gridHost } = this.context;
-        let { forceUpdate } = gridHost;
 
-        forceUpdate();
+        gridHost.broadcast('reconnect');
     }
     render() {
         return null;
@@ -359,25 +302,21 @@ GetterExtender.contextTypes = {
 export class Action extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
-        let { register, getter, forceUpdate } = gridHost;
         let { name } = this.props;
 
         this.plugin = {
-            actions: {
-                [name]: (params) => {
-                    let { action } = this.props;
-                    action(params, getter)
-                }
+            [name + 'Action']: (params) => {
+                let { action } = this.props;
+                action(params, (name) => gridHost.get(name + 'Getter'))
             }
         };
 
-        register(this.plugin);
+        gridHost.register(this.plugin);
     }
     componentWillUnmount() {
         let { gridHost } = this.context;
-        let { unregister } = gridHost;
 
-        unregister(this.plugin)
+        gridHost.unregister(this.plugin)
     }
     render() {
         return null;
@@ -825,6 +764,9 @@ export class GridTableView extends React.PureComponent {
         super(props)
 
         this.mRows = memoize((headerRows, bodyRows) => [...headerRows, ...bodyRows]);
+
+        this.trololo = (opapa) => this.opapa = opapa;
+        this.ololo = (params) => this.opapa(params)
     }
     render() {
         return (
@@ -839,7 +781,7 @@ export class GridTableView extends React.PureComponent {
                     connectGetters={(getter) => ({
                         rows: (this.mRows)(getter('tableHeaderRows')(), getter('tableBodyRows')()),
                         columns: getter('tableColumns')(),
-                        getCellInfo: getter('tableCellInfo'),
+                        getCellInfo: (() => { this.trololo(getter('tableCellInfo')); return this.ololo; })(),
                     })}>
                     <StaticTable cellContentTemplate={cellContentTemplate} />
                 </Template>
@@ -862,7 +804,7 @@ export class MagicDemo extends React.PureComponent {
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(200),
+            rows: generateRows(20),
             sortings: [{ column: 'id', direction: 'asc' }],
             selection: [1, 3, 18],
             expandedRows: [3],

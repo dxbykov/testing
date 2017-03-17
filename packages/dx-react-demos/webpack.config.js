@@ -4,7 +4,7 @@ var webpack = require('webpack');
 module.exports = {
     context: path.join(__dirname, 'src'),
     entry: {
-        index: 'index'
+        index: path.join(__dirname, 'src', 'index')
     },
     output: {
 		publicPath: '/dist',
@@ -17,18 +17,26 @@ module.exports = {
                 test: /\.jsx?$/,
                 exclude: /(node_modules|bower_components|public\/)/,
                 use: ["babel-loader"]
+            },
+            { 
+                test: /\.css$/, 
+                use: ["style-loader", "css-loader"]
             }
         ]
     },
     resolve: {
-        extensions: [".webpack.js", ".web.js", ".js"]
+        extensions: [".webpack.js", ".web.js", ".js", ".jsx"]
     },
     plugins: [
         new webpack.DefinePlugin({
             "process.env": { 
-                //NODE_ENV: JSON.stringify("production")
+                //NODE_ENV: JSON.stringify("production") 
             }
         })
     ],
-    devtool: 'eval-source-map'
+    devtool: 'eval-source-map',
+    devServer: {
+        host: '0.0.0.0',
+        port: 3002,
+    }
 }
