@@ -130,55 +130,6 @@ export class RootRenderer extends React.PureComponent {
 
 // Components
 
-export class Connector extends React.PureComponent {
-    constructor(props, context) {
-        super(props, context);
-
-        let { mapProps, mapActions } = props;
-        let { getter, action } = context.gridHost;
-
-        this.state = {
-            props: mapProps ? mapProps(getter) : {},
-            actions: mapActions ? mapActions(action, getter) : {}
-        };
-    }
-    updateMappings(props) {
-        let { mapProps } = props;
-        let { getter, action } = this.context.gridHost;
-
-        this.setState({ props: mapProps ? mapProps(getter) : {} })
-    }
-    componentWillReceiveProps(nextProps) {
-        this.updateMappings(nextProps);
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return !shallowEqual(this.state.props, nextState.props);
-    }
-    componentDidMount() {
-        let { gridHost } = this.context;
-        let { subscribe } = gridHost;
-
-        this.plugin = () => this.updateMappings(this.props)
-
-        subscribe(this.plugin);
-    }
-    componentWillUnmount() {
-        let { gridHost } = this.context;
-        let { unsubscribe } = gridHost;
-
-        unsubscribe(this.plugin)
-    }
-    render() {
-        let { children } = this.props;
-        let { props, actions } = this.state;
-        let mapped = Object.assign({}, props, actions);
-        return React.isValidElement(children) ? React.cloneElement(children, mapped) : children(mapped);
-    }
-};
-Connector.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
-
 export class TemplatePlaceholder extends React.PureComponent {
     constructor(props, context) {
         super(props, context);
@@ -196,8 +147,8 @@ export class TemplatePlaceholder extends React.PureComponent {
         this.prepareTemplates();
         this.setupSubscription();
 
-        let template = this.template.children();
-        return React.isValidElement(template) ? React.cloneElement(template, this.params) : template ? template(this.params) : null;
+        let { children, connectGetters, connectActions } = this.template;
+        return <TemplateConnector params={this.params} mapProps={connectGetters} mapActions={connectActions} content={children()} />
     }
     getChildContext() {
         return {
@@ -242,16 +193,70 @@ TemplatePlaceholder.contextTypes = {
     gridHost: React.PropTypes.object.isRequired,
 };
 
+export class TemplateConnector extends React.PureComponent {
+    constructor(props, context) {
+        super(props, context);
+
+        let { mapProps, mapActions, params } = props;
+        let { getter, action } = context.gridHost;
+
+        this.state = {
+            props: mapProps ? mapProps(getter, params) : {},
+            actions: mapActions ? mapActions(action, params, getter) : {},
+        };
+    }
+    updateMappings(props) {
+        let { mapProps, mapActions, params } = props;
+        let { getter, action } = this.context.gridHost;
+
+        this.setState({ 
+            props: mapProps ? mapProps(getter, params) : {},
+            actions: mapActions ? mapActions(action, params, getter) : {},
+        })
+    }
+    componentWillReceiveProps(nextProps) {
+        this.updateMappings(nextProps);
+    }
+    shouldComponentUpdate(nextProps, nextState) {
+        return !shallowEqual(this.state.props, nextState.props) || this.props.content !== nextProps.content;
+    }
+    componentDidMount() {
+        let { gridHost } = this.context;
+        let { subscribe } = gridHost;
+
+        this.plugin = () => this.updateMappings(this.props)
+
+        subscribe(this.plugin);
+    }
+    componentWillUnmount() {
+        let { gridHost } = this.context;
+        let { unsubscribe } = gridHost;
+
+        unsubscribe(this.plugin)
+    }
+    render() {
+        let { content, params } = this.props;
+        let { props, actions } = this.state;
+        let mapped = Object.assign({}, params, props, actions);
+        return React.isValidElement(content) ? React.cloneElement(content, mapped) : (content ? content(mapped) : null);
+    }
+};
+TemplateConnector.contextTypes = {
+    gridHost: React.PropTypes.object.isRequired,
+};
+
 export class Template extends React.PureComponent {
     componentWillMount() {
         let { gridHost } = this.context;
         let { register } = gridHost;
-        let { name, predicate, children } = this.props;
+        let { name, predicate, connectGetters, connectActions, children } = this.props;
 
         this.plugin = {
             templates: {
                 [name]: {
                     predicate,
+                    connectGetters,
+                    connectActions,
                     children: () => this.props.children,
                     subscriptions: []
                 }
@@ -458,23 +463,21 @@ export class FilterRow extends React.PureComponent {
             <div>
                 <GetterExtender name="tableHeaderRows" value={this.mTableHeaderRows}/>
 
-                <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'filter' && !column.type}>
-                    {({ column, row }) => (
-                        <Connector
-                            mapProps={(getter, action) => ({
-                                filter: getter('filterFor')({ columnName: column.name }),
-                            })}
-                            mapActions={(action) => ({
-                                changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value }),
-                            })}>
-                                {({ filter, changeFilter }) => (
-                                    <input
-                                        type="text"
-                                        value={filter}
-                                        onChange={(e) => changeFilter(e.target.value)}
-                                        style={{ width: '100%' }}/>
-                                )}
-                        </Connector>
+                <Template
+                    name="tableViewCell"
+                    predicate={({ column, row }) => row.type === 'filter' && !column.type}
+                    connectGetters={(getter, { column }) => ({
+                        filter: getter('filterFor')({ columnName: column.name }),
+                    })}
+                    connectActions={(action, { column }) => ({
+                        changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value }),
+                    })}>
+                    {({ filter, changeFilter }) => (
+                        <input
+                            type="text"
+                            value={filter}
+                            onChange={(e) => changeFilter(e.target.value)}
+                            style={{ width: '100%' }}/>
                     )}
                 </Template>
             </div>
@@ -568,17 +571,17 @@ export class HeaderRowSorting extends React.PureComponent {
             <div>
                 <Template
                     name="tableViewCell"
-                    predicate={({ column, row }) => row.type === 'heading' && !column.type}>
-                    {({ column, row }) => (
-                        <Connector
-                            mapProps={(getter) => ({
-                                direction: getter('sortingFor')({ columnName: column.name }),
-                            })}
-                            mapActions={(action) => ({
-                                changeDirection: () => action('applySorting')({ columnName: column.name }),
-                            })}>
-                            <SortableCell><TemplatePlaceholder /></SortableCell>
-                        </Connector>
+                    predicate={({ column, row }) => row.type === 'heading' && !column.type}
+                    connectGetters={(getter, { column }) => ({
+                        direction: getter('sortingFor')({ columnName: column.name }),
+                    })}
+                    connectActions={(action, { column }) => ({
+                        changeDirection: () => action('applySorting')({ columnName: column.name }),
+                    })}>
+                    {({ direction, changeDirection }) => (
+                        <SortableCell direction={direction} changeDirection={changeDirection}>
+                            <TemplatePlaceholder />
+                        </SortableCell>
                     )}
                 </Template>
             </div>
@@ -651,19 +654,21 @@ export class Selection extends React.PureComponent {
 
                 <Template
                     name="tableViewCell"
-                    predicate={({ column, row }) => column.type === 'select' && row.type === 'heading'}>
-                    {({ column, row }) => (
-                        <Connector
-                            mapProps={(getter) => ({
-                                allSelected: this.props.selection.length === getter('rows')().length,
-                                someSelected: this.props.selection.length !== getter('rows')().length && this.props.selection.length !== 0,
-                            })}
-                            mapActions={(action, getter) => ({
-                                toggleAll: () => this.toggleAllSelected(getter('rows')()),
-                            })}>
-                            <SelectAllCell/>
-                        </Connector>
-                    )}
+                    predicate={({ column, row }) => column.type === 'select' && row.type === 'heading'}
+                    connectGetters={(getter) => {
+                        const { selection } = this.props;
+                        const rows = getter('rows')();
+
+                        return {
+                            allSelected: selection.length === rows.length,
+                            someSelected: selection.length !== rows.length && selection.length !== 0,
+                        }
+                    }}
+                    connectActions={(action, _, getter) => ({
+                        toggleAll: () => this.toggleAllSelected(getter('rows')()),
+                    })}>
+                    {({ allSelected, someSelected, toggleAll }) =>
+                        <SelectAllCell allSelected={allSelected} someSelected={someSelected} toggleAll={toggleAll}/>}
                 </Template>
                 <Template
                     name="tableViewCell"
@@ -830,16 +835,14 @@ export class GridTableView extends React.PureComponent {
                 <Getter name="tableColumns" value={(getter) => getter('columns')()}/>
                 <Getter name="tableCellInfo" value={{}}/>
 
-                <Template name="tableView">
-                    <Connector
-                        mapProps={(getter) => ({
-                            rows: (this.mRows)(getter('tableHeaderRows')(), getter('tableBodyRows')()),
-                            columns: getter('tableColumns')(),
-                            getCellInfo: getter('tableCellInfo'),
-                            cellContentTemplate: cellContentTemplate,
-                        })}>
-                        <StaticTable />
-                    </Connector>
+                <Template
+                    name="tableView"
+                    connectGetters={(getter) => ({
+                        rows: (this.mRows)(getter('tableHeaderRows')(), getter('tableBodyRows')()),
+                        columns: getter('tableColumns')(),
+                        getCellInfo: getter('tableCellInfo'),
+                    })}>
+                    <StaticTable cellContentTemplate={cellContentTemplate} />
                 </Template>
                 <Template name="tableViewCell">
                     {({ row, column }) => (row[column.name] !== undefined ? <span>{row[column.name]}</span> : null)}
