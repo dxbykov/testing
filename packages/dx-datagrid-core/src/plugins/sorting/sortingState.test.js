@@ -1,7 +1,16 @@
-import { dataGridSortingStatePlugin as sortPlugin } from './sortingState';
+import { dataGridSortingStatePlugin } from './sortingState';
+import { immutableMutator } from '@devexpress/dx-core';
 
 describe('dataGridSortingStatePlugin', () => {
     
+    let sortPlugin = (options = {}) => {
+        return dataGridSortingStatePlugin({
+            propsGetter: () => ({}),
+            mutator: immutableMutator,
+            ...options
+        });
+    };
+
     test('#sortingsGetter', () => {
         let plugin = sortPlugin();
         expect(plugin.sortingsGetter().length).toBe(0);

@@ -1,17 +1,27 @@
-function toggleColumnSorting(state, columnName) {
-    let sorting = state.filter(s => { return s.column == columnName; })[0];
-    return [
-        {
+function toggleColumnSortingReducer(state, columnName, mutator) {
+    let nextState = state;
+    let index = state.findIndex(s => s.column == columnName);
+
+    if(index > -1) {
+        let sorting = state[index];
+        let nextSorting = mutator.set(sorting, 'ascending', !sorting.ascending);
+        nextState = mutator.splice(state, index, 1, nextSorting);
+    }
+    else {
+        let nextSorting = {
             column: columnName,
-            ascending: !sorting || !sorting.ascending
-        }
-    ];    
+            ascending: true
+        };
+        nextState = mutator.splice(state, 0, 0, nextSorting);
+    }
+    return nextState;
 }
+
 
 const nope = () => ({});
 
 export const dataGridSortingStatePlugin = (options = {}) => {
-    let { hostGetter = nope, propsGetter = nope } = options;
+    let { hostGetter = nope, propsGetter = nope, mutator } = options;
     let state = propsGetter().defaultSortings || [];
 
     const setState = nextState => {
@@ -27,7 +37,7 @@ export const dataGridSortingStatePlugin = (options = {}) => {
         toggleColumnSortingAction: columnName => {
             let { onToggleColumnSorting, onSortingsChanged } = propsGetter();
             onToggleColumnSorting && onToggleColumnSorting(columnName);
-            setState(toggleColumnSorting(state, columnName));
+            setState(toggleColumnSortingReducer(state, columnName, mutator));
             onSortingsChanged && onSortingsChanged(state);
         }
     }
