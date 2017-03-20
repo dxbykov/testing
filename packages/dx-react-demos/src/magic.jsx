@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Action, Getter, GetterExtender, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { DataGrid } from '@devexpress/dx-react-datagrid';
+import { DataGrid, TableView } from '@devexpress/dx-react-datagrid';
 import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
@@ -382,97 +382,6 @@ export class MasterDetail extends React.PureComponent {
 };
 
 
-class StaticTableCell extends React.PureComponent {
-    render() {
-        let { row, column, colspan, cellContentTemplate } = this.props;
-        
-        return (
-            <td
-                style={{ 
-                    padding: 0,
-                    width: (column.width || 100) + 'px' 
-                }}
-                colSpan={colspan || 0}>
-                {cellContentTemplate({ row, column })}
-            </td>
-        )
-    }
-};
-
-class StaticTableRow extends React.PureComponent {
-    render() {
-        let { row, columns, getCellInfo, cellContentTemplate } = this.props;
-        
-        return (
-            <tr>
-                {columns.map((column, columnIndex) => {
-                    let info = getCellInfo({ column, row, columnIndex });
-                    if(info.skip) return null
-                    return (
-                        <StaticTableCell key={column.name} row={row} column={column} colspan={info.colspan} cellContentTemplate={cellContentTemplate} />
-                    );
-                })}
-            </tr>
-        )
-    }
-};
-
-class StaticTable extends React.PureComponent {
-    render() {
-        let { rows, columns, getCellInfo, cellContentTemplate } = this.props;
-        
-        return (
-            <table style={{ borderCollapse: 'collapse' }}>
-                <tbody>
-                    {rows.map((row, rowIndex) => 
-                        <StaticTableRow key={row.id} row={row} columns={columns} getCellInfo={getCellInfo} cellContentTemplate={cellContentTemplate} />
-                    )}
-                </tbody>
-            </table>
-        );
-    }
-};
-
-const cellContentTemplate = ({ row, column }) => <TemplatePlaceholder name="tableViewCell" params={{ row, column }} />;
-
-export class GridTableView extends React.PureComponent {
-    constructor(props) {
-        super(props)
-
-        this.mRows = memoize((headerRows, bodyRows) => [...headerRows, ...bodyRows]);
-
-        this.trololo = (opapa) => this.opapa = opapa;
-        this.ololo = (params) => this.opapa(params)
-    }
-    render() {
-        return (
-            <div>
-                <Getter name="tableHeaderRows" value={[]}/>
-                <Getter name="tableBodyRows" value={(getter) => getter('rows')()}/>
-                <Getter name="tableColumns" value={(getter) => getter('columns')()}/>
-                <Getter name="tableCellInfo" value={{}}/>
-
-                <Template name="root">
-                    <TemplatePlaceholder name="tableView" />
-                </Template>
-                <Template
-                    name="tableView"
-                    connectGetters={(getter) => ({
-                        rows: (this.mRows)(getter('tableHeaderRows')(), getter('tableBodyRows')()),
-                        columns: getter('tableColumns')(),
-                        getCellInfo: (() => { this.trololo(getter('tableCellInfo')); return this.ololo; })(),
-                    })}>
-                    <StaticTable cellContentTemplate={cellContentTemplate} />
-                </Template>
-                <Template name="tableViewCell">
-                    {({ row, column }) => (row[column.name] !== undefined ? <span>{row[column.name]}</span> : null)}
-                </Template>
-            </div>
-        )
-    }
-}
-
-
 // Demo
 
 const rowTemplate = (row) => <div>Detail for {row.name}</div>
@@ -504,7 +413,7 @@ export class MagicDemo extends React.PureComponent {
                     rows={rows}
                     columns={columns}>
 
-                    <GridTableView/>
+                    <TableView/>
                     
                     <HeaderRow/>
                     <HeaderRowSorting/>
