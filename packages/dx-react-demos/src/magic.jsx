@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Action, Getter, GetterExtender, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { DataGrid, TableView } from '@devexpress/dx-react-datagrid';
+import { DataGrid, TableView, TableRowDetail } from '@devexpress/dx-react-datagrid';
 import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
@@ -299,88 +299,6 @@ export class Selection extends React.PureComponent {
     }
 };
 
-export class MasterDetail extends React.PureComponent {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            animating: []
-        }
-        
-        this.mTableBodyRows = memoize((rows, expanded, animating) => {
-            [...expanded, ...animating].filter((value, index, self) => self.indexOf(value) === index).forEach(rowId => {
-                let index = rows.findIndex(row => row.id === rowId);
-                if(index !== -1) {
-                    let rowIndex = rows.findIndex(row => row.id === rowId);
-                    let insertIndex = rowIndex + 1
-                    rows = [...rows.slice(0, insertIndex), { type: 'detailRow', for: rows[rowIndex] }, ...rows.slice(insertIndex)]
-                }
-            })
-            return rows
-        });
-        this.mTableColumns = memoize((columns) => [{ type: 'detail', width: 20 }, ...columns]);
-    }
-    componentWillReceiveProps(nextProps) {
-        let collapsed = this.props.expanded.filter(e => nextProps.expanded.indexOf(e) === -1);
-        let expanded = nextProps.expanded.filter(e => this.props.expanded.indexOf(e) === -1);
-
-        let changed = [].concat(collapsed).concat(expanded);
-
-        if(changed.length) {
-            this.setState({ animating: this.state.animating.concat(changed) });
-            setTimeout(() => {
-                this.setState({ 
-                    animating: this.state.animating.filter(a => changed.indexOf(a) === -1)
-                })
-            }, 200);
-        }
-    }
-    render() {
-        return (
-            <div>
-                <GetterExtender name="tableBodyRows" value={(rows) => (this.mTableBodyRows)(rows, this.props.expanded, this.state.animating)}/>
-                <GetterExtender name="tableColumns" value={this.mTableColumns}/>
-                <GetterExtender name="tableCellInfo" value={(original, getter, { row, columnIndex }) => {
-                    let columns = getter('tableColumns')();          
-                    if(row.type === 'detailRow') {
-                        if(columnIndex !== 0) {
-                            return { skip: true };
-                        }
-                        return { colspan: columns.length };
-                    }
-                    return original;
-                }}/>
-
-                <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'detailRow'}>
-                    {({ column, row }) => {
-                        let { expanded, expandedChange, template } = this.props;
-                        let { animating } = this.state;
-                        return (
-                            <div>
-                                {template ? template(row.for) : <div>Hello detail!</div>}
-                                {animating.indexOf(row.for.id) > -1 ? 'Animating' : null}
-                            </div>
-                        )
-                    }}
-                </Template>
-                <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
-                <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
-                    {({ column, row }) => {
-                        let { expanded, expandedChange } = this.props;
-                        return (
-                            <div
-                                style={{ width: '100%', height: '100%' }}
-                                onClick={() => expandedChange(selectionHelpers.calcSelection(expanded, row.id))}>
-                                {expanded.indexOf(row.id) > -1 ? '-' : '+'}
-                            </div>
-                        );
-                    }}
-                </Template>
-            </div>
-        )
-    }
-};
-
 
 // Demo
 
@@ -423,7 +341,7 @@ export class MagicDemo extends React.PureComponent {
                     <Selection
                         selection={selection}
                         selectionChange={this.changeSelection}/>
-                    <MasterDetail
+                    <TableRowDetail
                         expanded={expandedRows}
                         expandedChange={this.changeExpandedRows}
                         template={rowTemplate}/>
