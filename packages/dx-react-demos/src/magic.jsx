@@ -1,56 +1,13 @@
 import React from 'react';
 
-import { PluginsHost, Action, Getter, GetterExtender, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
+import { Action, Getter, GetterExtender, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
+import { DataGrid } from '@devexpress/dx-react-datagrid';
 import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
 import { defaultMemoize } from 'reselect'
 
 const memoize = defaultMemoize;
-
-// Host
-
-export class DataGrid extends React.PureComponent {
-    render() {
-        let { rows, columns, children } = this.props;
-        
-        return (
-            <PluginsHost>
-                <div id='plugins-root' style={{ display: 'none' }}>
-                    <BaseGetters rows={rows} columns={columns} />
-                    <GridTableView />
-                    {children}
-                </div>
-                <RootRenderer />
-            </PluginsHost>
-        )
-    }
-};
-DataGrid.propTypes = {
-    rows: React.PropTypes.array.isRequired,
-    columns: React.PropTypes.array.isRequired,
-};
-
-export class BaseGetters extends React.PureComponent {
-    render() {
-        const { rows, columns } = this.props;
-
-        return (
-            <div>
-                <Getter name="rows" value={() => rows} />
-                <Getter name="columns" value={() => columns} />
-            </div>
-        );
-    }
-}
-
-export class RootRenderer extends React.PureComponent {
-    render() {
-        return <TemplatePlaceholder name="tableView" />
-    }
-}
-
-// Plugins
 
 // Core
 const filterHelpers = {
@@ -495,6 +452,9 @@ export class GridTableView extends React.PureComponent {
                 <Getter name="tableColumns" value={(getter) => getter('columns')()}/>
                 <Getter name="tableCellInfo" value={{}}/>
 
+                <Template name="root">
+                    <TemplatePlaceholder name="tableView" />
+                </Template>
                 <Template
                     name="tableView"
                     connectGetters={(getter) => ({
@@ -543,6 +503,8 @@ export class MagicDemo extends React.PureComponent {
                 <DataGrid
                     rows={rows}
                     columns={columns}>
+
+                    <GridTableView/>
                     
                     <HeaderRow/>
                     <HeaderRowSorting/>
