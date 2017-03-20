@@ -9,10 +9,10 @@ export class TableView extends React.PureComponent {
     constructor(props) {
         super(props)
 
-        this.mRows = memoize((headerRows, bodyRows) => [...headerRows, ...bodyRows]);
+        this._tableRows = memoize((headerRows, bodyRows) => [...headerRows, ...bodyRows]);
 
-        this.trololo = (opapa) => this.opapa = opapa;
-        this.ololo = (params) => this.opapa(params)
+        this._cacheTableCellInfo = (tableCellInfo) => this._cachedTableCellInfo = tableCellInfo;
+        this._tableCellInfoCacher = (params) => this._cachedTableCellInfo(params)
     }
     render() {
         return (
@@ -22,15 +22,18 @@ export class TableView extends React.PureComponent {
                 <Getter name="tableColumns" value={(getter) => getter('columns')()}/>
                 <Getter name="tableCellInfo" value={{}}/>
 
+                {/*Computed*/}
+                <Getter name="tableRows" value={(getter) => (this._tableRows)(getter('tableHeaderRows')(), getter('tableBodyRows')())}/>
+
                 <Template name="root">
                     <TemplatePlaceholder name="tableView" />
                 </Template>
                 <Template
                     name="tableView"
                     connectGetters={(getter) => ({
-                        rows: (this.mRows)(getter('tableHeaderRows')(), getter('tableBodyRows')()),
+                        rows: getter('tableRows')(),
                         columns: getter('tableColumns')(),
-                        getCellInfo: (() => { this.trololo(getter('tableCellInfo')); return this.ololo; })(),
+                        getCellInfo: (() => { this._cacheTableCellInfo(getter('tableCellInfo')); return this._cachedTableCellInfo; })(),
                     })}>
                     <Table cellContentTemplate={cellContentTemplate} />
                 </Template>
@@ -38,6 +41,6 @@ export class TableView extends React.PureComponent {
                     {({ row, column }) => (row[column.name] !== undefined ? <span>{row[column.name]}</span> : null)}
                 </Template>
             </div>
-        )
+        );
     }
 }
