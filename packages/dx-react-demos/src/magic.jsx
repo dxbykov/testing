@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Action, Getter, GetterExtender, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { DataGrid, TableView, TableRowDetail } from '@devexpress/dx-react-datagrid';
+import { DataGrid, SortingState, TableView, TableRowDetail, TableHeaderRowSorting } from '@devexpress/dx-react-datagrid';
 import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
@@ -123,90 +123,6 @@ export class HeaderRow extends React.PureComponent {
         )
     }
 };
-
-
-// Core
-const sortingsHelper = {
-    calcSortings: (columnName, prevSorting) => {
-        let sorting = prevSorting.filter(s => { return s.column == columnName; })[0];
-        return [
-            {
-                column: columnName,
-                direction: (sorting && sorting.direction == 'asc') ? 'desc' : 'asc'
-            }
-        ];
-    },
-    directionFor: (columnName, sortings) => {
-        let sorting = sortings.filter(s => s.column === columnName)[0];
-        return sorting ? sorting.direction : false;
-    },
-    sort: (rows, sortings) => {
-        if(!sortings.length)
-            return rows;
-
-        let sortColumn = sortings[0].column,
-            result = rows.slice().sort((a, b) => {
-                let value = (a[sortColumn] < b[sortColumn]) ^ sortings[0].direction === "desc"
-                return value ? -1 : 1;
-            });
-        return result;
-    },
-};
-
-// UI
-export class SortingState extends React.PureComponent {
-    constructor(props) {
-        super(props)
-
-        this.mRows = memoize((rows, sortings) => sortingsHelper.sort(rows, sortings));
-    }
-    render() {
-        let { sortings, sortingsChange } = this.props;
-        
-        return (
-            <div>
-                <Action name="applySorting" action={({ columnName, value }) => sortingsChange(sortingsHelper.calcSortings(columnName, sortings))} />
-
-                <GetterExtender name="rows" value={(rows) => (this.mRows)(rows, sortings)}/>
-
-                <Getter name="sortingFor" value={(_, { columnName }) => sortingsHelper.directionFor(columnName, sortings)} />
-            </div>
-        )
-    }
-};
-
-const SortableCell = ({ direction, changeDirection, children }) => (
-    <div 
-        onClick={changeDirection}
-        style={{ width: '100%', height: '100%' }}>
-        {children} [{ direction ? (direction === 'desc' ? '↑' : '↓') : '#'}]
-    </div>
-);
-
-export class HeaderRowSorting extends React.PureComponent {
-    render() {
-        return (
-            <div>
-                <Template
-                    name="tableViewCell"
-                    predicate={({ column, row }) => row.type === 'heading' && !column.type}
-                    connectGetters={(getter, { column }) => ({
-                        direction: getter('sortingFor')({ columnName: column.name }),
-                    })}
-                    connectActions={(action, { column }) => ({
-                        changeDirection: () => action('applySorting')({ columnName: column.name }),
-                    })}>
-                    {({ direction, changeDirection }) => (
-                        <SortableCell direction={direction} changeDirection={changeDirection}>
-                            <TemplatePlaceholder />
-                        </SortableCell>
-                    )}
-                </Template>
-            </div>
-        )
-    }
-};
-
 
 // Core
 const selectionHelpers = {
@@ -334,7 +250,7 @@ export class MagicDemo extends React.PureComponent {
                     <TableView/>
                     
                     <HeaderRow/>
-                    <HeaderRowSorting/>
+                    <TableHeaderRowSorting/>
 
                     <FilterRow/>
 
