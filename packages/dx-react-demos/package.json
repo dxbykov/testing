@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@devexpress/dx-core": "^0.0.0",
+    "@devexpress/dx-react-core": "^0.0.0",
     "@devexpress/dx-datagrid-core": "^0.0.0",
 
     "core-js": "^2.4.1",

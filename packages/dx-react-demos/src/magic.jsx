@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { PluginHost } from '@devexpress/dx-core'
+import { PluginsHost, Action, Getter, GetterExtender, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
 import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
@@ -8,327 +8,47 @@ import { defaultMemoize } from 'reselect'
 
 const memoize = defaultMemoize;
 
-function shallowEqual(objA, objB) {
-  if (objA === objB) {
-    return true;
-  }
-
-  const keysA = Object.keys(objA);
-  const keysB = Object.keys(objB);
-
-  if (keysA.length !== keysB.length) {
-    return false;
-  }
-
-  // Test for A's keys different from B.
-  const hasOwn = Object.prototype.hasOwnProperty;
-  for (let i = 0; i < keysA.length; i += 1) {
-    if (!hasOwn.call(objB, keysA[i]) ||
-        objA[keysA[i]] !== objB[keysA[i]]) {
-      return false;
-    }
-
-    const valA = objA[keysA[i]];
-    const valB = objB[keysA[i]];
-
-    if (valA !== valB) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 // Host
 
-export class Grid extends React.PureComponent {
-    constructor(props) {
-        super(props);
-
-        this.host = new PluginHost();
-
-        this.host.register({
-            rowsGetter: () => props.rows,
-            columnsGetter: () => props.columns,
-        });
-    }
-    getChildContext() {
-        return {
-            gridHost: this.host
-        }
-    }
+export class DataGrid extends React.PureComponent {
     render() {
-        let { children } = this.props;
+        let { rows, columns, children } = this.props;
         
         return (
-            <div>
+            <PluginsHost>
                 <div id='plugins-root' style={{ display: 'none' }}>
+                    <BaseGetters rows={rows} columns={columns} />
                     <GridTableView />
                     {children}
                 </div>
                 <RootRenderer />
-            </div>
+            </PluginsHost>
         )
     }
 };
-Grid.propTypes = {
+DataGrid.propTypes = {
     rows: React.PropTypes.array.isRequired,
     columns: React.PropTypes.array.isRequired,
 };
-Grid.childContextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
+
+export class BaseGetters extends React.PureComponent {
+    render() {
+        const { rows, columns } = this.props;
+
+        return (
+            <div>
+                <Getter name="rows" value={() => rows} />
+                <Getter name="columns" value={() => columns} />
+            </div>
+        );
+    }
+}
 
 export class RootRenderer extends React.PureComponent {
     render() {
         return <TemplatePlaceholder name="tableView" />
     }
 }
-
-// Components
-
-export class TemplatePlaceholder extends React.PureComponent {
-    constructor(props, context) {
-        super(props, context);
-
-        this.subscription = () => this.forceUpdate();
-    }
-    componentWillUnmount() {
-        this.teardownSubscription();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return !shallowEqual(this.props.params, nextProps.params);
-    }
-    render() {
-        this.teardownSubscription();
-        this.prepareTemplates();
-        this.setupSubscription();
-
-        let { children, connectGetters, connectActions } = this.template;
-        return <TemplateConnector params={this.params} mapProps={connectGetters} mapActions={connectActions} content={children()} />
-    }
-    getChildContext() {
-        return {
-            templateHost: {
-                templates: this.restTemplates,
-                params: this.params
-            }
-        }
-    }
-    setupSubscription() {
-        this.template.subscriptions.push(this.subscription);
-    }
-    teardownSubscription() {
-        if(this.template) {
-            this.template.subscriptions.splice(this.template.subscriptions.indexOf(this.subscription), 1);
-        }
-    }
-    prepareTemplates() {
-        let { gridHost, templateHost } = this.context;
-        let { plugins } = gridHost;
-        let { name, params } = this.props;
-
-        this.params = params || this.context.templateHost && this.context.templateHost.params
-
-        let templates = name 
-            ? plugins
-                .map(plugin => plugin[name + 'Template'])
-                .filter(template => !!template)
-                .filter(template => template.predicate ? template.predicate(params) : true)
-                .reverse()
-            : templateHost.templates;
-
-        this.template = templates[0];
-        this.restTemplates = templates.slice(1);
-    }
-};
-TemplatePlaceholder.childContextTypes = {
-    templateHost: React.PropTypes.object.isRequired,
-};
-TemplatePlaceholder.contextTypes = {
-    templateHost: React.PropTypes.object,
-    gridHost: React.PropTypes.object.isRequired,
-};
-
-export class TemplateConnector extends React.PureComponent {
-    constructor(props, context) {
-        super(props, context);
-
-        let { mapProps, mapActions, params } = props;
-        let { gridHost } = context;
-
-        this.state = {
-            props: mapProps ? mapProps((name) => gridHost.get(name + 'Getter'), params) : {},
-            actions: mapActions ? mapActions((name) => gridHost.get(name + 'Action'), params) : {},
-        };
-    }
-    updateMappings(props) {
-        let { mapProps, mapActions, params } = props;
-        let { gridHost } = this.context;
-
-        this.setState({ 
-            props: mapProps ? mapProps((name) => gridHost.get(name + 'Getter'), params) : {},
-            actions: mapActions ? mapActions((name) => gridHost.get(name + 'Action'), params, (name) => gridHost.get(name + 'Getter')) : {},
-        })
-    }
-    componentWillReceiveProps(nextProps) {
-        this.updateMappings(nextProps);
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return !shallowEqual(this.state.props, nextState.props) || this.props.content !== nextProps.content;
-    }
-    componentDidMount() {
-        let { gridHost } = this.context;
-
-        this.plugin = {
-            reconnect: () => this.updateMappings(this.props)
-        }
-
-        if(this.props.mapProps)
-            gridHost.register(this.plugin);
-    }
-    componentWillUnmount() {
-        let { gridHost } = this.context;
-
-        if(this.props.mapProps)
-            gridHost.unregister(this.plugin)
-    }
-    render() {
-        let { content, params } = this.props;
-        let { props, actions } = this.state;
-        let mapped = Object.assign({}, params, props, actions);
-        return React.isValidElement(content) ? React.cloneElement(content, mapped) : (content ? content(mapped) : null);
-    }
-};
-TemplateConnector.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
-
-export class Template extends React.PureComponent {
-    componentWillMount() {
-        let { gridHost } = this.context;
-        let { name, predicate, connectGetters, connectActions, children } = this.props;
-
-        this.plugin = {
-            [name + 'Template']: {
-                predicate,
-                connectGetters,
-                connectActions,
-                children: () => this.props.children,
-                subscriptions: []
-            }
-        };
-
-        gridHost.register(this.plugin);
-    }
-    componentWillUnmount() {
-        let { gridHost } = this.context;
-
-        gridHost.unregister(this.plugin)
-    }
-    componentDidUpdate() {
-        this.plugin[this.props.name + 'Template'].subscriptions.forEach(subscription => subscription());
-    }
-    render() {
-        return null;
-    }
-};
-Template.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
-
-export class Getter extends React.PureComponent {
-    componentWillMount() {
-        let { gridHost } = this.context;
-        let { name } = this.props;
-
-        this.plugin = {
-            [name + 'Getter']: (params) => {
-                let { value } = this.props;
-                return typeof value === "function" ? value((name) => gridHost.get(name + 'Getter'), params) : value
-            }
-        };
-
-        gridHost.register(this.plugin);
-    }
-    componentWillUnmount() {
-        let { gridHost } = this.context;
-
-        gridHost.unregister(this.plugin)
-    }
-    componentDidUpdate() {
-        let { gridHost } = this.context;
-
-        gridHost.broadcast('reconnect');
-    }
-    render() {
-        return null;
-    }
-};
-Getter.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
-
-export class GetterExtender extends React.PureComponent {
-    componentWillMount() {
-        let { gridHost } = this.context;
-        let { name } = this.props;
-
-        this.plugin = {
-            [name + 'GetterExtender']: (original) => (params) => {
-                let { value } = this.props;
-                return typeof value === "function" ? value(original(params), (name) => gridHost.get(name + 'Getter'), params) : value
-            }
-        };
-
-        gridHost.register(this.plugin);
-    }
-    componentWillUnmount() {
-        let { gridHost } = this.context;
-
-        gridHost.unregister(this.plugin)
-    }
-    componentDidUpdate() {
-        let { gridHost } = this.context;
-
-        gridHost.broadcast('reconnect');
-    }
-    render() {
-        return null;
-    }
-};
-GetterExtender.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
-
-export class Action extends React.PureComponent {
-    componentWillMount() {
-        let { gridHost } = this.context;
-        let { name } = this.props;
-
-        this.plugin = {
-            [name + 'Action']: (params) => {
-                let { action } = this.props;
-                action(params, (name) => gridHost.get(name + 'Getter'))
-            }
-        };
-
-        gridHost.register(this.plugin);
-    }
-    componentWillUnmount() {
-        let { gridHost } = this.context;
-
-        gridHost.unregister(this.plugin)
-    }
-    render() {
-        return null;
-    }
-};
-Action.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-};
-
-
 
 // Plugins
 
@@ -623,8 +343,8 @@ export class Selection extends React.PureComponent {
 };
 
 export class MasterDetail extends React.PureComponent {
-    constructor(props, context) {
-        super(props, context);
+    constructor(props) {
+        super(props);
 
         this.state = {
             animating: []
@@ -703,9 +423,6 @@ export class MasterDetail extends React.PureComponent {
         )
     }
 };
-MasterDetail.contextTypes = {
-    gridHost: React.PropTypes.object.isRequired,
-}
 
 
 class StaticTableCell extends React.PureComponent {
@@ -823,7 +540,7 @@ export class MagicDemo extends React.PureComponent {
 
         return (
             <div>
-                <Grid
+                <DataGrid
                     rows={rows}
                     columns={columns}>
                     
@@ -847,10 +564,10 @@ export class MagicDemo extends React.PureComponent {
                     <FilterState
                         filters={filters}
                         filtersChange={this.changeFilters}/>
-                </Grid>
+                </DataGrid>
 
                 {/*<h2>Uncontrolled with default filters</h2>
-                <Grid
+                <DataGrid
                     rows={rows}
                     columns={columns}>
                     
@@ -872,7 +589,7 @@ export class MagicDemo extends React.PureComponent {
                     <SortingState
                         sortings={sortings}
                         sortingsChange={sortings => this.setState({ sortings })}/>
-                </Grid>*/}
+                </DataGrid>*/}
             </div>
         )
     }
