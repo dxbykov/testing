@@ -184,12 +184,14 @@ export class TemplateConnector extends React.PureComponent {
             reconnect: () => this.updateMappings(this.props)
         }
 
-        gridHost.register(this.plugin);
+        if(this.props.mapProps)
+            gridHost.register(this.plugin);
     }
     componentWillUnmount() {
         let { gridHost } = this.context;
 
-        gridHost.unregister(this.plugin)
+        if(this.props.mapProps)
+            gridHost.unregister(this.plugin)
     }
     render() {
         let { content, params } = this.props;
@@ -804,7 +806,7 @@ export class MagicDemo extends React.PureComponent {
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(20),
+            rows: generateRows(40),
             sortings: [{ column: 'id', direction: 'asc' }],
             selection: [1, 3, 18],
             expandedRows: [3],
