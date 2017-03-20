@@ -1,34 +1,13 @@
 import React from 'react';
 
 import { Action, Getter, GetterExtender, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { DataGrid, SortingState, TableView, TableRowDetail, TableHeaderRowSorting, FilterState, TableFilterRow } from '@devexpress/dx-react-datagrid';
+import { DataGrid, SortingState, TableView, TableRowDetail, TableHeaderRowSorting, FilterState, TableFilterRow, TableHeaderRow } from '@devexpress/dx-react-datagrid';
 import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
 import { defaultMemoize } from 'reselect'
 
 const memoize = defaultMemoize;
-
-
-export class HeaderRow extends React.PureComponent {
-    constructor(props) {
-        super(props)
-
-        this.mTableHeaderRows = memoize((rows, columns) => {
-            return [columns.reduce((accum, c) => {
-                accum[c.name] = c.title;
-                return accum;
-            }, { type: 'heading' }), ...rows]
-        });
-    }
-    render() {
-        return (
-            <div>
-                <GetterExtender name="tableHeaderRows" value={(rows, getter) => (this.mTableHeaderRows)(rows, getter('columns')())}/>
-            </div>
-        )
-    }
-};
 
 // Core
 const selectionHelpers = {
@@ -155,7 +134,7 @@ export class MagicDemo extends React.PureComponent {
 
                     <TableView/>
                     
-                    <HeaderRow/>
+                    <TableHeaderRow/>
                     <TableHeaderRowSorting/>
 
                     <TableFilterRow/>
