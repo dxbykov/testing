@@ -1,107 +1,13 @@
 import React from 'react';
 
 import { Action, Getter, GetterExtender, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { DataGrid, SortingState, TableView, TableRowDetail, TableHeaderRowSorting } from '@devexpress/dx-react-datagrid';
+import { DataGrid, SortingState, TableView, TableRowDetail, TableHeaderRowSorting, FilterState, TableFilterRow } from '@devexpress/dx-react-datagrid';
 import './magic.css';
 
 import { generateColumns, generateRows } from './demoData';
 import { defaultMemoize } from 'reselect'
 
 const memoize = defaultMemoize;
-
-// Core
-const filterHelpers = {
-    filter: (rows, filters) => {
-        if(!filters.length)
-            return rows;
-
-        return rows.filter((row) => {
-            return filters.reduce((accumulator, filter) => {
-                return accumulator && String(row[filter.column]).toLowerCase().indexOf(filter.value.toLowerCase()) > -1;
-            }, true);
-        });
-    },
-    filterFor: (columnName, filters) => {
-        if(!filters.length)
-            return '';
-        let filter = filters.filter(s => s.column === columnName)[0];
-        return filter ? filter.value : '';
-    },
-    calcFilters: ({ columnName, value }, filters) => {
-        let filterIndex = filters.findIndex(f => { return f.column == columnName; });
-        let nextState = filters.slice();
-        if(filterIndex > -1) {
-            nextState.splice(filterIndex, 1, { column: columnName, value: value });
-        } else {
-            nextState.push({ column: columnName, value: value })
-        }
-        return nextState;
-    }
-};
-
-// UI
-export class FilterState extends React.PureComponent {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            filters: props.defaultFilters || []
-        };
-
-        this.mRows = memoize((rows, filters) => filterHelpers.filter(rows, filters))
-    }
-    render() {
-        return (
-            <div>
-                <Action name="setColumnFilter" action={({ columnName, value }, getter) => {
-                    let { filtersChange } = this.props;
-                    let filters = filterHelpers.calcFilters({ columnName, value }, getter('filters')());
-                    this.setState({ filters });
-                    filtersChange && filtersChange(filters);
-                }} />
-
-                <GetterExtender name="rows" value={(rows, getter) => (this.mRows)(rows, getter('filters')())}/>
-
-                <Getter name="filters" value={this.props.filters || this.state.filters} />
-                <Getter name="filterFor" value={(getter, { columnName }) => filterHelpers.filterFor(columnName, getter('filters')())} />
-            </div>
-        )
-    }
-};
-
-
-export class FilterRow extends React.PureComponent {
-    constructor(props) {
-        super(props)
-
-        this.mTableHeaderRows = memoize((rows) => [...rows, { type: 'filter' }]);
-    }
-    render() {
-        return (
-            <div>
-                <GetterExtender name="tableHeaderRows" value={this.mTableHeaderRows}/>
-
-                <Template
-                    name="tableViewCell"
-                    predicate={({ column, row }) => row.type === 'filter' && !column.type}
-                    connectGetters={(getter, { column }) => ({
-                        filter: getter('filterFor')({ columnName: column.name }),
-                    })}
-                    connectActions={(action, { column }) => ({
-                        changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value }),
-                    })}>
-                    {({ filter, changeFilter }) => (
-                        <input
-                            type="text"
-                            value={filter}
-                            onChange={(e) => changeFilter(e.target.value)}
-                            style={{ width: '100%' }}/>
-                    )}
-                </Template>
-            </div>
-        )
-    }
-};
 
 
 export class HeaderRow extends React.PureComponent {
@@ -252,7 +158,7 @@ export class MagicDemo extends React.PureComponent {
                     <HeaderRow/>
                     <TableHeaderRowSorting/>
 
-                    <FilterRow/>
+                    <TableFilterRow/>
 
                     <Selection
                         selection={selection}
