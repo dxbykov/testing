@@ -22,8 +22,15 @@ export class TableRowDetail extends React.PureComponent {
         super(props);
 
         this.state = {
-            animating: []
-        }
+            animating: [],
+            expanded: props.defaultExpanded || [],
+        };
+
+        this.changeExpanded = (expanded) => {
+            let { expandedChange } = this.props;
+            this.setState({ expanded });
+            expandedChange && expandedChange(expanded);
+        };
         
         this._tableBodyRows = memoize((rows, expanded, animating) => {
             [...expanded, ...animating].filter((value, index, self) => self.indexOf(value) === index).forEach(rowId => {
@@ -54,7 +61,8 @@ export class TableRowDetail extends React.PureComponent {
         }
     }
     render() {
-        let { expanded, expandedChange, template } = this.props;
+        let expanded = this.props.expanded || this.state.expanded;
+        let { template } = this.props;
         let { animating } = this.state;
 
         return (
@@ -85,7 +93,7 @@ export class TableRowDetail extends React.PureComponent {
                     {({ column, row }) => (
                         <div
                             style={{ width: '100%', height: '100%' }}
-                            onClick={() => expandedChange(expandingHelpers.calcExpanded(expanded, row.id))}>
+                            onClick={() => this.changeExpanded(expandingHelpers.calcExpanded(expanded, row.id))}>
                             {expanded.indexOf(row.id) > -1 ? '-' : '+'}
                         </div>
                     )}

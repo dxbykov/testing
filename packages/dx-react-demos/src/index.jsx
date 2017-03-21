@@ -1,7 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { MagicDemo } from './magic'
+import { FullFeaturedControlledDemo } from './full-featured-controlled.jsx';
+import { FullFeaturedUncontrolledDemo } from './full-featured-uncontrolled.jsx';
+import './index.css';
 
 class App extends React.Component {
     constructor() {
@@ -11,8 +13,10 @@ class App extends React.Component {
     render() {
         return (
             <div>
-                <h1>Magic</h1>
-                <MagicDemo/>
+                <h1>Demo Index</h1>
+                
+                <FullFeaturedControlledDemo/>
+                <FullFeaturedUncontrolledDemo/>
             </div>
         );
     }

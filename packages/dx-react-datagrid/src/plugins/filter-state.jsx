@@ -41,22 +41,25 @@ export class FilterState extends React.PureComponent {
             filters: props.defaultFilters || []
         };
 
+        this.changeFilters = (filters) => {
+            let { filtersChange } = this.props;
+            this.setState({ filters });
+            filtersChange && filtersChange(filters);
+        };
+
         this._rows = memoize((rows, filters) => filterHelpers.filter(rows, filters))
     }
     render() {
+        let filters = this.props.filters || this.state.filters;
+
         return (
             <div>
                 <Action name="setColumnFilter" action={({ columnName, value }, getter) => {
-                    let { filtersChange } = this.props;
-                    let filters = filterHelpers.calcFilters({ columnName, value }, getter('filters')());
-                    this.setState({ filters });
-                    filtersChange && filtersChange(filters);
-                }} />
+                    this.changeFilters(filterHelpers.calcFilters({ columnName, value }, filters)); }} />
 
-                <GetterExtender name="rows" value={(rows, getter) => (this._rows)(rows, getter('filters')())}/>
+                <GetterExtender name="rows" value={(rows, getter) => (this._rows)(rows, filters)}/>
 
-                <Getter name="filters" value={this.props.filters || this.state.filters} />
-                <Getter name="filterFor" value={(getter, { columnName }) => filterHelpers.filterFor(columnName, getter('filters')())} />
+                <Getter name="filterFor" value={(getter, { columnName }) => filterHelpers.filterFor(columnName, filters)} />
             </div>
         )
     }

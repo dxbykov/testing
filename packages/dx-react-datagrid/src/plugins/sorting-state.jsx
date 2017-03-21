@@ -33,16 +33,26 @@ const sortingsHelper = {
 // UI
 export class SortingState extends React.PureComponent {
     constructor(props) {
-        super(props)
+        super(props);
+
+        this.state = {
+            sortings: props.defaultSortings || []
+        };
+
+        this.changeSortings = (sortings) => {
+            let { sortingsChange } = this.props;
+            this.setState({ sortings });
+            sortingsChange && sortingsChange(sortings);
+        };
 
         this._rows = memoize((rows, sortings) => sortingsHelper.sort(rows, sortings));
     }
     render() {
-        let { sortings, sortingsChange } = this.props;
+        let sortings = this.props.sortings || this.state.sortings;
         
         return (
             <div>
-                <Action name="applySorting" action={({ columnName, value }) => sortingsChange(sortingsHelper.calcSortings(columnName, sortings))} />
+                <Action name="applySorting" action={({ columnName, value }) => this.changeSortings(sortingsHelper.calcSortings(columnName, sortings))} />
 
                 <GetterExtender name="rows" value={(rows) => (this._rows)(rows, sortings)}/>
 
