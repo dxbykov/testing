@@ -45,9 +45,12 @@ export class TableRowDetail extends React.PureComponent {
         });
         this._tableColumns = memoize((columns) => [{ type: 'detail', width: 20 }, ...columns]);
     }
-    componentWillReceiveProps(nextProps) {
-        let collapsed = this.props.expanded.filter(e => nextProps.expanded.indexOf(e) === -1);
-        let expanded = nextProps.expanded.filter(e => this.props.expanded.indexOf(e) === -1);
+    componentDidUpdate(prevProps, prevState) {
+        let prevExpanded = prevProps.expanded || prevState.expanded;
+        let newExpanded = this.props.expanded || this.state.expanded;
+
+        let collapsed = prevExpanded.filter(e => newExpanded.indexOf(e) === -1);
+        let expanded = newExpanded.filter(e => prevExpanded.indexOf(e) === -1);
 
         let changed = [].concat(collapsed).concat(expanded);
 
@@ -67,8 +70,19 @@ export class TableRowDetail extends React.PureComponent {
 
         return (
             <div>
-                <GetterExtender name="tableBodyRows" value={(rows) => (this._tableBodyRows)(rows, expanded, animating)}/>
                 <GetterExtender name="tableColumns" value={this._tableColumns}/>
+                <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
+                <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
+                    {({ column, row }) => (
+                        <div
+                            style={{ width: '100%', height: '100%' }}
+                            onClick={() => this.changeExpanded(expandingHelpers.calcExpanded(expanded, row.id))}>
+                            {expanded.indexOf(row.id) > -1 ? '-' : '+'}
+                        </div>
+                    )}
+                </Template>
+
+                <GetterExtender name="tableBodyRows" value={(rows) => (this._tableBodyRows)(rows, expanded, animating)}/>
                 <GetterExtender name="tableCellInfo" value={(original, getter, { row, columnIndex }) => {
                     let columns = getter('tableColumns')();          
                     if(row.type === 'detailRow') {
@@ -79,22 +93,11 @@ export class TableRowDetail extends React.PureComponent {
                     }
                     return original;
                 }}/>
-
                 <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'detailRow'}>
                     {({ column, row }) => (
                         <div>
                             {template ? template(row.for) : <div>Hello detail!</div>}
                             {animating.indexOf(row.for.id) > -1 ? 'Animating' : null}
-                        </div>
-                    )}
-                </Template>
-                <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
-                <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
-                    {({ column, row }) => (
-                        <div
-                            style={{ width: '100%', height: '100%' }}
-                            onClick={() => this.changeExpanded(expandingHelpers.calcExpanded(expanded, row.id))}>
-                            {expanded.indexOf(row.id) > -1 ? '-' : '+'}
                         </div>
                     )}
                 </Template>

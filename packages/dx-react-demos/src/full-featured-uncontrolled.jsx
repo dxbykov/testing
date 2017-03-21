@@ -33,7 +33,6 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                         defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
                     <FilterState
                         defaultFilters={[{ column: 'name', value: 'She' }]}/>
-                    {/* TODO: Should we provide uncontrolled state for selection? */}
                     <SelectionState
                         defaultSelection={[1, 3, 18]}/>
 
