@@ -27,9 +27,11 @@ export class TableRowDetail extends React.PureComponent {
         };
 
         this.changeExpanded = (expanded) => {
+            let prevExpanded = this.props.expanded || this.state.expanded;
             let { expandedChange } = this.props;
             this.setState({ expanded });
             expandedChange && expandedChange(expanded);
+            this.setupAnimation(prevExpanded, expanded);
         };
         
         this._tableBodyRows = memoize((rows, expanded, animating) => {
@@ -38,17 +40,15 @@ export class TableRowDetail extends React.PureComponent {
                 if(index !== -1) {
                     let rowIndex = rows.findIndex(row => row.id === rowId);
                     let insertIndex = rowIndex + 1
-                    rows = [...rows.slice(0, insertIndex), { type: 'detailRow', for: rows[rowIndex] }, ...rows.slice(insertIndex)]
+                    let row = rows[rowIndex];
+                    rows = [...rows.slice(0, insertIndex), { type: 'detailRow', id: 'detailRow' + row.id, for: row }, ...rows.slice(insertIndex)]
                 }
             })
             return rows
         });
-        this._tableColumns = memoize((columns) => [{ type: 'detail', width: 20 }, ...columns]);
+        this._tableColumns = memoize((columns) => [{ type: 'detail', name: 'detail', width: 20 }, ...columns]);
     }
-    componentDidUpdate(prevProps, prevState) {
-        let prevExpanded = prevProps.expanded || prevState.expanded;
-        let newExpanded = this.props.expanded || this.state.expanded;
-
+    setupAnimation(prevExpanded, newExpanded) {
         let collapsed = prevExpanded.filter(e => newExpanded.indexOf(e) === -1);
         let expanded = newExpanded.filter(e => prevExpanded.indexOf(e) === -1);
 
@@ -70,7 +70,7 @@ export class TableRowDetail extends React.PureComponent {
 
         return (
             <div>
-                <GetterExtender name="tableColumns" value={this._tableColumns}/>
+                <GetterExtender name="tableColumns" value={(columns) => this._tableColumns(columns)}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
                     {({ column, row }) => (

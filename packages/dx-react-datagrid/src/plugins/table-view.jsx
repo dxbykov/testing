@@ -33,7 +33,7 @@ export class TableView extends React.PureComponent {
                     connectGetters={(getter) => ({
                         rows: getter('tableRows')(),
                         columns: getter('tableColumns')(),
-                        getCellInfo: (() => { this._cacheTableCellInfo(getter('tableCellInfo')); return this._cachedTableCellInfo; })(),
+                        getCellInfo: (() => { this._cacheTableCellInfo(getter('tableCellInfo')); return this._tableCellInfoCacher; })(),
                     })}>
                     <Table cellContentTemplate={cellContentTemplate} />
                 </Template>

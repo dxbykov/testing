@@ -6,12 +6,12 @@ export class TableFilterRow extends React.PureComponent {
     constructor(props) {
         super(props)
 
-        this._tableHeaderRows = memoize((rows) => [...rows, { type: 'filter' }]);
+        this._tableHeaderRows = memoize((rows) => [...rows, { type: 'filter', id: 'filter' }]);
     }
     render() {
         return (
             <div>
-                <GetterExtender name="tableHeaderRows" value={this._tableHeaderRows}/>
+                <GetterExtender name="tableHeaderRows" value={(rows) => this._tableHeaderRows(rows)}/>
 
                 <Template
                     name="tableViewCell"

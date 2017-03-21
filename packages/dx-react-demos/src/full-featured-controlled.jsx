@@ -48,7 +48,7 @@ export class FullFeaturedControlledDemo extends React.PureComponent {
                         selectionChange={this.changeSelection}/>
 
                     <TableView/>
-                    
+
                     <TableHeaderRow/>
                     <TableHeaderRowSorting/>
 

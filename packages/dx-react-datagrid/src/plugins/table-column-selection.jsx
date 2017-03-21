@@ -8,12 +8,12 @@ export class TableColumnSelection extends React.PureComponent {
     constructor(props) {
         super(props);
         
-        this._columns = memoize((columns) => [{ type: 'select', width: 20 }, ...columns]);
+        this._columns = memoize((columns) => [{ type: 'select', name: 'select', width: 20 }, ...columns]);
     }
     render() {
         return (
             <div>
-                <GetterExtender name="tableColumns" value={this._columns}/>
+                <GetterExtender name="tableColumns" value={(columns) => this._columns(columns)}/>
 
                 <Template
                     name="tableViewCell"

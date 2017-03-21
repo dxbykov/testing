@@ -12,12 +12,12 @@ export class Action extends React.PureComponent {
             }
         };
 
-        pluginsHost.register(this.plugin);
+        pluginsHost.registerPlugin(this.plugin);
     }
     componentWillUnmount() {
         let { pluginsHost } = this.context;
 
-        pluginsHost.unregister(this.plugin)
+        pluginsHost.unregisterPlugin(this.plugin);
     }
     render() {
         return null;

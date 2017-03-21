@@ -12,12 +12,12 @@ export class Getter extends React.PureComponent {
             }
         };
 
-        pluginsHost.register(this.plugin);
+        pluginsHost.registerPlugin(this.plugin);
     }
     componentWillUnmount() {
         let { pluginsHost } = this.context;
 
-        pluginsHost.unregister(this.plugin)
+        pluginsHost.unregisterPlugin(this.plugin)
     }
     componentDidUpdate() {
         let { pluginsHost } = this.context;
@@ -44,12 +44,12 @@ export class GetterExtender extends React.PureComponent {
             }
         };
 
-        pluginsHost.register(this.plugin);
+        pluginsHost.registerPlugin(this.plugin);
     }
     componentWillUnmount() {
         let { pluginsHost } = this.context;
 
-        pluginsHost.unregister(this.plugin)
+        pluginsHost.unregisterPlugin(this.plugin)
     }
     componentDidUpdate() {
         let { pluginsHost } = this.context;

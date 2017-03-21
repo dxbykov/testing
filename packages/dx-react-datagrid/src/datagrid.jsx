@@ -28,8 +28,8 @@ class DataGridBase extends React.PureComponent {
         return (
             <div>
                 <Template name="root" />
-                <Getter name="rows" value={() => rows} />
-                <Getter name="columns" value={() => columns} />
+                <Getter name="rows" value={rows} />
+                <Getter name="columns" value={columns} />
             </div>
         )
     }

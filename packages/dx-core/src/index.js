@@ -1,1 +1,1 @@
-export * from './PluginHost';
+export * from './plugin-host';
