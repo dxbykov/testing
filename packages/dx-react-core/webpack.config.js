@@ -24,12 +24,8 @@ module.exports = {
     resolve: {
         extensions: [".webpack.js", ".web.js", ".js"]
     },
-    plugins: [
-        new webpack.DefinePlugin({
-            "process.env": { 
-                //NODE_ENV: JSON.stringify("production")
-            }
-        })
-    ],
-    devtool: 'eval-source-map'
+    externals: {
+        '@devexpress/dx-core': '@devexpress/dx-core',
+        'react': 'react'
+    }
 }

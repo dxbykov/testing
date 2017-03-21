@@ -7,7 +7,6 @@ module.exports = {
         index: './src/index'
     },
     output: {
-		//publicPath: '/dist',
 		path: path.join(__dirname, 'dist'),
 		filename: '[name].js',
         libraryTarget: 'umd'
@@ -24,12 +23,4 @@ module.exports = {
     resolve: {
         extensions: [".webpack.js", ".web.js", ".js"]
     },
-    // plugins: [
-    //     new webpack.DefinePlugin({
-    //         "process.env": { 
-    //             //NODE_ENV: JSON.stringify("production")
-    //         }
-    //     })
-    // ],
-    // devtool: 'eval-source-map'
 }

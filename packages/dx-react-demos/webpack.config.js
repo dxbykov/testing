@@ -25,6 +25,13 @@ module.exports = {
         ]
     },
     resolve: {
+        alias: {
+            // Strange hack for lerna
+            '@devexpress/dx-react-datagrid': path.resolve('./node_modules/@devexpress/dx-react-datagrid'),
+            '@devexpress/dx-datagrid-core': path.resolve('./node_modules/@devexpress/dx-react-datagrid/node_modules/@devexpress/dx-datagrid-core'),
+            '@devexpress/dx-react-core': path.resolve('./node_modules/@devexpress/dx-react-datagrid/node_modules/@devexpress/dx-react-core'),
+            '@devexpress/dx-core': path.resolve('./node_modules/@devexpress/dx-react-datagrid/node_modules/@devexpress/dx-react-core/node_modules/@devexpress/dx-core'),
+        },
         extensions: [".webpack.js", ".web.js", ".js", ".jsx"]
     },
     plugins: [
