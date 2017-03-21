@@ -1,5 +1,5 @@
 import React from 'react';
-import { GetterExtender, Template } from '@devexpress/dx-react-core';
+import { Getter, Template } from '@devexpress/dx-react-core';
 import memoize from '../utils/memoize.js';
 
 export class TableFilterRow extends React.PureComponent {
@@ -11,7 +11,7 @@ export class TableFilterRow extends React.PureComponent {
     render() {
         return (
             <div>
-                <GetterExtender name="tableHeaderRows" value={(rows) => this._tableHeaderRows(rows)}/>
+                <Getter name="tableHeaderRows" value={(rows) => this._tableHeaderRows(rows)}/>
 
                 <Template
                     name="tableViewCell"

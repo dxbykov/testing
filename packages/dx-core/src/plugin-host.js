@@ -28,17 +28,19 @@ export class PluginHost {
     get(key) {
         let plugins = this.collect(key);
         
-        let result = plugins[0];
+        let result = plugins[0]();
         plugins.slice(1).forEach(plugin => result = plugin(result));
         return result;
     }
 
     registerSubscription(subscription) {
-        this._subscriptions.push(subscription);
+        let index = this._subscriptions.indexOf(subscription);
+        if(index === -1)
+            this._subscriptions.push(subscription);
     }
     unregisterSubscription(subscription) {
         let index = this._subscriptions.indexOf(subscription);
-        if(index > -1)
+        if(index !== -1)
             this._subscriptions.splice(this._subscriptions.indexOf(subscription), 1);
     }
     broadcast(event, message) {

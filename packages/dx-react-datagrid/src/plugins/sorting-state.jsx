@@ -1,5 +1,5 @@
 import React from 'react';
-import { Getter, GetterExtender, Action } from '@devexpress/dx-react-core';
+import { Getter, Action } from '@devexpress/dx-react-core';
 import memoize from '../utils/memoize.js';
 
 // Core
@@ -54,7 +54,7 @@ export class SortingState extends React.PureComponent {
             <div>
                 <Action name="applySorting" action={({ columnName, value }) => this.changeSortings(sortingsHelper.calcSortings(columnName, sortings))} />
 
-                <GetterExtender name="rows" value={(rows) => (this._rows)(rows, sortings)}/>
+                <Getter name="rows" value={(rows) => (this._rows)(rows, sortings)}/>
 
                 <Getter name="sortingFor" value={(_, { columnName }) => sortingsHelper.directionFor(columnName, sortings)} />
             </div>

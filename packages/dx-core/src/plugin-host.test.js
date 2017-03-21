@@ -9,7 +9,7 @@ describe('PluginHost', () => {
 
     test('#get', () => {
         let plugin = {
-            something: 123
+            something: () => 123
         };
         
         host.registerPlugin(plugin);
@@ -18,7 +18,7 @@ describe('PluginHost', () => {
 
     test('#get with extender', () => {
         let plugin1 = {
-            something: '1'
+            something: () => '1'
         };
         let plugin2 = {
             somethingExtender: original => original + '2'
@@ -35,7 +35,7 @@ describe('PluginHost', () => {
 
     test('#get clean cache', () => {
         let plugin1 = {
-            something: '1'
+            something: () => '1'
         };
         let plugin2 = {
             somethingExtender: original => original + '2'
@@ -74,6 +74,17 @@ describe('PluginHost', () => {
             onMessage: jest.fn()
         };
         
+        host.registerSubscription(subscription);
+        host.broadcast('onMessage', 'update');
+        expect(subscription.onMessage.mock.calls.length).toBe(1);
+    });
+
+    test('#registerSubscription several times', () => {
+        let subscription = {
+            onMessage: jest.fn()
+        };
+        
+        host.registerSubscription(subscription);
         host.registerSubscription(subscription);
         host.broadcast('onMessage', 'update');
         expect(subscription.onMessage.mock.calls.length).toBe(1);

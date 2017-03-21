@@ -1,5 +1,5 @@
 import React from 'react';
-import { GetterExtender, Template } from '@devexpress/dx-react-core';
+import { Getter, Template } from '@devexpress/dx-react-core';
 import memoize from '../utils/memoize.js';
 import { SelectAllCell } from '../components/select-all-cell.jsx';
 import { SelectCell } from '../components/select-cell.jsx';
@@ -13,7 +13,7 @@ export class TableColumnSelection extends React.PureComponent {
     render() {
         return (
             <div>
-                <GetterExtender name="tableColumns" value={(columns) => this._columns(columns)}/>
+                <Getter name="tableColumns" value={(columns) => this._columns(columns)}/>
 
                 <Template
                     name="tableViewCell"

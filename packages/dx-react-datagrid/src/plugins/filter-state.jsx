@@ -1,5 +1,5 @@
 import React from 'react';
-import { Getter, GetterExtender, Action } from '@devexpress/dx-react-core';
+import { Getter, Action } from '@devexpress/dx-react-core';
 import memoize from '../utils/memoize.js';
 
 // Core
@@ -54,10 +54,10 @@ export class FilterState extends React.PureComponent {
 
         return (
             <div>
-                <Action name="setColumnFilter" action={({ columnName, value }, getter) => {
+                <Action name="setColumnFilter" action={({ columnName, value }) => {
                     this.changeFilters(filterHelpers.calcFilters({ columnName, value }, filters)); }} />
 
-                <GetterExtender name="rows" value={(rows) => (this._rows)(rows, filters)}/>
+                <Getter name="rows" value={(rows) => (this._rows)(rows, filters)}/>
 
                 <Getter name="filterFor" value={(getter, { columnName }) => filterHelpers.filterFor(columnName, filters)} />
             </div>

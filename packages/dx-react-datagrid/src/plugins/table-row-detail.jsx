@@ -1,5 +1,5 @@
 import React from 'react';
-import { Getter, GetterExtender, Template } from '@devexpress/dx-react-core';
+import { Getter, Template } from '@devexpress/dx-react-core';
 import memoize from '../utils/memoize.js';
 
 const expandingHelpers = {
@@ -70,7 +70,7 @@ export class TableRowDetail extends React.PureComponent {
 
         return (
             <div>
-                <GetterExtender name="tableColumns" value={(columns) => this._tableColumns(columns)}/>
+                <Getter name="tableColumns" value={(columns) => this._tableColumns(columns)}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
                     {({ column, row }) => (
@@ -82,8 +82,8 @@ export class TableRowDetail extends React.PureComponent {
                     )}
                 </Template>
 
-                <GetterExtender name="tableBodyRows" value={(rows) => (this._tableBodyRows)(rows, expanded, animating)}/>
-                <GetterExtender name="tableCellInfo" value={(original, getter, { row, columnIndex }) => {
+                <Getter name="tableBodyRows" value={(rows) => (this._tableBodyRows)(rows, expanded, animating)}/>
+                <Getter name="tableCellInfo" value={(original, getter, { row, columnIndex }) => {
                     let columns = getter('tableColumns')();          
                     if(row.type === 'detailRow') {
                         if(columnIndex !== 0) {

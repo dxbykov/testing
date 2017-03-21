@@ -1,5 +1,5 @@
 import React from 'react';
-import { GetterExtender } from '@devexpress/dx-react-core';
+import { Getter } from '@devexpress/dx-react-core';
 import memoize from '../utils/memoize.js';
 
 export class TableHeaderRow extends React.PureComponent {
@@ -16,7 +16,7 @@ export class TableHeaderRow extends React.PureComponent {
     render() {
         return (
             <div>
-                <GetterExtender name="tableHeaderRows" value={(rows, getter) => (this._tableHeaderRows)(rows, getter('columns')())}/>
+                <Getter name="tableHeaderRows" value={(rows, getter) => (this._tableHeaderRows)(rows, getter('columns')())}/>
             </div>
         )
     }
