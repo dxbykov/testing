@@ -54,7 +54,7 @@ export class SortingState extends React.PureComponent {
             <div>
                 <Action name="applySorting" action={({ columnName, value }) => this.changeSortings(sortingsHelper.calcSortings(columnName, sortings))} />
 
-                <Getter name="rows" value={(rows) => (this._rows)(rows, sortings)}/>
+                <Getter name="rows" value={(original) => this._rows(original(), sortings)}/>
 
                 <Getter name="sortingFor" value={(_, { columnName }) => sortingsHelper.directionFor(columnName, sortings)} />
             </div>

@@ -9,7 +9,7 @@ export class Getter extends React.PureComponent {
             [name + 'Getter']: (original) => (params) => {
                 let { value } = this.props;
                 let args = [(name) => pluginHost.get(name + 'Getter'), params];
-                if(original) args.unshift(original(params))
+                if(original) args.unshift(original)
                 return typeof value === "function" ? value.apply(null, args) : value
             }
         };

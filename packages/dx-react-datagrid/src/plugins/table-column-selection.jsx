@@ -13,7 +13,7 @@ export class TableColumnSelection extends React.PureComponent {
     render() {
         return (
             <div>
-                <Getter name="tableColumns" value={(columns) => this._columns(columns)}/>
+                <Getter name="tableColumns" value={(original) => this._columns(original())}/>
 
                 <Template
                     name="tableViewCell"

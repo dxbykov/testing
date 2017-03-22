@@ -1,5 +1,5 @@
 import React from 'react';
-import { PluginHost, Getter, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
+import { PluginHost, Getter } from '@devexpress/dx-react-core';
 
 export class DataGrid extends React.PureComponent {
     render() {
@@ -7,11 +7,8 @@ export class DataGrid extends React.PureComponent {
         
         return (
             <PluginHost>
-                <div id='plugins-root' style={{ display: 'none' }}>
-                    <DataGridBase rows={rows} columns={columns} />
-                    {children}
-                </div>
-                <TemplatePlaceholder name="root" />
+                <DataGridBase rows={rows} columns={columns} />
+                {children}
             </PluginHost>
         )
     }
@@ -27,7 +24,6 @@ class DataGridBase extends React.PureComponent {
         
         return (
             <div>
-                <Template name="root" />
                 <Getter name="rows" value={rows} />
                 <Getter name="columns" value={columns} />
             </div>

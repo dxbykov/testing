@@ -70,7 +70,7 @@ export class TableRowDetail extends React.PureComponent {
 
         return (
             <div>
-                <Getter name="tableColumns" value={(columns) => this._tableColumns(columns)}/>
+                <Getter name="tableColumns" value={(original) => this._tableColumns(original())}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
                     {({ column, row }) => (
@@ -82,8 +82,9 @@ export class TableRowDetail extends React.PureComponent {
                     )}
                 </Template>
 
-                <Getter name="tableBodyRows" value={(rows) => (this._tableBodyRows)(rows, expanded, animating)}/>
-                <Getter name="tableCellInfo" value={(original, getter, { row, columnIndex }) => {
+                <Getter name="tableBodyRows" value={(original) => this._tableBodyRows(original(), expanded, animating)}/>
+                <Getter name="tableCellInfo" value={(original, getter, params) => {
+                    const { row, columnIndex } = params;
                     let columns = getter('tableColumns')();          
                     if(row.type === 'detailRow') {
                         if(columnIndex !== 0) {
@@ -91,7 +92,7 @@ export class TableRowDetail extends React.PureComponent {
                         }
                         return { colspan: columns.length };
                     }
-                    return original;
+                    return original(params);
                 }}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'detailRow'}>
                     {({ column, row }) => (

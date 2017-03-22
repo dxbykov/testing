@@ -57,7 +57,7 @@ export class FilterState extends React.PureComponent {
                 <Action name="setColumnFilter" action={({ columnName, value }) => {
                     this.changeFilters(filterHelpers.calcFilters({ columnName, value }, filters)); }} />
 
-                <Getter name="rows" value={(rows) => (this._rows)(rows, filters)}/>
+                <Getter name="rows" value={(original) => this._rows(original(), filters)}/>
 
                 <Getter name="filterFor" value={(getter, { columnName }) => filterHelpers.filterFor(columnName, filters)} />
             </div>

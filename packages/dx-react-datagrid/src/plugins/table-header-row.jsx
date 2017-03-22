@@ -16,7 +16,7 @@ export class TableHeaderRow extends React.PureComponent {
     render() {
         return (
             <div>
-                <Getter name="tableHeaderRows" value={(rows, getter) => (this._tableHeaderRows)(rows, getter('columns')())}/>
+                <Getter name="tableHeaderRows" value={(original, getter) => this._tableHeaderRows(original(), getter('columns')())}/>
             </div>
         )
     }

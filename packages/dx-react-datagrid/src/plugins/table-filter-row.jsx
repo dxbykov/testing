@@ -11,7 +11,7 @@ export class TableFilterRow extends React.PureComponent {
     render() {
         return (
             <div>
-                <Getter name="tableHeaderRows" value={(rows) => this._tableHeaderRows(rows)}/>
+                <Getter name="tableHeaderRows" value={(original) => this._tableHeaderRows(original())}/>
 
                 <Template
                     name="tableViewCell"
