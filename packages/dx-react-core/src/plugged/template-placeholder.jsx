@@ -1,5 +1,6 @@
 import React from 'react';
 import shallowEqual from '../utils/shallowEqual.js';
+import { RERENDER_TEMPLATE } from './template.jsx';
 import { TemplateConnector } from './template-connector.jsx';
 
 export class TemplatePlaceholder extends React.PureComponent {
@@ -7,7 +8,7 @@ export class TemplatePlaceholder extends React.PureComponent {
         super(props, context);
 
         this.subscription = {
-            retemplate: (id) => {
+            [RERENDER_TEMPLATE]: (id) => {
                 if(this.template.id === id)
                     this.forceUpdate();
             }

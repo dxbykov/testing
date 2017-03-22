@@ -1,5 +1,7 @@
 import React from 'react';
 
+export const UPDATE_CONNECTION = 'updateConnection';
+
 export class Getter extends React.PureComponent {
     componentWillMount() {
         let { pluginHost } = this.context;
@@ -24,7 +26,7 @@ export class Getter extends React.PureComponent {
     componentDidUpdate() {
         let { pluginHost } = this.context;
 
-        pluginHost.broadcast('reconnect');
+        pluginHost.broadcast(UPDATE_CONNECTION);
     }
     render() {
         return null;

@@ -1,5 +1,7 @@
 import React from 'react';
 
+export const RERENDER_TEMPLATE = 'rerenderTemplate';
+
 let globalTemplateId = 0;
 export class Template extends React.PureComponent {
     constructor(props, context) {
@@ -28,7 +30,7 @@ export class Template extends React.PureComponent {
     }
     componentDidUpdate() {
         let { pluginHost } = this.context;
-        pluginHost.broadcast('retemplate', this.id);
+        pluginHost.broadcast(RERENDER_TEMPLATE, this.id);
     }
     render() {
         return null;

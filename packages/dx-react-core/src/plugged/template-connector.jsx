@@ -1,5 +1,6 @@
 import React from 'react';
 import shallowEqual from '../utils/shallowEqual.js';
+import { UPDATE_CONNECTION } from './getter.jsx';
 
 export class TemplateConnector extends React.PureComponent {
     constructor(props, context) {
@@ -8,7 +9,7 @@ export class TemplateConnector extends React.PureComponent {
         this.state = this.mappedBindings(props);
 
         this.subscription = {
-            reconnect: () => this.setState(this.mappedBindings(this.props))
+            [UPDATE_CONNECTION]: () => this.setState(this.mappedBindings(this.props))
         };
     }
     mappedBindings(props) {
