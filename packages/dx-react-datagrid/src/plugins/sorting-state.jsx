@@ -1,6 +1,5 @@
 import React from 'react';
 import { Getter, Action } from '@devexpress/dx-react-core';
-import memoize from '../utils/memoize.js';
 
 // Core
 const sortingsHelper = {
@@ -30,6 +29,8 @@ const sortingsHelper = {
     },
 };
 
+export const sortingDirectionForColumn = sortingsHelper.directionFor;
+
 // UI
 export class SortingState extends React.PureComponent {
     constructor(props) {
@@ -45,7 +46,7 @@ export class SortingState extends React.PureComponent {
             sortingsChange && sortingsChange(sortings);
         };
 
-        this._rows = memoize((rows, sortings) => sortingsHelper.sort(rows, sortings));
+        this._rows = ({ rows, sortings }) => sortingsHelper.sort(rows, sortings);
     }
     render() {
         let sortings = this.props.sortings || this.state.sortings;
@@ -54,9 +55,14 @@ export class SortingState extends React.PureComponent {
             <div>
                 <Action name="applySorting" action={({ columnName, value }) => this.changeSortings(sortingsHelper.calcSortings(columnName, sortings))} />
 
-                <Getter name="rows" value={(original) => this._rows(original(), sortings)}/>
+                <Getter name="rows"
+                    pureComputed={this._rows}
+                    connectArgs={(getter) => ({
+                        rows: getter('rows')(),
+                        sortings
+                    })}/>
 
-                <Getter name="sortingFor" value={(_, { columnName }) => sortingsHelper.directionFor(columnName, sortings)} />
+                <Getter name="sortings" value={sortings} />
             </div>
         )
     }

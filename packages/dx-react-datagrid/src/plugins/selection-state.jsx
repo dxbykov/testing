@@ -1,6 +1,5 @@
 import React from 'react';
 import { Getter, GetterExtender, Action } from '@devexpress/dx-react-core';
-import memoize from '../utils/memoize.js';
 
 const selectionHelpers = {
     calcSelection: (prevSelection, row, getRowId) => {
@@ -50,7 +49,7 @@ export class SelectionState extends React.PureComponent {
                 <Action name="toggleAllSelection" action={({ rows }) =>
                     this.changeSelection(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id))} />
 
-                <Getter name="selection" value={() => selection} />
+                <Getter name="selection" value={selection} />
             </div>
         )
     }

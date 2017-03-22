@@ -1,7 +1,6 @@
 import React from 'react';
 import { Getter, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
 import { Table } from '../components/table.jsx';
-import memoize from '../utils/memoize.js';
 
 const cellContentTemplate = ({ row, column }) => <TemplatePlaceholder name="tableViewCell" params={{ row, column }} />;
 
@@ -9,21 +8,30 @@ export class TableView extends React.PureComponent {
     constructor(props) {
         super(props)
 
-        this._tableRows = memoize((headerRows, bodyRows) => [...headerRows, ...bodyRows]);
-
-        this._cacheTableCellInfo = (tableCellInfo) => this._cachedTableCellInfo = tableCellInfo;
-        this._tableCellInfoCacher = (params) => this._cachedTableCellInfo(params)
+        this._tableRows = ({ tableHeaderRows, tableBodyRows }) => [...tableHeaderRows, ...tableBodyRows];
     }
     render() {
         return (
             <div>
                 <Getter name="tableHeaderRows" value={[]}/>
-                <Getter name="tableBodyRows" value={(getter) => getter('rows')()}/>
-                <Getter name="tableColumns" value={(getter) => getter('columns')()}/>
-                <Getter name="tableCellInfo" value={{}}/>
+                <Getter name="tableBodyRows"
+                    pureComputed={({ rows }) => rows}
+                    connectArgs={(getter) => ({
+                        rows: getter('rows')(),
+                    })}/>
+                <Getter name="tableColumns"
+                    pureComputed={({ columns }) => columns}
+                    connectArgs={(getter) => ({
+                        columns: getter('columns')(),
+                    })}/>
 
                 {/*Computed*/}
-                <Getter name="tableRows" value={(getter) => (this._tableRows)(getter('tableHeaderRows')(), getter('tableBodyRows')())}/>
+                <Getter name="tableRows"
+                    pureComputed={this._tableRows}
+                    connectArgs={(getter) => ({
+                        tableHeaderRows: getter('tableHeaderRows')(),
+                        tableBodyRows: getter('tableBodyRows')(),
+                    })}/>
 
                 <Template name="root">
                     <TemplatePlaceholder name="tableView" />
@@ -33,7 +41,6 @@ export class TableView extends React.PureComponent {
                     connectGetters={(getter) => ({
                         rows: getter('tableRows')(),
                         columns: getter('tableColumns')(),
-                        getCellInfo: (() => { this._cacheTableCellInfo(getter('tableCellInfo')); return this._tableCellInfoCacher; })(),
                     })}>
                     <Table cellContentTemplate={cellContentTemplate} />
                 </Template>

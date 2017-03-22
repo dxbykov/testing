@@ -18,10 +18,7 @@ export class PluginHost {
     }
     collect(key) {
         if(!this._gettersCache[key]) {
-            this._gettersCache[key] = [
-                ...this._plugins.map(plugin => plugin[key]).filter(plugin => !!plugin),
-                ...this._plugins.map(plugin => plugin[key + 'Extender']).filter(plugin => !!plugin)
-            ];
+            this._gettersCache[key] = this._plugins.map(plugin => plugin[key]).filter(plugin => !!plugin);
         }
         return this._gettersCache[key];
     }

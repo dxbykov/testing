@@ -24,10 +24,10 @@ class TableRow extends React.PureComponent {
         return (
             <tr>
                 {columns.map((column, columnIndex) => {
-                    let info = getCellInfo({ column, row, columnIndex });
-                    if(info.skip) return null
+                    if(row.colspan && columnIndex > 0) return null;
+                    const colspan = row.colspan ? columns.length : 1;
                     return (
-                        <TableCell key={column.name} row={row} column={column} colspan={info.colspan} cellContentTemplate={cellContentTemplate} />
+                        <TableCell key={column.name} row={row} column={column} colspan={colspan} cellContentTemplate={cellContentTemplate} />
                     );
                 })}
             </tr>
@@ -37,13 +37,13 @@ class TableRow extends React.PureComponent {
 
 export class Table extends React.PureComponent {
     render() {
-        let { rows, columns, getCellInfo, cellContentTemplate } = this.props;
+        let { rows, columns, cellContentTemplate } = this.props;
         
         return (
             <table style={{ borderCollapse: 'collapse' }}>
                 <tbody>
                     {rows.map((row, rowIndex) => 
-                        <TableRow key={row.id} row={row} columns={columns} getCellInfo={getCellInfo} cellContentTemplate={cellContentTemplate} />
+                        <TableRow key={row.id} row={row} columns={columns} cellContentTemplate={cellContentTemplate} />
                     )}
                 </tbody>
             </table>

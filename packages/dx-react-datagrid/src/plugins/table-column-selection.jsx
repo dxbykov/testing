@@ -1,6 +1,5 @@
 import React from 'react';
 import { Getter, Template } from '@devexpress/dx-react-core';
-import memoize from '../utils/memoize.js';
 import { SelectAllCell } from '../components/select-all-cell.jsx';
 import { SelectCell } from '../components/select-cell.jsx';
 
@@ -8,12 +7,16 @@ export class TableColumnSelection extends React.PureComponent {
     constructor(props) {
         super(props);
         
-        this._columns = memoize((columns) => [{ type: 'select', name: 'select', width: 20 }, ...columns]);
+        this._tableColumns = ({ tableColumns }) => [{ type: 'select', name: 'select', width: 20 }, ...tableColumns];
     }
     render() {
         return (
             <div>
-                <Getter name="tableColumns" value={(original) => this._columns(original())}/>
+                <Getter name="tableColumns"
+                    pureComputed={this._tableColumns}
+                    connectArgs={(getter) => ({
+                        tableColumns: getter('tableColumns')(),
+                    })}/>
 
                 <Template
                     name="tableViewCell"

@@ -21,10 +21,10 @@ describe('PluginHost', () => {
             something: () => '1'
         };
         let plugin2 = {
-            somethingExtender: original => original + '2'
+            something: original => original + '2'
         };
         let plugin3 = {
-            somethingExtender: original => original + '3'
+            something: original => original + '3'
         };
         
         host.registerPlugin(plugin1);
@@ -38,7 +38,7 @@ describe('PluginHost', () => {
             something: () => '1'
         };
         let plugin2 = {
-            somethingExtender: original => original + '2'
+            something: original => original + '2'
         };
         
         host.registerPlugin(plugin1);

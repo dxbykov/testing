@@ -1,6 +1,5 @@
 import React from 'react';
 import { Getter, Template } from '@devexpress/dx-react-core';
-import memoize from '../utils/memoize.js';
 
 const expandingHelpers = {
     calcExpanded: (prevExpanded, rowId) => {
@@ -34,19 +33,23 @@ export class TableRowDetail extends React.PureComponent {
             this.setupAnimation(prevExpanded, expanded);
         };
         
-        this._tableBodyRows = memoize((rows, expanded, animating) => {
+        this._tableBodyRows = ({ tableBodyRows, expanded, animating }) => {
             [...expanded, ...animating].filter((value, index, self) => self.indexOf(value) === index).forEach(rowId => {
-                let index = rows.findIndex(row => row.id === rowId);
+                let index = tableBodyRows.findIndex(row => row.id === rowId);
                 if(index !== -1) {
-                    let rowIndex = rows.findIndex(row => row.id === rowId);
+                    let rowIndex = tableBodyRows.findIndex(row => row.id === rowId);
                     let insertIndex = rowIndex + 1
-                    let row = rows[rowIndex];
-                    rows = [...rows.slice(0, insertIndex), { type: 'detailRow', id: 'detailRow' + row.id, for: row }, ...rows.slice(insertIndex)]
+                    let row = tableBodyRows[rowIndex];
+                    tableBodyRows = [
+                        ...tableBodyRows.slice(0, insertIndex),
+                        { type: 'detailRow', id: 'detailRow' + row.id, for: row, colspan: true },
+                        ...tableBodyRows.slice(insertIndex)
+                    ];
                 }
-            })
-            return rows
-        });
-        this._tableColumns = memoize((columns) => [{ type: 'detail', name: 'detail', width: 20 }, ...columns]);
+            });
+            return tableBodyRows;
+        };
+        this._tableColumns = ({ tableColumns }) => [{ type: 'detail', name: 'detail', width: 20 }, ...tableColumns];
     }
     setupAnimation(prevExpanded, newExpanded) {
         let collapsed = prevExpanded.filter(e => newExpanded.indexOf(e) === -1);
@@ -70,7 +73,11 @@ export class TableRowDetail extends React.PureComponent {
 
         return (
             <div>
-                <Getter name="tableColumns" value={(original) => this._tableColumns(original())}/>
+                <Getter name="tableColumns"
+                    pureComputed={this._tableColumns}
+                    connectArgs={(getter) => ({
+                        tableColumns: getter('tableColumns')(),
+                    })}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
                     {({ column, row }) => (
@@ -82,18 +89,13 @@ export class TableRowDetail extends React.PureComponent {
                     )}
                 </Template>
 
-                <Getter name="tableBodyRows" value={(original) => this._tableBodyRows(original(), expanded, animating)}/>
-                <Getter name="tableCellInfo" value={(original, getter, params) => {
-                    const { row, columnIndex } = params;
-                    let columns = getter('tableColumns')();          
-                    if(row.type === 'detailRow') {
-                        if(columnIndex !== 0) {
-                            return { skip: true };
-                        }
-                        return { colspan: columns.length };
-                    }
-                    return original(params);
-                }}/>
+                <Getter name="tableBodyRows"
+                    pureComputed={this._tableBodyRows}
+                    connectArgs={(getter) => ({
+                        tableBodyRows: getter('tableBodyRows')(),
+                        expanded: expanded,
+                        animating: animating,
+                    })}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'detailRow'}>
                     {({ column, row }) => (
                         <div>

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Getter, Action } from '@devexpress/dx-react-core';
-import memoize from '../utils/memoize.js';
 
 // Core
 const filterHelpers = {
@@ -32,6 +31,8 @@ const filterHelpers = {
     }
 };
 
+export const filterStateForColumn = filterHelpers.filterFor;
+
 // UI
 export class FilterState extends React.PureComponent {
     constructor(props) {
@@ -47,7 +48,7 @@ export class FilterState extends React.PureComponent {
             filtersChange && filtersChange(filters);
         };
 
-        this._rows = memoize((rows, filters) => filterHelpers.filter(rows, filters))
+        this._rows = ({ rows, filters }) => filterHelpers.filter(rows, filters)
     }
     render() {
         let filters = this.props.filters || this.state.filters;
@@ -57,9 +58,14 @@ export class FilterState extends React.PureComponent {
                 <Action name="setColumnFilter" action={({ columnName, value }) => {
                     this.changeFilters(filterHelpers.calcFilters({ columnName, value }, filters)); }} />
 
-                <Getter name="rows" value={(original) => this._rows(original(), filters)}/>
+                <Getter name="rows"
+                    pureComputed={this._rows}
+                    connectArgs={(getter) => ({
+                        rows: getter('rows')(),
+                        filters
+                    })}/>
 
-                <Getter name="filterFor" value={(getter, { columnName }) => filterHelpers.filterFor(columnName, filters)} />
+                <Getter name="filters" value={filters} />
             </div>
         )
     }
