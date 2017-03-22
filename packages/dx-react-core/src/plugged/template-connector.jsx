@@ -13,16 +13,16 @@ export class TemplateConnector extends React.PureComponent {
     }
     mappedBindings(props) {
         let { mapProps, mapActions, params } = props;
-        let { pluginsHost } = this.context;
+        let { pluginHost } = this.context;
 
         let mappedProps = {};
         if(mapProps) {
-            mappedProps = mapProps((name) => pluginsHost.get(name + 'Getter'), params);
+            mappedProps = mapProps((name) => pluginHost.get(name + 'Getter'), params);
         }
 
         let mappedActions = {};
         if(mapActions) {
-            mappedActions = mapActions((name) => pluginsHost.get(name + 'Action'), params);
+            mappedActions = mapActions((name) => pluginHost.get(name + 'Action'), params);
         }
 
         return {
@@ -43,16 +43,16 @@ export class TemplateConnector extends React.PureComponent {
         this.updateConnection();
     }
     updateConnection() {
-        let { pluginsHost } = this.context;
+        let { pluginHost } = this.context;
         if(this.props.mapProps) {
-            pluginsHost.registerSubscription(this.subscription);
+            pluginHost.registerSubscription(this.subscription);
         } else {
-            pluginsHost.unregisterSubscription(this.subscription);
+            pluginHost.unregisterSubscription(this.subscription);
         }
     }
     componentWillUnmount() {
-        let { pluginsHost } = this.context;
-        pluginsHost.unregisterSubscription(this.subscription);
+        let { pluginHost } = this.context;
+        pluginHost.unregisterSubscription(this.subscription);
     }
     render() {
         let { content, params } = this.props;
@@ -63,5 +63,5 @@ export class TemplateConnector extends React.PureComponent {
     }
 };
 TemplateConnector.contextTypes = {
-    pluginsHost: React.PropTypes.object.isRequired,
+    pluginHost: React.PropTypes.object.isRequired,
 };

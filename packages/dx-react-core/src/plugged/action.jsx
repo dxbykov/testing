@@ -2,27 +2,27 @@ import React from 'react';
 
 export class Action extends React.PureComponent {
     componentWillMount() {
-        let { pluginsHost } = this.context;
+        let { pluginHost } = this.context;
         let { name } = this.props;
 
         this.plugin = {
             [name + 'Action']: () => (params) => {
                 let { action } = this.props;
-                action(params, (name) => pluginsHost.get(name + 'Getter'))
+                action(params, (name) => pluginHost.get(name + 'Getter'))
             }
         };
 
-        pluginsHost.registerPlugin(this.plugin);
+        pluginHost.registerPlugin(this.plugin);
     }
     componentWillUnmount() {
-        let { pluginsHost } = this.context;
+        let { pluginHost } = this.context;
 
-        pluginsHost.unregisterPlugin(this.plugin);
+        pluginHost.unregisterPlugin(this.plugin);
     }
     render() {
         return null;
     }
 };
 Action.contextTypes = {
-    pluginsHost: React.PropTypes.object.isRequired,
+    pluginHost: React.PropTypes.object.isRequired,
 };

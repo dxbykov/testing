@@ -8,7 +8,7 @@ export class Template extends React.PureComponent {
         this.id = globalTemplateId++;
     }
     componentWillMount() {
-        let { pluginsHost } = this.context;
+        let { pluginHost } = this.context;
         let { name, predicate, connectGetters, connectActions, children } = this.props;
 
         this.plugin = {
@@ -20,20 +20,20 @@ export class Template extends React.PureComponent {
                 id: this.id
             }
         };
-        pluginsHost.registerPlugin(this.plugin);
+        pluginHost.registerPlugin(this.plugin);
     }
     componentWillUnmount() {
-        let { pluginsHost } = this.context;
-        pluginsHost.unregisterPlugin(this.plugin)
+        let { pluginHost } = this.context;
+        pluginHost.unregisterPlugin(this.plugin)
     }
     componentDidUpdate() {
-        let { pluginsHost } = this.context;
-        pluginsHost.broadcast('retemplate', this.id);
+        let { pluginHost } = this.context;
+        pluginHost.broadcast('retemplate', this.id);
     }
     render() {
         return null;
     }
 };
 Template.contextTypes = {
-    pluginsHost: React.PropTypes.object.isRequired,
+    pluginHost: React.PropTypes.object.isRequired,
 };

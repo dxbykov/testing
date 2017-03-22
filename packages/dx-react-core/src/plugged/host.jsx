@@ -1,7 +1,7 @@
 import React from 'react';
 import { PluginHost as PluginHostCore } from '@devexpress/dx-core'
 
-export class PluginsHost extends React.PureComponent {
+export class PluginHost extends React.PureComponent {
     constructor(props) {
         super(props);
 
@@ -9,7 +9,7 @@ export class PluginsHost extends React.PureComponent {
     }
     getChildContext() {
         return {
-            pluginsHost: this.host
+            pluginHost: this.host
         }
     }
     render() {
@@ -23,6 +23,6 @@ export class PluginsHost extends React.PureComponent {
         )
     }
 };
-PluginsHost.childContextTypes = {
-    pluginsHost: React.PropTypes.object.isRequired,
+PluginHost.childContextTypes = {
+    pluginHost: React.PropTypes.object.isRequired,
 };

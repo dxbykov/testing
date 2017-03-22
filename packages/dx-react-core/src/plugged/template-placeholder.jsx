@@ -36,21 +36,21 @@ export class TemplatePlaceholder extends React.PureComponent {
         }
     }
     setupSubscription() {
-        let { pluginsHost } = this.context;
-        pluginsHost.registerSubscription(this.subscription);
+        let { pluginHost } = this.context;
+        pluginHost.registerSubscription(this.subscription);
     }
     teardownSubscription() {
-        let { pluginsHost } = this.context;
-        pluginsHost.unregisterSubscription(this.subscription);
+        let { pluginHost } = this.context;
+        pluginHost.unregisterSubscription(this.subscription);
     }
     prepareTemplates() {
-        let { pluginsHost, templateHost } = this.context;
+        let { pluginHost, templateHost } = this.context;
         let { name, params } = this.props;
 
         this.params = params || this.context.templateHost && this.context.templateHost.params
 
         let templates = name 
-            ? pluginsHost.collect(name + 'Template')
+            ? pluginHost.collect(name + 'Template')
                 .filter(template => template.predicate ? template.predicate(params) : true)
                 .reverse()
             : templateHost.templates;
@@ -64,5 +64,5 @@ TemplatePlaceholder.childContextTypes = {
 };
 TemplatePlaceholder.contextTypes = {
     templateHost: React.PropTypes.object,
-    pluginsHost: React.PropTypes.object.isRequired,
+    pluginHost: React.PropTypes.object.isRequired,
 };

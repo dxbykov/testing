@@ -1,4 +1,4 @@
-export { PluginsHost } from './host.jsx';
+export { PluginHost } from './host.jsx';
 export { Action } from './action.jsx';
 export { Getter } from './getter.jsx';
 export { Template } from './template.jsx';
