@@ -48,6 +48,51 @@ describe('Getter', () => {
         expect(tree.find('h1').text()).toBe('dep');
     });
 
+    test('order has the meaning', () => {
+        const tree = mount(
+            <PluginHost>
+                <Getter name="dep" value={'base'} />
+                <Getter name="test"
+                    pureComputed={({ dep }) => dep}
+                    connectArgs={(getter) => ({
+                        dep: getter('dep')()
+                    })}/>
+
+                <Getter name="dep" value={'overriden'} />
+
+                <Template 
+                    name="root"
+                    connectGetters={(getter) => ({
+                        prop: getter('test')()
+                    })}>
+                    {({ prop }) => <h1>{prop}</h1>}
+                </Template>
+            </PluginHost>
+        );
+
+        expect(tree.find('h1').text()).toBe('base');
+    });
+
+    test('latest result should be tracked in template', () => {
+        const tree = mount(
+            <PluginHost>
+                <Getter name="dep" value={'base'} />
+
+                <Template 
+                    name="root"
+                    connectGetters={(getter) => ({
+                        prop: getter('dep')()
+                    })}>
+                    {({ prop }) => <h1>{prop}</h1>}
+                </Template>
+                    
+                <Getter name="dep" value={'overriden'} />
+            </PluginHost>
+        );
+
+        expect(tree.find('h1').text()).toBe('overriden');
+    });
+
     test('can extend getter with same name', () => {
         const tree = mount(
             <PluginHost>
@@ -100,6 +145,38 @@ describe('Getter', () => {
         tree.setProps({ text: 'new' });
 
         expect(tree.find('h1').text()).toBe('new');
+    });
+
+    test('notifies when updated', () => {
+        const Test = ({ text, onChange }) => (
+            <PluginHost>
+                <Getter name="test" value={text} />
+                <Getter name="test"
+                    pureComputed={({ original }) => original + '_extended'}
+                    connectArgs={(getter) => ({
+                        original: getter('test')()
+                    })}
+                    onChange={onChange} />
+
+                <Template 
+                    name="root"
+                    connectGetters={(getter) => ({
+                        prop: getter('test')()
+                    })}>
+                    {({ prop }) => <h1>{prop}</h1>}
+                </Template>
+            </PluginHost>
+        );
+
+        const onChange = jest.fn();
+        const tree = mount(
+            <Test text="text" onChange={onChange} />
+        );
+        tree.setProps({ text: 'text' });
+        tree.setProps({ text: 'new' });
+
+        expect(onChange.mock.calls).toHaveLength(1);
+        expect(onChange.mock.calls[0][0]).toBe('new_extended');
     });
 
     // This test is not correct enough. Rewrite it in future

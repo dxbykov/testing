@@ -1,8 +1,9 @@
 import React from 'react';
 import {
     DataGrid,
-    SortingState, SelectionState, FilterState,
-    TableView, TableColumnSelection, TableRowDetail, TableHeaderRowSorting, TableFilterRow, TableHeaderRow
+    SortingState, SelectionState, FilterState, PagingState,
+    TableView, TableColumnSelection, TableRowDetail, TableHeaderRowSorting, TableFilterRow, TableHeaderRow,
+    Paging
 } from '@devexpress/dx-react-datagrid';
 
 import { generateColumns, generateRows } from './demoData';
@@ -13,7 +14,7 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(20),
+            rows: generateRows(105),
         };
 
         this.rowTemplate = (row) => <div>Detail for {row.name} from {row.city}</div>
@@ -32,7 +33,10 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                     <SortingState
                         defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
                     <FilterState
-                        defaultFilters={[{ column: 'name', value: 'She' }]}/>
+                        defaultFilters={[{ column: 'sex', value: 'fe' }]}/>
+                    <PagingState
+                        defaultPage={2}
+                        pageSize={20} />
                     <SelectionState
                         defaultSelection={[1, 3, 18]}/>
 
@@ -48,6 +52,8 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                     <TableRowDetail
                         defaultExpanded={[3]}
                         template={this.rowTemplate}/>
+
+                    <Paging />
 
                 </DataGrid>
             </div>

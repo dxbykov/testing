@@ -1,6 +1,7 @@
 import React from 'react';
 import { Getter, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
 import { Table } from '../components/table.jsx';
+import memoize from '../utils/memoize.js';
 
 const cellContentTemplate = ({ row, column }) => <TemplatePlaceholder name="tableViewCell" params={{ row, column }} />;
 
@@ -8,7 +9,7 @@ export class TableView extends React.PureComponent {
     constructor(props) {
         super(props)
 
-        this._tableRows = ({ tableHeaderRows, tableBodyRows }) => [...tableHeaderRows, ...tableBodyRows];
+        this._tableRows = memoize((tableHeaderRows, tableBodyRows) => [...tableHeaderRows, ...tableBodyRows]);
     }
     render() {
         return (
@@ -25,21 +26,13 @@ export class TableView extends React.PureComponent {
                         columns: getter('columns')(),
                     })}/>
 
-                {/*Computed*/}
-                <Getter name="tableRows"
-                    pureComputed={this._tableRows}
-                    connectArgs={(getter) => ({
-                        tableHeaderRows: getter('tableHeaderRows')(),
-                        tableBodyRows: getter('tableBodyRows')(),
-                    })}/>
-
                 <Template name="root">
                     <TemplatePlaceholder name="tableView" />
                 </Template>
                 <Template
                     name="tableView"
                     connectGetters={(getter) => ({
-                        rows: getter('tableRows')(),
+                        rows: this._tableRows(getter('tableHeaderRows')(), getter('tableBodyRows')()),
                         columns: getter('tableColumns')(),
                     })}>
                     <Table cellContentTemplate={cellContentTemplate} />

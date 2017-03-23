@@ -16,14 +16,20 @@ export class PluginHost {
     cleanPluginsCache() {
         this._gettersCache = {};
     }
-    collect(key) {
+    collect(key, upTo) {
         if(!this._gettersCache[key]) {
             this._gettersCache[key] = this._plugins.map(plugin => plugin[key]).filter(plugin => !!plugin);
         }
-        return this._gettersCache[key];
+        if(!upTo) return this._gettersCache[key];
+
+        const upToIndex = this._plugins.indexOf(upTo);
+        return this._gettersCache[key].filter(getter => {
+            const pluginIndex = this._plugins.findIndex(plugin => plugin[key] === getter);
+            return pluginIndex < upToIndex;
+        });
     }
-    get(key) {
-        let plugins = this.collect(key);
+    get(key, upTo) {
+        let plugins = this.collect(key, upTo);
         
         let result = plugins[0]();
         plugins.slice(1).forEach(plugin => result = plugin(result));

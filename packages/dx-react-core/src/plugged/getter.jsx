@@ -1,7 +1,7 @@
 import React from 'react';
 import shallowEqual from '../utils/shallowEqual.js';
 
-function getterMemoize(func) {
+function getterMemoize(func, onChange) {
   let lastArg = null
   let lastResult = null
   return (arg) => {
@@ -10,6 +10,7 @@ function getterMemoize(func) {
       !shallowEqual(lastArg, arg)
     ) {
       lastResult = func(arg)
+      lastArg !== null && onChange(lastResult);
     }
     lastArg = arg
     return lastResult
@@ -18,20 +19,26 @@ function getterMemoize(func) {
 
 export const UPDATE_CONNECTION = 'updateConnection';
 
+const noop = () => {};
+
 export class Getter extends React.PureComponent {
     componentWillMount() {
         const { pluginHost } = this.context;
         const { name, pureComputed } = this.props;
-        const pureComputedMemoized = getterMemoize(pureComputed);
+        const pureComputedMemoized = getterMemoize(pureComputed, (result) => (this.props.onChange || noop)(result));
 
         this.plugin = {
             [name + 'Getter']: (original) => () => {
                 const { value, connectArgs } = this.props;
-                if(value) return value;
+                if(value !== undefined) return value;
 
                 let args = {};
                 if(connectArgs) {
-                    const getter = (getterName) => getterName === name ? original : pluginHost.get(getterName + 'Getter');
+                    const getter = (getterName) => {
+                        if(getterName === name) return original;
+                        
+                        return pluginHost.get(getterName + 'Getter', this.plugin)
+                    };
                     args = connectArgs(getter);
                 }
                 return pureComputedMemoized(args);

@@ -10,7 +10,7 @@ class TableCell extends React.PureComponent {
                     padding: 0,
                     width: (column.width || 100) + 'px' 
                 }}
-                colSpan={colspan || 0}>
+                colSpan={colspan}>
                 {cellContentTemplate({ row, column })}
             </td>
         )
