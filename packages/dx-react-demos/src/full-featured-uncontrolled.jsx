@@ -23,17 +23,17 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
         let { rows, columns } = this.state;
 
         return (
-            <div>
+            <div style={{ width: '500px' }}>
                 <h2>Full Featured Uncontrolled Demo</h2>
 
                 <DataGrid
                     rows={rows}
                     columns={columns}>
 
-                    <SortingState
-                        defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
                     <FilterState
                         defaultFilters={[{ column: 'sex', value: 'fe' }]}/>
+                    <SortingState
+                        defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
                     <PagingState
                         defaultPage={2}
                         pageSize={20} />

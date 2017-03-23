@@ -7,7 +7,7 @@ export class Paging extends React.PureComponent {
         return (
             <div>
                 <Template name="root">
-                    <div style={{ display: 'inline-block' }}> {/* TODO: Fiber remove */}
+                    <div> {/* TODO: Fiber remove */}
                         <TemplatePlaceholder />
                         <TemplatePlaceholder name="pager" />
                     </div>

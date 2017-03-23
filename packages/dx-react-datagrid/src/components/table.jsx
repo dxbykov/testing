@@ -40,7 +40,7 @@ export class Table extends React.PureComponent {
         let { rows, columns, cellContentTemplate } = this.props;
         
         return (
-            <table style={{ borderCollapse: 'collapse' }}>
+            <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                 <tbody>
                     {rows.map((row, rowIndex) => 
                         <TableRow key={row.id} row={row} columns={columns} cellContentTemplate={cellContentTemplate} />

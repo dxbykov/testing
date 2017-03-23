@@ -33,7 +33,7 @@ export class FullFeaturedControlledDemo extends React.PureComponent {
         let { rows, columns, sortings, selection, expandedRows, filters, page } = this.state;
 
         return (
-            <div>
+            <div style={{ width: '500px' }}>
                 <h2>Full Featured Controlled Demo</h2>
 
                 <DataGrid
@@ -43,13 +43,13 @@ export class FullFeaturedControlledDemo extends React.PureComponent {
                     <FilterState
                         filters={filters}
                         filtersChange={this.changeFilters}/>
+                    <SortingState
+                        sortings={sortings}
+                        sortingsChange={this.changeSortings}/>
                     <PagingState
                         page={page}
                         onPageChange={this.changePage}
                         pageSize={20} />
-                    <SortingState
-                        sortings={sortings}
-                        sortingsChange={this.changeSortings}/>
 
                     <SelectionState
                         selection={selection}
