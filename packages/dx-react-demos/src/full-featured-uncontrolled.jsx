@@ -24,7 +24,7 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
 
         return (
             <div>
-                <h2>Full Featured Controlled Demo</h2>
+                <h2>Full Featured Uncontrolled Demo</h2>
 
                 <DataGrid
                     rows={rows}
