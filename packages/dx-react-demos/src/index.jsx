@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 
 import { FullFeaturedControlledDemo } from './full-featured-controlled.jsx';
 import { FullFeaturedUncontrolledDemo } from './full-featured-uncontrolled.jsx';
+import { UncontrolledVirtualDemo } from './uncontrolled-virtual.jsx';
 import './index.css';
 
 class App extends React.Component {
@@ -15,8 +16,9 @@ class App extends React.Component {
             <div>
                 <h1>Demo Index</h1>
                 
-                <FullFeaturedControlledDemo/>
-                <FullFeaturedUncontrolledDemo/>
+                <FullFeaturedControlledDemo />
+                <FullFeaturedUncontrolledDemo />
+                <UncontrolledVirtualDemo />
             </div>
         );
     }
