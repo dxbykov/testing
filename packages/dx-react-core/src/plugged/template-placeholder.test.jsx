@@ -41,6 +41,37 @@ describe('TemplatePlaceholder', () => {
         expect(tree.find('h1').text()).toBe('param');
     });
     
+    test('template should be updated in placeholder on params change', () => {
+        class EncapsulatedPlugin extends React.PureComponent {
+            render() {
+                return (
+                    <Template name="test">
+                        {({ text }) => (
+                            <h1>{text}</h1>
+                        )}
+                    </Template>
+                );
+            }
+        };
+
+        const Test = ({ param }) => (
+            <PluginHost>
+                <EncapsulatedPlugin />
+
+                <Template name="root">
+                    <TemplatePlaceholder name="test" params={{ text: param }} />
+                </Template>
+            </PluginHost>
+        );
+
+        const tree = mount(
+            <Test param={'text'} />
+        );
+        tree.setProps({ param: 'new' })
+
+        expect(tree.find('h1').text()).toBe('new');
+    });
+    
     test('template chain should be rendered in placeholder', () => {
         const tree = mount(
             <PluginHost>

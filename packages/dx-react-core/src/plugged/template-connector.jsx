@@ -35,7 +35,9 @@ export class TemplateConnector extends React.PureComponent {
         this.setState(this.mappedBindings(nextProps));
     }
     shouldComponentUpdate(nextProps, nextState) {
-        return !shallowEqual(this.state.props, nextState.props) || this.props.content !== nextProps.content;
+        return !shallowEqual(this.props.params, nextProps.params)
+            || !shallowEqual(this.state.props, nextState.props)
+            || this.props.content !== nextProps.content;
     }
     componentDidMount() {
         this.updateConnection();
