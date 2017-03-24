@@ -1,6 +1,5 @@
 import React from 'react';
 import { Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { Pager } from '../components/pager.jsx';
 
 export class Paging extends React.PureComponent {
     render() {
@@ -21,7 +20,7 @@ export class Paging extends React.PureComponent {
                     connectActions={(action) => ({
                         onPageChange: (page) => action('pageChange')({ page }),
                     })}>
-                    <Pager />
+                    {this.props.pagerTemplate}
                 </Template>
             </div>
         );

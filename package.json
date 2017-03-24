@@ -8,7 +8,8 @@
     "watch:datagrid-core": "lerna run build:watch --scope @devexpress/dx-datagrid-core --stream",
     "watch:react-core": "lerna run build:watch --scope @devexpress/dx-react-core --stream",
     "watch:react-datagrid": "lerna run build:watch --scope @devexpress/dx-react-datagrid --stream",
+    "watch:react-datagrid-bootstrap3": "lerna run build:watch --scope @devexpress/dx-react-datagrid-bootstrap3 --stream",
     "watch:react-demos": "lerna run watch --scope @devexpress/dx-react-demos --stream",
-    "watch": "concurrently --kill-others \"npm run watch:core\" \"npm run watch:datagrid-core\" \"npm run watch:react-core\" \"npm run watch:react-datagrid\" \"npm run watch:react-demos\""
+    "watch": "concurrently --kill-others \"npm run watch:core\" \"npm run watch:datagrid-core\" \"npm run watch:react-core\" \"npm run watch:react-datagrid\" \"npm run watch:react-datagrid-bootstrap3\" \"npm run watch:react-demos\""
   }
 }
