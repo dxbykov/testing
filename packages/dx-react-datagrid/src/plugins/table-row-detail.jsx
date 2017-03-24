@@ -68,7 +68,7 @@ export class TableRowDetail extends React.PureComponent {
     }
     render() {
         let expanded = this.props.expanded || this.state.expanded;
-        let { template } = this.props;
+        let { template, detailToggleTemplate } = this.props;
         let { animating } = this.state;
 
         return (
@@ -80,13 +80,10 @@ export class TableRowDetail extends React.PureComponent {
                     })}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
-                    {({ column, row }) => (
-                        <div
-                            style={{ width: '100%', height: '100%' }}
-                            onClick={() => this.changeExpanded(expandingHelpers.calcExpanded(expanded, row.id))}>
-                            {expanded.indexOf(row.id) > -1 ? '-' : '+'}
-                        </div>
-                    )}
+                    {({ row }) => detailToggleTemplate({
+                        expanded: expanded.indexOf(row.id) > -1,
+                        toggleExpanded: () => this.changeExpanded(expandingHelpers.calcExpanded(expanded, row.id))
+                    })}
                 </Template>
 
                 <Getter name="tableBodyRows"

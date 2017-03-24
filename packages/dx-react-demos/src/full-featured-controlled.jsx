@@ -2,10 +2,11 @@ import React from 'react';
 import {
     DataGrid,
     SortingState, SelectionState, FilterState, PagingState,
-    TableView, TableColumnSelection, TableRowDetail, TableHeaderRowSorting, TableFilterRow, TableHeaderRow
+    TableView, TableColumnSelection, TableHeaderRowSorting, TableFilterRow, TableHeaderRow
 } from '@devexpress/dx-react-datagrid';
 
 import {
+    TableRowDetail,
     Paging
 } from '@devexpress/dx-react-datagrid-bootstrap3';
 
