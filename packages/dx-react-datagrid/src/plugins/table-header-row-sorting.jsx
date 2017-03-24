@@ -1,10 +1,11 @@
 import React from 'react';
 import { Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { SortableCell } from '../components/sortable-cell.jsx';
 import { sortingDirectionForColumn } from './sorting-state.jsx';
 
 export class TableHeaderRowSorting extends React.PureComponent {
     render() {
+        const SortableCell = this.props.sortableCellTemplate;
+
         return (
             <div>
                 <Template
