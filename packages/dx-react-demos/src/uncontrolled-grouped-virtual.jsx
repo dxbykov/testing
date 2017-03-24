@@ -1,20 +1,20 @@
 import React from 'react';
 import {
     DataGrid,
-    SortingState, SelectionState, FilterState, PagingState,
-    VirtualTableView, TableColumnSelection, TableRowDetail, TableHeaderRowSorting, TableFilterRow, TableHeaderRow,
-    Paging
+    SortingState, SelectionState, FilterState, GroupingState,
+    VirtualTableView, TableColumnSelection, TableRowDetail, TableHeaderRowSorting, TableHeaderRowGrouping, TableFilterRow, TableHeaderRow, TableGroupRow,
+    Grouping
 } from '@devexpress/dx-react-datagrid';
 
 import { generateColumns, generateRows } from './demoData';
 
-export class UncontrolledVirtualDemo extends React.PureComponent {
+export class UncontrolledGroupedVirtualDemo extends React.PureComponent {
     constructor(props) {
         super(props)
 
         this.state = {
             columns: generateColumns(),
-            rows: generateRows(200000),
+            rows: generateRows(20000),
         };
 
         this.rowTemplate = (row) => <div>Detail for {row.name} from {row.city}</div>
@@ -24,16 +24,19 @@ export class UncontrolledVirtualDemo extends React.PureComponent {
 
         return (
             <div style={{ width: '500px' }}>
-                <h2>Uncontrolled Virtual Demo (200K rows)</h2>
+                <h2>Uncontrolled Grouped Virtual Demo (20K rows)</h2>
 
                 <DataGrid
                     rows={rows}
                     columns={columns}>
 
                     <FilterState
-                        defaultFilters={[{ column: 'sex', value: 'fe' }]}/>
+                        defaultFilters={[{ column: 'car', value: 'au' }]}/>
                     <SortingState
                         defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
+                    <GroupingState
+                        defaultGrouping={[{ column: 'sex' }]}
+                        defaultExpandedGroups={{ 'Female': true }}/>
 
                     <SelectionState
                         defaultSelection={[1, 3, 18]}/>
@@ -42,6 +45,7 @@ export class UncontrolledVirtualDemo extends React.PureComponent {
                     
                     <TableHeaderRow/>
                     <TableHeaderRowSorting/>
+                    <TableHeaderRowGrouping/>
 
                     <TableFilterRow/>
 
@@ -50,6 +54,9 @@ export class UncontrolledVirtualDemo extends React.PureComponent {
                     <TableRowDetail
                         defaultExpanded={[3]}
                         template={this.rowTemplate}/>
+                    
+                    <TableGroupRow/>
+                    <Grouping />
 
                 </DataGrid>
             </div>

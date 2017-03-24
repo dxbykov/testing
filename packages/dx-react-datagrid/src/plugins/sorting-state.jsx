@@ -78,7 +78,7 @@ const sortingsHelper = {
 
         let sortColumn = sortings[0].column,
             inverse = sortings[0].direction === "desc",
-            result = mergeSort(rows.slice(), (a, b) => (a[sortColumn] < b[sortColumn]) ^ inverse ? -1 : 1);
+            result = mergeSort(rows.slice(), (a, b) => (a[sortColumn] === b[sortColumn]) ? 0 : (a[sortColumn] < b[sortColumn]) ^ inverse ? -1 : 1);
         return result;
     },
 };

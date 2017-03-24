@@ -8,7 +8,7 @@ class TableCell extends React.PureComponent {
             <td
                 style={{ 
                     padding: 0,
-                    width: (column.width || 100) + 'px' 
+                    width: column.width ? column.width + 'px' : 'auto' 
                 }}
                 colSpan={colspan}>
                 {cellContentTemplate({ row, column })}
