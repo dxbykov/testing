@@ -17,3 +17,4 @@ export { TableHeaderRowGrouping } from './plugins/table-header-row-grouping.jsx'
 export { TableFilterRow } from './plugins/table-filter-row.jsx';
 
 export { Paging } from './plugins/paging.jsx';
+export { Grouping } from './plugins/grouping.jsx';

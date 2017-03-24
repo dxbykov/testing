@@ -3,7 +3,7 @@ import {
     DataGrid,
     SortingState, SelectionState, FilterState, PagingState, GroupingState,
     TableView, TableColumnSelection, TableRowDetail, TableHeaderRowSorting, TableHeaderRowGrouping, TableFilterRow, TableHeaderRow, TableGroupRow,
-    Paging
+    Paging, Grouping
 } from '@devexpress/dx-react-datagrid';
 
 import { generateColumns, generateRows } from './demoData';
@@ -67,6 +67,7 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
 
                     <TableGroupRow />
 
+                    <Grouping />
 
                 </DataGrid>
             </div>
