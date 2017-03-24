@@ -15,7 +15,7 @@ export const Pager = ({ currentPage, onPageChange, totalPages }) => {
                     style={{ 
                         display: 'inline-block',
                         border: `1px solid ${ page === currentPage ? 'red' : 'black' }`,
-                        padding: '3px'
+                        padding: '0 3px'
                     }}>
                     {page + 1}
                 </div>

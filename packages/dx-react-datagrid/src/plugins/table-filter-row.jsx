@@ -31,7 +31,7 @@ export class TableFilterRow extends React.PureComponent {
                             type="text"
                             value={filter}
                             onChange={(e) => changeFilter(e.target.value)}
-                            style={{ width: '100%' }}/>
+                            style={{ width: '100%', padding: 0 }}/>
                     )}
                 </Template>
             </div>

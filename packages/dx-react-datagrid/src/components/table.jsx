@@ -22,7 +22,7 @@ class TableRow extends React.PureComponent {
         let { row, columns, getCellInfo, cellContentTemplate } = this.props;
         
         return (
-            <tr>
+            <tr style={{ height: row.height ? row.height === 'auto' ? 'auto' : row.height + 'px' : '20px' }}>
                 {columns.map((column, columnIndex) => {
                     if(row.colspan !== undefined && columnIndex > row.colspan) return null;
                     const colspan = row.colspan === columnIndex ? columns.length - row.colspan : 1;

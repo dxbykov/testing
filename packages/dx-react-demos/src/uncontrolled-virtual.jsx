@@ -34,9 +34,7 @@ export class UncontrolledVirtualDemo extends React.PureComponent {
                         defaultFilters={[{ column: 'sex', value: 'fe' }]}/>
                     <SortingState
                         defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
-                    {/*<PagingState
-                        defaultPage={2}
-                        pageSize={20} />*/}
+
                     <SelectionState
                         defaultSelection={[1, 3, 18]}/>
 
@@ -49,11 +47,9 @@ export class UncontrolledVirtualDemo extends React.PureComponent {
 
                     <TableColumnSelection/>
 
-                    {/*<TableRowDetail
+                    <TableRowDetail
                         defaultExpanded={[3]}
-                        template={this.rowTemplate}/>*/}
-
-                    {/*<Paging />*/}
+                        template={this.rowTemplate}/>
 
                 </DataGrid>
             </div>

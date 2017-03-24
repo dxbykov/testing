@@ -1,4 +1,5 @@
 import React from 'react';
+import { Sizer } from './sizer.jsx';
 
 function testCSSProp(property, value, noPrefixes) {
     let prop = property + ':';
@@ -68,6 +69,7 @@ class VirtualBox extends React.Component {
         let visibleItems = visibleItemMetas.map(visibleItemMeta => {
             return (
                 <VirtualItem 
+                    className={this.props.itemClassName}
                     key={`${visibleItemMeta.index}`}
                     viewport={{ 
                         ...viewport,
@@ -86,7 +88,7 @@ class VirtualBox extends React.Component {
         })
         
         return (
-            <div style={{ 
+            <div className={this.props.className} style={{ 
                 ...this.props.style,
                 position: 'relative',
                 [sizeProp]: fullSize + 'px',
@@ -187,9 +189,9 @@ class VirtualItem extends React.Component {
         }
 
         return (
-            <div style={{ 
+            <div className={this.props.className} style={{ 
                 ...additionalStyles,
-                [sizeProp]: size + 'px'
+                [sizeProp]: size + 'px',
             }}>
                 {children}
             </div>
@@ -219,29 +221,69 @@ VirtualItem.childContextTypes = {
     }).isRequired
 };
 
+const DEFAULT_HEIGHT = 20;
+
 export class VirtualTable extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            autoHeights: new WeakMap()
+        };
+    }
     render() {
         const { headerRows, bodyRows, columns, cellContentTemplate } = this.props;
         const rows = [...headerRows, ...bodyRows];
 
         return (
             <VirtualBox
+                className="virtual-table"
                 direction="vertical"
                 itemCount={rows.length}
-                itemInfo={(rowIndex) => ({
-                    size: 22,
-                    stick: rowIndex < headerRows.length ? 'before' : false,
-                })}
-                itemTemplate={(rowIndex) => (            
-                    <VirtualBox
-                        direction="horizontal"
-                        itemCount={columns.length}
-                        itemInfo={(columnIndex) => ({
-                            size: columns[columnIndex].width || 100,
-                            stick: false,
-                        })}
-                        itemTemplate={(columnIndex) => cellContentTemplate({ row: rows[rowIndex], column: columns[columnIndex] })}/>
-                )}/>
+                itemInfo={(rowIndex) => {
+                    const row = rows[rowIndex];
+
+                    return {
+                        size: row.height ? this.state.autoHeights.get(row) || DEFAULT_HEIGHT : DEFAULT_HEIGHT,
+                        stick: rowIndex < headerRows.length ? 'before' : false,
+                    };
+                }}
+                itemTemplate={(rowIndex) => {
+                    const row = rows[rowIndex];
+                    const colspan = row.colspan;
+                    const columnLength = colspan !== undefined ? colspan + 1 : columns.length;
+                    return (
+                        <VirtualBox
+                            itemClassName="virtual-cell"
+                            direction="horizontal"
+                            itemCount={columnLength}
+                            itemInfo={(columnIndex) => {
+                                const size = columnIndex !== colspan
+                                    ? columns[columnIndex].width || 100
+                                    : columns.slice(colspan).reduce(((accum, column) => (accum + (column.width || 100))), 0);
+                                
+                                return {
+                                    size: size,
+                                    stick: false,
+                                };
+                            }}
+                            itemTemplate={(columnIndex) => {
+                                const template = cellContentTemplate({ row, column: columns[columnIndex] });
+                                if(row.height !== 'auto') return template;
+                                return (
+                                    <Sizer
+                                        height={this.state.autoHeights.get(row) || DEFAULT_HEIGHT}
+                                        onHeightChange={(height) => {
+                                            let { autoHeights } = this.state;
+                                            autoHeights.set(row, height);
+                                            this.setState({ autoHeights })
+                                        }}>
+                                        {template}
+                                    </Sizer>
+                                ) 
+                            }}/>
+                    );
+                }}/>
         )
     }
 }

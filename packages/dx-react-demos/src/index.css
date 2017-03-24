@@ -1,12 +1,16 @@
 * {
     box-sizing: border-box;
 }
-table {
-    border: 1px solid gray;
+.virtual-table, table {
+    border-top: 1px solid gray;
+    border-left: 1px solid gray;
 }
-td:not(:last-of-type) {
+.virtual-cell, td {
     border-right: 1px solid gray; 
+    border-bottom: 1px solid gray;
 }
-tr:not(:last-of-type) td {
-    border-bottom: 1px solid gray; 
+
+.virtual-cell {
+    display: flex;
+    align-items: center;
 }
