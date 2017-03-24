@@ -6,6 +6,28 @@ const pagingHelpers = {
     paginate: (originalRows, pageSize, page) => {
         return originalRows.slice(pageSize * page, pageSize * (page + 1));
     },
+    ensurePageHeaders: (originalRows, pageSize) => {
+        let result = originalRows.slice(),
+            currentIndex = pageSize;
+
+        while(result.length > currentIndex) {
+            let row = result[currentIndex],
+                parentRows = [];
+            
+            while(row._parentRow) {
+                parentRows.unshift(row._parentRow);
+                row = row._parentRow;
+            }
+            
+            if(parentRows.length) {
+                result.splice(currentIndex, 0, ...parentRows);
+            }
+
+            currentIndex += pageSize;
+        }
+
+        return result;
+    }
 };
 
 // UI
@@ -23,6 +45,7 @@ export class PagingState extends React.PureComponent {
             onPageChange && onPageChange(page);
         };
 
+        this._ensurePageHeaders = ({ rows, pageSize }) => pagingHelpers.ensurePageHeaders(rows, pageSize);
         this._rows = ({ rows, pageSize, page }) => pagingHelpers.paginate(rows, pageSize, page);
     }
     render() {
@@ -41,10 +64,18 @@ export class PagingState extends React.PureComponent {
                         pageSize,
                     })}
                     onChange={(totalPages) => {
-                        if(totalPages < page) {
+                        debugger
+                        if(totalPages - 1 < page) {
                             this.changePage(Math.max(totalPages - 1, 0));
                         }
                     }} />
+
+                <Getter name="rows"
+                    pureComputed={this._ensurePageHeaders}
+                    connectArgs={(getter) => ({
+                        rows: getter('rows')(),
+                        pageSize
+                    })}/>
 
                 <Getter name="rows"
                     pureComputed={this._rows}

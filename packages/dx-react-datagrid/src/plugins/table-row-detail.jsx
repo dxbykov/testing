@@ -42,7 +42,7 @@ export class TableRowDetail extends React.PureComponent {
                     let row = tableBodyRows[rowIndex];
                     tableBodyRows = [
                         ...tableBodyRows.slice(0, insertIndex),
-                        { type: 'detailRow', id: 'detailRow' + row.id, for: row, colspan: true },
+                        { type: 'detailRow', id: 'detailRow' + row.id, for: row, colspan: 0 },
                         ...tableBodyRows.slice(insertIndex)
                     ];
                 }

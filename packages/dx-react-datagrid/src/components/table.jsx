@@ -24,8 +24,8 @@ class TableRow extends React.PureComponent {
         return (
             <tr>
                 {columns.map((column, columnIndex) => {
-                    if(row.colspan && columnIndex > 0) return null;
-                    const colspan = row.colspan ? columns.length : 1;
+                    if(row.colspan !== undefined && columnIndex > row.colspan) return null;
+                    const colspan = row.colspan === columnIndex ? columns.length - row.colspan : 1;
                     return (
                         <TableCell key={column.name} row={row} column={column} colspan={colspan} cellContentTemplate={cellContentTemplate} />
                     );

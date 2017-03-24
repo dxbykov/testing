@@ -1,8 +1,8 @@
 import React from 'react';
 import {
     DataGrid,
-    SortingState, SelectionState, FilterState, PagingState,
-    TableView, TableColumnSelection, TableRowDetail, TableHeaderRowSorting, TableFilterRow, TableHeaderRow,
+    SortingState, SelectionState, FilterState, PagingState, GroupingState,
+    TableView, TableColumnSelection, TableRowDetail, TableHeaderRowSorting, TableFilterRow, TableHeaderRow, TableGroupRow,
     Paging
 } from '@devexpress/dx-react-datagrid';
 
@@ -30,13 +30,22 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                     rows={rows}
                     columns={columns}>
 
-                    <FilterState
-                        defaultFilters={[{ column: 'sex', value: 'fe' }]}/>
                     <SortingState
                         defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
+                    
+                    <FilterState
+                        defaultFilters={[{ column: 'sex', value: 'fe' }]}/>
+                    
+
+                    <GroupingState
+                        defaultGrouping={[ { column: 'sex' }, { column: 'city' }, { column: 'car' } ]}
+                        defaultExpandedGroups={{ 'Female': true }}
+                        />
+
                     <PagingState
-                        defaultPage={2}
-                        pageSize={20} />
+                        defaultPage={0}
+                        pageSize={25} />
+
                     <SelectionState
                         defaultSelection={[1, 3, 18]}/>
 
@@ -46,6 +55,8 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                     <TableHeaderRowSorting/>
 
                     <TableFilterRow/>
+                        
+                    <Paging />
 
                     <TableColumnSelection/>
 
@@ -53,7 +64,8 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                         defaultExpanded={[3]}
                         template={this.rowTemplate}/>
 
-                    <Paging />
+                    <TableGroupRow />
+
 
                 </DataGrid>
             </div>
