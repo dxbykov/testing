@@ -9,6 +9,12 @@ export class TableView extends React.PureComponent {
         super(props)
 
         this._tableRows = memoize((tableHeaderRows, tableBodyRows) => [...tableHeaderRows, ...tableBodyRows]);
+        this._getCellInfo = ({ row, column, columnIndex, columns }) => {
+            if(row.colspan !== undefined && columnIndex > row.colspan)
+                return { skip: true };
+            const colspan = row.colspan === columnIndex ? columns.length - row.colspan : 1;
+            return { colspan };
+        };
     }
     render() {
         return (
@@ -21,7 +27,7 @@ export class TableView extends React.PureComponent {
                         rows: this._tableRows(getter('tableHeaderRows')(), getter('tableBodyRows')()),
                         columns: getter('tableColumns')(),
                     })}>
-                    <Table cellContentTemplate={cellContentTemplate} />
+                    <Table getCellInfo={this._getCellInfo} cellContentTemplate={cellContentTemplate} />
                 </Template>
             </div>
         );

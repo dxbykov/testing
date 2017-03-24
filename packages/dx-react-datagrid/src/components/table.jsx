@@ -19,15 +19,15 @@ class TableCell extends React.PureComponent {
 
 class TableRow extends React.PureComponent {
     render() {
-        let { row, columns, getCellInfo, cellContentTemplate } = this.props;
+        let { row, columns, cellContentTemplate, getCellInfo } = this.props;
         
         return (
             <tr style={{ height: row.height ? row.height === 'auto' ? 'auto' : row.height + 'px' : '20px' }}>
                 {columns.map((column, columnIndex) => {
-                    if(row.colspan !== undefined && columnIndex > row.colspan) return null;
-                    const colspan = row.colspan === columnIndex ? columns.length - row.colspan : 1;
+                    let info = getCellInfo({ row, column, columnIndex, columns });
+                    if(info.skip) return null;
                     return (
-                        <TableCell key={column.name} row={row} column={column} colspan={colspan} cellContentTemplate={cellContentTemplate} />
+                        <TableCell key={column.name} row={row} column={column} colspan={info.colspan} cellContentTemplate={cellContentTemplate} />
                     );
                 })}
             </tr>
@@ -37,13 +37,13 @@ class TableRow extends React.PureComponent {
 
 export class Table extends React.PureComponent {
     render() {
-        let { rows, columns, cellContentTemplate } = this.props;
+        let { rows, columns, cellContentTemplate, getCellInfo } = this.props;
         
         return (
             <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                 <tbody>
                     {rows.map((row, rowIndex) => 
-                        <TableRow key={row.id} row={row} columns={columns} cellContentTemplate={cellContentTemplate} />
+                        <TableRow key={row.id} row={row} columns={columns} cellContentTemplate={cellContentTemplate} getCellInfo={getCellInfo} />
                     )}
                 </tbody>
             </table>
