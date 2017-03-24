@@ -2,7 +2,7 @@ import React from 'react';
 import {
     DataGrid,
     SortingState, SelectionState, FilterState, PagingState, GroupingState,
-    TableView, TableColumnSelection, TableRowDetail, TableHeaderRowSorting, TableFilterRow, TableHeaderRow, TableGroupRow,
+    TableView, TableColumnSelection, TableRowDetail, TableHeaderRowSorting, TableHeaderRowGrouping, TableFilterRow, TableHeaderRow, TableGroupRow,
     Paging
 } from '@devexpress/dx-react-datagrid';
 
@@ -34,11 +34,11 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                         defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
                     
                     <FilterState
-                        defaultFilters={[{ column: 'sex', value: 'fe' }]}/>
+                        defaultFilters={[{ column: 'name', value: 'j' }]}/>
                     
 
                     <GroupingState
-                        defaultGrouping={[ { column: 'sex' }, { column: 'city' }, { column: 'car' } ]}
+                        defaultGrouping={[ { column: 'sex' }/*, { column: 'city' }, { column: 'car' }*/ ]}
                         defaultExpandedGroups={{ 'Female': true }}
                         />
 
@@ -53,6 +53,7 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                     
                     <TableHeaderRow/>
                     <TableHeaderRowSorting/>
+                    <TableHeaderRowGrouping/>
 
                     <TableFilterRow/>
                         

@@ -197,7 +197,6 @@ describe('Getter', () => {
                         <Template 
                             name="root"
                             connectGetters={(getter) => {
-                                debugger
                                 log.push(getter('test')());
                             }} />
                     </div>

@@ -13,6 +13,7 @@ export { TableRowDetail } from './plugins/table-row-detail.jsx';
 export { TableGroupRow } from './plugins/table-group-row.jsx';
 export { TableHeaderRow } from './plugins/table-header-row.jsx';
 export { TableHeaderRowSorting } from './plugins/table-header-row-sorting.jsx';
+export { TableHeaderRowGrouping } from './plugins/table-header-row-grouping.jsx';
 export { TableFilterRow } from './plugins/table-filter-row.jsx';
 
 export { Paging } from './plugins/paging.jsx';

@@ -64,7 +64,6 @@ export class PagingState extends React.PureComponent {
                         pageSize,
                     })}
                     onChange={(totalPages) => {
-                        debugger
                         if(totalPages - 1 < page) {
                             this.changePage(Math.max(totalPages - 1, 0));
                         }

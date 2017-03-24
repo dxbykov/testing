@@ -5,20 +5,20 @@ import { Getter, Action } from '@devexpress/dx-react-core';
 const groupHelpers = {
     groupByColumn: (prevGrouping, { columnName, groupIndex }) => {
         let grouping = prevGrouping.slice(),
-            index = grouping.findIndex(g => g.column === columnName)[0],
-            colGrouping;
+            index = grouping.findIndex(g => g.column === columnName);
 
         if(index > -1) {
-            colGrouping = grouping[index];
-            grouping.splice(grouping.indexOf(colGrouping), 1);
+            grouping.splice(index, 1);
         }
-        if(!colGrouping) {
-            colGrouping = {
-                column: columnName
-            };
+        else {
+            groupIndex = groupIndex || grouping.length;
         }
         
-        grouping.splice(groupIndex, 0, colGrouping);
+        if(groupIndex > -1) {
+            grouping.splice(groupIndex, 0, {
+                column: columnName
+            });
+        }
         
         return grouping;
     },
@@ -105,6 +105,16 @@ export class GroupingState extends React.PureComponent {
             this.setState({ expandedGroups });
             expandedGroupsChange && expandedGroupsChange(expandedGroups);
         };
+
+        this.groupByColumn = ({ columnName, groupIndex }) => {
+            let prevGrouping = this.props.grouping || this.state.grouping;
+            let { groupingChange } = this.props;
+
+            let grouping = groupHelpers.groupByColumn(prevGrouping, { columnName, groupIndex });
+
+            this.setState({ grouping });
+            groupingChange && groupingChange(expandedGroups);
+        };
     }
     render() {
         let grouping = this.props.grouping || this.state.grouping;
@@ -113,6 +123,7 @@ export class GroupingState extends React.PureComponent {
         return (
             <div>
                 <Action name="toggleGroupExpanded" action={({ groupKey }) => { this.toggleGroupExpanded(groupKey); }} />
+                <Action name="groupByColumn" action={({ columnName, groupIndex }) => { this.groupByColumn({ columnName, groupIndex }); }} />
 
                 <Getter name="rows"
                     pureComputed={({ rows, grouping }) => groupHelpers.groupRows(rows, grouping)}
