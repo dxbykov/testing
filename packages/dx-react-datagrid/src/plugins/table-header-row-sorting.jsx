@@ -1,6 +1,6 @@
 import React from 'react';
 import { Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { sortingDirectionForColumn } from './sorting-state.jsx';
+import { getColumnSortingDirection } from '@devexpress/dx-datagrid-core';
 
 export class TableHeaderRowSorting extends React.PureComponent {
     render() {
@@ -12,10 +12,10 @@ export class TableHeaderRowSorting extends React.PureComponent {
                     name="tableViewCell"
                     predicate={({ column, row }) => row.type === 'heading' && !column.type}
                     connectGetters={(getter, { column }) => ({
-                        direction: sortingDirectionForColumn(column.name, getter('sortings')()),
+                        direction: getColumnSortingDirection(getter('sortings')(), column.name),
                     })}
                     connectActions={(action, { column }) => ({
-                        changeDirection: ({ keepOther }) => action('applySorting')({ columnName: column.name, keepOther }),
+                        changeDirection: ({ keepOther }) => action('setColumnSorting')({ columnName: column.name, keepOther }),
                     })}>
                     {({ direction, changeDirection }) => (
                         <SortableCell direction={direction} changeDirection={changeDirection}>
