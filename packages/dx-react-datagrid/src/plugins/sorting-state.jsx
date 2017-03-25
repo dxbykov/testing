@@ -58,15 +58,43 @@ var mergeSort = function(array, comparefn) {
   return merge_sort(array, comparefn);
 }
 
+const createSortingCompare = (sorting, compareEqual) => (a, b) => {
+    let sortColumn = sorting.column,
+        inverse = sorting.direction === "desc";
+    
+    if(a[sortColumn] === b[sortColumn]) {
+        return compareEqual && compareEqual(a, b) || 0;
+    }
+    else {
+        return (a[sortColumn] < b[sortColumn]) ^ inverse ? -1 : 1
+    }
+};
+
+
 const sortingsHelper = {
-    calcSortings: (columnName, prevSorting) => {
-        let sorting = prevSorting.filter(s => { return s.column == columnName; })[0];
-        return [
-            {
-                column: columnName,
-                direction: (sorting && sorting.direction == 'asc') ? 'desc' : 'asc'
+    calcSortings: (columnName, direction , keepOther, prevSortings) => {
+        let sortingIndex = prevSortings.findIndex(s => { return s.column == columnName; }),
+            sorting = prevSortings[sortingIndex],
+            result = keepOther ? prevSortings.slice() : [];
+
+        if(sorting) {
+            sorting = Object.assign({}, sorting, { direction: sorting.direction == 'asc' ? 'desc' : 'asc' });
+            if(keepOther) {
+                result.splice(sortingIndex, 1, sorting);
             }
-        ];
+            else {
+                result.push(sorting);
+            }
+            
+        }
+        else {
+            result.push({
+                column: columnName,
+                direction: 'asc'
+            });
+        }
+
+        return result;
     },
     directionFor: (columnName, sortings) => {
         let sorting = sortings.filter(s => s.column === columnName)[0];
@@ -76,10 +104,11 @@ const sortingsHelper = {
         if(!sortings.length)
             return rows;
 
-        let sortColumn = sortings[0].column,
-            inverse = sortings[0].direction === "desc",
-            result = mergeSort(rows.slice(), (a, b) => (a[sortColumn] === b[sortColumn]) ? 0 : (a[sortColumn] < b[sortColumn]) ^ inverse ? -1 : 1);
-        return result;
+        let compare = sortings.slice()
+            .reverse()
+            .reduce((prevCompare, sorting) => createSortingCompare(sorting, prevCompare), () => 0);
+
+        return mergeSort(rows.slice(), compare);;
     },
 };
 
@@ -107,7 +136,11 @@ export class SortingState extends React.PureComponent {
         
         return (
             <div>
-                <Action name="applySorting" action={({ columnName, value }) => this.changeSortings(sortingsHelper.calcSortings(columnName, sortings))} />
+                <Action
+                    name="applySorting"
+                    action={(
+                        { columnName, direction, keepOther }) => this.changeSortings(sortingsHelper.calcSortings(columnName, direction , keepOther, sortings)
+                    )} />
 
                 <Getter name="rows"
                     pureComputed={this._rows}

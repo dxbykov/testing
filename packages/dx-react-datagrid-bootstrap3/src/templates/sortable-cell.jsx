@@ -4,7 +4,7 @@ export const SortableCell = ({ direction, changeDirection, children }) => {
     const iconName = direction ? (direction === 'asc' ? 'glyphicon glyphicon-arrow-down' : 'glyphicon glyphicon-arrow-up') : '';
     return (
         <div 
-            onClick={changeDirection}
+            onClick={e => changeDirection({ keepOther: e.shiftKey })}
             style={{ width: '100%', height: '100%' }} >
             <div
                 style={{
