@@ -66,7 +66,7 @@ const createSortingCompare = (sorting, compareEqual) => (a, b) => {
     }
 };
 
-export const sortRows = (rows, sortings) => {
+export const sortedRows = (rows, sortings) => {
     if(!sortings.length)
         return rows;
 

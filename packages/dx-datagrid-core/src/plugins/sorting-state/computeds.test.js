@@ -1,10 +1,10 @@
 import { 
-    sortRows
+    sortedRows
 } from './computeds';
 
 describe('SortingState computeds', () => {
     
-    describe('#sortRows', () => {
+    describe('#sortedRows', () => {
 
         const rows = [
             { a: 2, b: 2 },
@@ -15,14 +15,14 @@ describe('SortingState computeds', () => {
 
         test('does not mutate rows if no sortings specified', () => {
             let sortings = [ ],
-                sorted = sortRows(rows, sortings);
+                sorted = sortedRows(rows, sortings);
                 
             expect(sorted).toBe(rows);
         });
 
         test('can sort ascending by one column', () => {
             let sortings = [ { column: 'a', direction: 'asc' } ],
-                sorted = sortRows(rows, sortings);
+                sorted = sortedRows(rows, sortings);
                 
             expect(sorted).toEqual([
                 { a: 1, b: 1 },
@@ -34,7 +34,7 @@ describe('SortingState computeds', () => {
 
         test('can sort descending by one column', () => {
             let sortings = [ { column: 'a', direction: 'desc' } ],
-                sorted = sortRows(rows, sortings);
+                sorted = sortedRows(rows, sortings);
                 
             expect(sorted).toEqual([
                 { a: 2, b: 2 },
@@ -46,7 +46,7 @@ describe('SortingState computeds', () => {
 
         test('can sort by several columns', () => {
             let sortings = [ { column: 'a', direction: 'asc' }, { column: 'b', direction: 'asc' } ],
-                sorted = sortRows(rows, sortings);
+                sorted = sortedRows(rows, sortings);
                 
             expect(sorted).toEqual([
                 { a: 1, b: 1 },
@@ -58,7 +58,7 @@ describe('SortingState computeds', () => {
 
         test('can sort by several columns with different directions', () => {
             let sortings = [ { column: 'a', direction: 'asc' }, { column: 'b', direction: 'desc' } ],
-                sorted = sortRows(rows, sortings);
+                sorted = sortedRows(rows, sortings);
                 
             expect(sorted).toEqual([
                 { a: 1, b: 2 },

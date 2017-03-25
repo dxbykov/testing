@@ -1,6 +1,6 @@
 import React from 'react';
 import { Getter, Action } from '@devexpress/dx-react-core';
-import { sortRows, setColumnSorting } from '@devexpress/dx-datagrid-core';
+import { sortedRows, setColumnSorting } from '@devexpress/dx-datagrid-core';
 
 export class SortingState extends React.PureComponent {
     constructor(props) {
@@ -17,7 +17,7 @@ export class SortingState extends React.PureComponent {
             sortingsChange && sortingsChange(nextSortings);
         };
 
-        this._rows = ({ rows, sortings }) => sortRows(rows, sortings);
+        this._rows = ({ rows, sortings }) => sortedRows(rows, sortings);
     }
     render() {
         let sortings = this.props.sortings || this.state.sortings;
