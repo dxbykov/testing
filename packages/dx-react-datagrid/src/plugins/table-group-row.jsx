@@ -13,6 +13,8 @@ export class TableGroupRow extends React.PureComponent {
         };
     }
     render() {
+        const GroupRowCell = this.props.groupRowCellTemplate;
+
         return (
             <div>
                 <Getter name="tableColumns"
@@ -37,9 +39,10 @@ export class TableGroupRow extends React.PureComponent {
                     connectActions={action => ({ toggleGroupExpanded: action('toggleGroupExpanded') })} >
 
                     {({ column, row, expandedGroups, toggleGroupExpanded }) => (
-                        <div onClick={() => toggleGroupExpanded({ groupKey: row.key })}>
-                            <span>{expandedGroups[row.key] ? '-' : '+'}</span> {row.column}: {row.value}
-                        </div>
+                        <GroupRowCell
+                            row={row}
+                            isExpanded={expandedGroups[row.key]}
+                            toggleGroupExpanded={() => toggleGroupExpanded({ groupKey: row.key })} />
                     )}
                 </Template>
             </div>
