@@ -1,6 +1,5 @@
 import React from 'react';
 import { Template } from '@devexpress/dx-react-core';
-import { Table } from '../components/table.jsx';
 import { TableViewBase, cellContentTemplate } from './table-view-base.jsx';
 import memoize from '../utils/memoize.js';
 
@@ -17,6 +16,9 @@ export class TableView extends React.PureComponent {
         };
     }
     render() {
+        const  { tableTemplate, rowTemplate, cellTemplate } = this.props;
+        const Table = tableTemplate;
+
         return (
             <div>
                 <TableViewBase />
@@ -24,10 +26,15 @@ export class TableView extends React.PureComponent {
                 <Template
                     name="tableView"
                     connectGetters={(getter) => ({
-                        rows: this._tableRows(getter('tableHeaderRows')(), getter('tableBodyRows')()),
+                        headerRows: getter('tableHeaderRows')(),
+                        bodyRows: getter('tableBodyRows')(),
                         columns: getter('tableColumns')(),
                     })}>
-                    <Table getCellInfo={this._getCellInfo} cellContentTemplate={cellContentTemplate} />
+                    <Table
+                        getCellInfo={this._getCellInfo}
+                        cellContentTemplate={cellContentTemplate}
+                        cellTemplate={cellTemplate}
+                        rowTemplate={rowTemplate} />
                 </Template>
             </div>
         );

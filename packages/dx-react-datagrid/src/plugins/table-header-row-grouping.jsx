@@ -1,9 +1,10 @@
 import React from 'react';
 import { Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { GroupableCell } from '../components/groupable-cell.jsx';
 
 export class TableHeaderRowGrouping extends React.PureComponent {
     render() {
+        const GroupableCell = this.props.groupableCellTemplate;
+
         return (
             <div>
                 <Template

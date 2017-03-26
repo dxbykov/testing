@@ -1,6 +1,5 @@
 import React from 'react';
 import { Getter, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { Table } from '../components/table.jsx';
 import { WindowedScroller } from '../components/windowed-scroller.jsx';
 import { VirtualTable } from '../components/virtual-table.jsx';
 import { TableViewBase, cellContentTemplate } from './table-view-base.jsx';

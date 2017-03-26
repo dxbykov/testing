@@ -2,12 +2,11 @@ import React from 'react';
 import {
     DataGrid,
     SortingState, SelectionState, FilterState, PagingState, GroupingState,
-    TableView, TableColumnSelection, TableHeaderRowGrouping, TableFilterRow, TableHeaderRow, TableGroupRow,
-    Grouping
+    TableFilterRow, TableHeaderRow, TableGroupRow
 } from '@devexpress/dx-react-datagrid';
 import {
-    TableRowDetail, TableHeaderRowSorting,
-    Paging
+    TableView, TableRowDetail, TableHeaderRowSorting, TableHeaderRowGrouping,
+    TableColumnSelection, Paging, Grouping
 } from '@devexpress/dx-react-datagrid-bootstrap3';
 
 import { generateColumns, generateRows } from './demoData';
@@ -27,7 +26,7 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
         let { rows, columns } = this.state;
 
         return (
-            <div style={{ width: '500px' }}>
+            <div style={{ width: '100%' }}>
                 <h2>Full Featured Uncontrolled Demo</h2>
 
                 <DataGrid

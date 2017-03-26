@@ -1,16 +1,13 @@
 * {
     box-sizing: border-box;
 }
-.virtual-table, table {
+.virtual-table {
     border-top: 1px solid gray;
     border-left: 1px solid gray;
 }
-.virtual-cell, td {
+.virtual-cell {
     border-right: 1px solid gray; 
     border-bottom: 1px solid gray;
-}
-
-.virtual-cell {
     display: flex;
     align-items: center;
 }

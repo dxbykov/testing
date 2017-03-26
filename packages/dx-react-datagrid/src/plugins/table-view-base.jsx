@@ -1,6 +1,5 @@
 import React from 'react';
 import { Getter, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { Table } from '../components/table.jsx';
 import memoize from '../utils/memoize.js';
 
 export const cellContentTemplate = ({ row, column }) => <TemplatePlaceholder name="tableViewCell" params={{ row, column }} />;

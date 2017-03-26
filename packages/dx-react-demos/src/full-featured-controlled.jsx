@@ -2,12 +2,12 @@ import React from 'react';
 import {
     DataGrid,
     SortingState, SelectionState, FilterState, PagingState,
-    TableView, TableColumnSelection, TableFilterRow, TableHeaderRow
+    TableFilterRow, TableHeaderRow
 } from '@devexpress/dx-react-datagrid';
 
 import {
-    TableRowDetail, TableHeaderRowSorting,
-    Paging
+    TableView, TableRowDetail, TableHeaderRowSorting,
+    TableColumnSelection, Paging
 } from '@devexpress/dx-react-datagrid-bootstrap3';
 
 import { generateColumns, generateRows } from './demoData';
@@ -37,7 +37,7 @@ export class FullFeaturedControlledDemo extends React.PureComponent {
         let { rows, columns, sortings, selection, expandedRows, filters, page } = this.state;
 
         return (
-            <div style={{ width: '500px' }}>
+            <div style={{ width: '100%' }}>
                 <h2>Full Featured Controlled Demo</h2>
 
                 <DataGrid

@@ -1,7 +1,5 @@
 import React from 'react';
 import { Getter, Template } from '@devexpress/dx-react-core';
-import { SelectAllCell } from '../components/select-all-cell.jsx';
-import { SelectCell } from '../components/select-cell.jsx';
 
 export class TableColumnSelection extends React.PureComponent {
     constructor(props) {
@@ -10,6 +8,9 @@ export class TableColumnSelection extends React.PureComponent {
         this._tableColumns = ({ tableColumns }) => [{ type: 'select', name: 'select', width: 20 }, ...tableColumns];
     }
     render() {
+        const SelectAllCell = this.props.selectAllCellTemplate;
+        const SelectCell = this.props.selectCellTemplate;
+
         return (
             <div>
                 <Getter name="tableColumns"

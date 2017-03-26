@@ -29,9 +29,10 @@ export class TableFilterRow extends React.PureComponent {
                     {({ filter, changeFilter }) => (
                         <input
                             type="text"
+                            className="form-control input-sm"
                             value={filter}
                             onChange={(e) => changeFilter(e.target.value)}
-                            style={{ width: '100%', padding: 0 }}/>
+                            style={{ width: '100%' }}/>
                     )}
                 </Template>
             </div>

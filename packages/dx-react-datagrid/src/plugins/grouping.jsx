@@ -1,6 +1,5 @@
 import React from 'react';
 import { Getter, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
-import { GroupPanel } from '../components/group-panel.jsx';
 
 export class Grouping extends React.PureComponent {
     constructor(props) {
@@ -37,7 +36,7 @@ export class Grouping extends React.PureComponent {
                     connectActions={(action) => ({
                         groupByColumn: ({ columnName, groupIndex }) => action('groupByColumn')({ columnName, groupIndex }),
                     })}>
-                    <GroupPanel />
+                    {this.props.groupPanelTemplate}
                 </Template>
             </div>
         );
