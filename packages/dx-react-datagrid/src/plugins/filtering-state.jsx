@@ -34,7 +34,7 @@ const filterHelpers = {
 export const filterStateForColumn = filterHelpers.filterFor;
 
 // UI
-export class FilterState extends React.PureComponent {
+export class FilteringState extends React.PureComponent {
     constructor(props) {
         super(props);
 

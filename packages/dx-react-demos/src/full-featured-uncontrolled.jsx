@@ -4,7 +4,7 @@ import {
 } from '@devexpress/dx-react-core';
 import {
     DataGrid,
-    SortingState, SelectionState, FilterState, PagingState, GroupingState,
+    SortingState, SelectionState, FilteringState, PagingState, GroupingState,
     TableHeaderRow
 } from '@devexpress/dx-react-datagrid';
 import {
@@ -39,7 +39,7 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                     <SortingState
                         defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
                     
-                    <FilterState
+                    <FilteringState
                         defaultFilters={[{ column: 'name', value: 'j' }]}/>
                     
 

@@ -4,7 +4,7 @@ import {
 } from '@devexpress/dx-react-core';
 import {
     DataGrid,
-    SortingState, SelectionState, FilterState, PagingState,
+    SortingState, SelectionState, FilteringState, PagingState,
     TableHeaderRow
 } from '@devexpress/dx-react-datagrid';
 import {
@@ -46,7 +46,7 @@ export class FullFeaturedControlledDemo extends React.PureComponent {
                     rows={rows}
                     columns={columns}>
 
-                    <FilterState
+                    <FilteringState
                         filters={filters}
                         filtersChange={this.changeFilters}/>
                     <SortingState

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Getter, Template } from '@devexpress/dx-react-core';
-import { filterStateForColumn } from './filter-state.jsx';
+import { filterStateForColumn } from './filtering-state.jsx';
 
 export class TableFilterRow extends React.PureComponent {
     constructor(props) {

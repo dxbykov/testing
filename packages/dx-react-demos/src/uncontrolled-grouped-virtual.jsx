@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     DataGrid,
-    SortingState, SelectionState, FilterState, GroupingState,
+    SortingState, SelectionState, FilteringState, GroupingState,
     TableHeaderRow
 } from '@devexpress/dx-react-datagrid';
 import {
@@ -33,7 +33,7 @@ export class UncontrolledGroupedVirtualDemo extends React.PureComponent {
                     rows={rows}
                     columns={columns}>
 
-                    <FilterState
+                    <FilteringState
                         defaultFilters={[{ column: 'car', value: 'au' }]}/>
                     <SortingState
                         defaultSortings={[{ column: 'name', direction: 'asc' }]}/>

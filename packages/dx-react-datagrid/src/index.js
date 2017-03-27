@@ -1,6 +1,6 @@
 export { DataGrid } from './datagrid.jsx';
 
-export { FilterState } from './plugins/filter-state.jsx';
+export { FilteringState } from './plugins/filtering-state.jsx';
 export { PagingState } from './plugins/paging-state.jsx';
 export { GroupingState } from './plugins/grouping-state.jsx';
 export { SelectionState } from './plugins/selection-state.jsx';

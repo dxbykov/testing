@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     DataGrid,
-    SortingState, SelectionState, FilterState, PagingState,
+    SortingState, SelectionState, FilteringState, PagingState,
     TableHeaderRow,
     Paging
 } from '@devexpress/dx-react-datagrid';
@@ -33,7 +33,7 @@ export class UncontrolledVirtualDemo extends React.PureComponent {
                     rows={rows}
                     columns={columns}>
 
-                    <FilterState
+                    <FilteringState
                         defaultFilters={[{ column: 'sex', value: 'fe' }]}/>
                     <SortingState
                         defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
