@@ -18,11 +18,25 @@
             "port": 5858
         },
         {
-            "name" : "Run Jest Tests",
+            "name" : "Run dx-react-core tests",
             "type": "node",
             "request": "launch",
             "program" : "${workspaceRoot}/packages/dx-react-core/node_modules/jest/bin/jest.js",
             "cwd": "${workspaceRoot}/packages/dx-react-core/",
+            "args": [
+                "--runInBand"
+            ],
+            "runtimeArgs": [
+                "--harmony"
+            ],
+            "sourceMaps": true
+        },
+        {
+            "name" : "Run dx-datagrid-core tests",
+            "type": "node",
+            "request": "launch",
+            "program" : "${workspaceRoot}/packages/dx-datagrid-core/node_modules/jest/bin/jest.js",
+            "cwd": "${workspaceRoot}/packages/dx-datagrid-core/",
             "args": [
                 "--runInBand"
             ],
