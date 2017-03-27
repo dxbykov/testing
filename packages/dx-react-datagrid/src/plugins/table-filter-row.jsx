@@ -26,14 +26,7 @@ export class TableFilterRow extends React.PureComponent {
                     connectActions={(action, { column }) => ({
                         changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value }),
                     })}>
-                    {({ filter, changeFilter }) => (
-                        <input
-                            type="text"
-                            className="form-control input-sm"
-                            value={filter}
-                            onChange={(e) => changeFilter(e.target.value)}
-                            style={{ width: '100%' }}/>
-                    )}
+                    {({ filter, changeFilter }) => this.props.filterCellTemplate({ filter, changeFilter })}
                 </Template>
             </div>
         )
