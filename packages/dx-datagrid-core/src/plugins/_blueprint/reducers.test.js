@@ -7,7 +7,11 @@ describe('Plugin reducers', () => {
     describe('#_pureReducer', () => {
 
         test('should work', () => {
-            expect(_pureReducer()).toBeUndefined();
+            let state = [],
+                payload = { columnName: 'test' },
+                nextState = _pureReducer(state, payload);
+
+            expect(nextState).toBeUndefined();
         });
 
     });

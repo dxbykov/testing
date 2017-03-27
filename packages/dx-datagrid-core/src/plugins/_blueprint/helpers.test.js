@@ -7,7 +7,10 @@ describe('Plugin helpers', () => {
     describe('#_pureHelper', () => {
 
         test('should work', () => {
-            expect(_pureHelper()).toBeUndefined();
+            let arg1 = [],
+                value = _pureHelper(arg1);
+                
+            expect(value).toBeUndefined();
         });
 
     });
