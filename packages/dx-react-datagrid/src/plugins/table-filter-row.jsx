@@ -1,6 +1,6 @@
 import React from 'react';
 import { Getter, Template } from '@devexpress/dx-react-core';
-import { filterStateForColumn } from './filtering-state.jsx';
+import { getColumnFilterValue } from '@devexpress/dx-datagrid-core';
 
 export class TableFilterRow extends React.PureComponent {
     constructor(props) {
@@ -21,7 +21,7 @@ export class TableFilterRow extends React.PureComponent {
                     name="tableViewCell"
                     predicate={({ column, row }) => row.type === 'filter' && !column.type}
                     connectGetters={(getter, { column }) => ({
-                        filter: filterStateForColumn(column.name, getter('filters')()),
+                        filter: getColumnFilterValue(getter('filters')(), column.name),
                     })}
                     connectActions={(action, { column }) => ({
                         changeFilter: (value) => action('setColumnFilter')({ columnName: column.name, value }),
