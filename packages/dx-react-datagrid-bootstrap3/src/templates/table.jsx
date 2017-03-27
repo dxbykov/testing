@@ -48,7 +48,7 @@ export class Table extends React.PureComponent {
         const TableRow = rowTemplate;
 
         return (
-            <table style={{ borderCollapse: 'collapse', width: '100%' }} className="table table-condensed">
+            <table style={{ borderCollapse: 'collapse', width: '100%' }} className="table">
                 <thead>
                     {headerRows.map((row, rowIndex) => 
                         <TableRow

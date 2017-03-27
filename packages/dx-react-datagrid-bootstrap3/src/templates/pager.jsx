@@ -3,7 +3,8 @@ import { Pagination } from 'react-bootstrap';
 
 export const Pager = ({ currentPage, onPageChange, totalPages }) => (
     <Pagination
-          items={totalPages}
-          activePage={currentPage + 1}
-          onSelect={page => onPageChange(page - 1)} />
+        style={{ margin: 0 }}
+        items={totalPages}
+        activePage={currentPage + 1}
+        onSelect={page => onPageChange(page - 1)} />
 );

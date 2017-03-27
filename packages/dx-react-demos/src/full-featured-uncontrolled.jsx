@@ -50,7 +50,7 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
 
                     <PagingState
                         defaultPage={0}
-                        pageSize={25} />
+                        pageSize={10} />
 
                     <SelectionState
                         defaultSelection={[1, 3, 18]}/>
