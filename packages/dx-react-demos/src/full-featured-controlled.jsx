@@ -1,10 +1,12 @@
 import React from 'react';
 import {
+    Template, TemplatePlaceholder
+} from '@devexpress/dx-react-core';
+import {
     DataGrid,
     SortingState, SelectionState, FilterState, PagingState,
     TableHeaderRow
 } from '@devexpress/dx-react-datagrid';
-
 import {
     TableView, TableRowDetail, TableHeaderRowSorting,
     TableFilterRow, TableColumnSelection, Paging
@@ -74,6 +76,15 @@ export class FullFeaturedControlledDemo extends React.PureComponent {
                         template={this.rowTemplate}/>
 
                     <Paging />
+
+                    <Template name="root">
+                        <div className="panel panel-default">
+                            <TemplatePlaceholder name="tableView" />
+                            <div className="panel-footer">
+                                <TemplatePlaceholder name="pager" />
+                            </div>
+                        </div>
+                    </Template>
 
                 </DataGrid>
             </div>

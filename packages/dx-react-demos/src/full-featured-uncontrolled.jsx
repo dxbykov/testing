@@ -1,5 +1,8 @@
 import React from 'react';
 import {
+    Template, TemplatePlaceholder
+} from '@devexpress/dx-react-core';
+import {
     DataGrid,
     SortingState, SelectionState, FilterState, PagingState, GroupingState,
     TableHeaderRow
@@ -71,6 +74,18 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                     <TableGroupRow />
 
                     <Grouping />
+
+                    <Template name="root">
+                        <div className="panel panel-default">
+                            <div className="panel-heading">
+                                <TemplatePlaceholder name="group-panel" />
+                            </div>
+                            <TemplatePlaceholder name="tableView" />
+                            <div className="panel-footer">
+                                <TemplatePlaceholder name="pager" />
+                            </div>
+                        </div>
+                    </Template>
 
                 </DataGrid>
             </div>
