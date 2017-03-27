@@ -13,7 +13,7 @@ export class FilteringState extends React.PureComponent {
         this._setColumnFilter = (filters, { columnName, value }) => {
             let { filtersChange } = this.props;
             let nextFilters = setColumnFilter(filters, { columnName, value });
-            this.setState({ nextFilters });
+            this.setState({ filters: nextFilters });
             filtersChange && filtersChange(nextFilters);
         };
 
