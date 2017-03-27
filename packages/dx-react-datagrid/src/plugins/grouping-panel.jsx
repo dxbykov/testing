@@ -1,7 +1,7 @@
 import React from 'react';
 import { Getter, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
 
-export class Grouping extends React.PureComponent {
+export class GroupingPanel extends React.PureComponent {
     constructor(props) {
         super(props);
 

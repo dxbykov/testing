@@ -9,7 +9,7 @@ import {
 } from '@devexpress/dx-react-datagrid';
 import {
     TableView, TableRowDetail, TableHeaderRowSorting,
-    TableFilterRow, TableColumnSelection, Paging
+    TableFilterRow, TableColumnSelection, PagingPanel
 } from '@devexpress/dx-react-datagrid-bootstrap3';
 
 import { generateColumns, generateRows } from './demoData';
@@ -75,7 +75,7 @@ export class FullFeaturedControlledDemo extends React.PureComponent {
                         expandedChange={this.changeExpandedRows}
                         template={this.rowTemplate}/>
 
-                    <Paging />
+                    <PagingPanel />
 
                     <Template name="root">
                         <div className="panel panel-default">

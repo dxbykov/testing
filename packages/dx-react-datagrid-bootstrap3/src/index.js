@@ -1,5 +1,5 @@
-export { Paging } from './plugins/paging.jsx';
-export { Grouping } from './plugins/grouping.jsx';
+export { PagingPanel } from './plugins/paging-panel.jsx';
+export { GroupingPanel } from './plugins/grouping-panel.jsx';
 export { TableRowDetail } from './plugins/table-row-detail.jsx';
 export { TableHeaderRowSorting } from './plugins/table-header-row-sorting.jsx';
 export { TableHeaderRowGrouping } from './plugins/table-header-row-grouping.jsx';

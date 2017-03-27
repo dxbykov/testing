@@ -1,7 +1,7 @@
 import React from 'react';
 import { Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
 
-export class Paging extends React.PureComponent {
+export class PagingPanel extends React.PureComponent {
     render() {
         return (
             <div>
