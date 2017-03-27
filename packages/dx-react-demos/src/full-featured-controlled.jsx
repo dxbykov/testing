@@ -31,7 +31,7 @@ export class FullFeaturedControlledDemo extends React.PureComponent {
         this.changeSortings = (sortings) => this.setState({ sortings });
         this.changeFilters = (filters) => this.setState({ filters });
         this.changePage = (page) => this.setState({ page });
-        this.rowTemplate = (row) => <div>Detail for {row.name} from {row.city}</div>
+        this.rowTemplate = ({ row }) => <div>Detail for {row.name} from {row.city}</div>
     }
     render() {
         let { rows, columns, sortings, selection, expandedRows, filters, page } = this.state;

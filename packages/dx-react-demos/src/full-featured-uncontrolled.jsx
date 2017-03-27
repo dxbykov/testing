@@ -20,7 +20,7 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
             rows: generateRows(105),
         };
 
-        this.rowTemplate = (row) => <div>Detail for {row.name} from {row.city}</div>
+        this.rowTemplate = ({ row }) => <div>Detail for {row.name} from {row.city}</div>
     }
     render() {
         let { rows, columns } = this.state;

@@ -21,7 +21,6 @@ export class TableRowDetail extends React.PureComponent {
         super(props);
 
         this.state = {
-            animating: [],
             expanded: props.defaultExpanded || [],
         };
 
@@ -30,11 +29,10 @@ export class TableRowDetail extends React.PureComponent {
             let { expandedChange } = this.props;
             this.setState({ expanded });
             expandedChange && expandedChange(expanded);
-            this.setupAnimation(prevExpanded, expanded);
         };
         
-        this._tableBodyRows = ({ tableBodyRows, expanded, animating }) => {
-            [...expanded, ...animating].filter((value, index, self) => self.indexOf(value) === index).forEach(rowId => {
+        this._tableBodyRows = ({ tableBodyRows, expanded }) => {
+            expanded.filter((value, index, self) => self.indexOf(value) === index).forEach(rowId => {
                 let index = tableBodyRows.findIndex(row => row.id === rowId);
                 if(index !== -1) {
                     let rowIndex = tableBodyRows.findIndex(row => row.id === rowId);
@@ -51,25 +49,9 @@ export class TableRowDetail extends React.PureComponent {
         };
         this._tableColumns = ({ tableColumns }) => [{ type: 'detail', name: 'detail', width: 20 }, ...tableColumns];
     }
-    setupAnimation(prevExpanded, newExpanded) {
-        let collapsed = prevExpanded.filter(e => newExpanded.indexOf(e) === -1);
-        let expanded = newExpanded.filter(e => prevExpanded.indexOf(e) === -1);
-
-        let changed = [].concat(collapsed).concat(expanded);
-
-        if(changed.length) {
-            this.setState({ animating: this.state.animating.concat(changed) });
-            setTimeout(() => {
-                this.setState({ 
-                    animating: this.state.animating.filter(a => changed.indexOf(a) === -1)
-                })
-            }, 200);
-        }
-    }
     render() {
         let expanded = this.props.expanded || this.state.expanded;
         let { template, detailToggleTemplate } = this.props;
-        let { animating } = this.state;
 
         return (
             <div>
@@ -90,16 +72,10 @@ export class TableRowDetail extends React.PureComponent {
                     pureComputed={this._tableBodyRows}
                     connectArgs={(getter) => ({
                         tableBodyRows: getter('tableBodyRows')(),
-                        expanded: expanded,
-                        animating: animating,
+                        expanded: expanded
                     })}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'detailRow'}>
-                    {({ column, row }) => (
-                        <div>
-                            {template ? template(row.for) : <div>Hello detail!</div>}
-                            {animating.indexOf(row.for.id) > -1 ? 'Animating' : null}
-                        </div>
-                    )}
+                    {({ column, row }) => template({ row: row.for })}
                 </Template>
             </div>
         )
