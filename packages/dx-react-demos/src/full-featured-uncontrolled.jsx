@@ -75,18 +75,6 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
 
                     <Grouping />
 
-                    <Template name="root">
-                        <div className="panel panel-default">
-                            <div className="panel-heading">
-                                <TemplatePlaceholder name="group-panel" />
-                            </div>
-                            <TemplatePlaceholder name="tableView" />
-                            <div className="panel-footer">
-                                <TemplatePlaceholder name="pager" />
-                            </div>
-                        </div>
-                    </Template>
-
                 </DataGrid>
             </div>
         )

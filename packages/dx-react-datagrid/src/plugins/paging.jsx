@@ -5,10 +5,10 @@ export class Paging extends React.PureComponent {
     render() {
         return (
             <div>
-                <Template name="root">
-                    <div> {/* TODO: Fiber remove */}
-                        <TemplatePlaceholder />
+                <Template name="gridFooter">
+                    <div>
                         <TemplatePlaceholder name="pager" />
+                        <TemplatePlaceholder />
                     </div>
                 </Template>
                 <Template

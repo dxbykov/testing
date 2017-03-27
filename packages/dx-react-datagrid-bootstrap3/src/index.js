@@ -6,4 +6,5 @@ export { TableHeaderRowGrouping } from './plugins/table-header-row-grouping.jsx'
 export { TableGroupRow } from './plugins/table-group-row.jsx';
 export { TableColumnSelection } from './plugins/table-column-selection.jsx';
 export { TableView } from './plugins/table-view.jsx';
+export { VirtualTableView } from './plugins/virtual-table-view.jsx';
 export { TableFilterRow } from './plugins/table-filter-row.jsx';

@@ -26,6 +26,7 @@
     "webpack": "^2.2.1"
   },
   "dependencies": {
+    "@devexpress/dx-react-core": "^0.0.0",
     "@devexpress/dx-react-datagrid": "^0.0.0",
     "react": "^15.4.2",
     "react-bootstrap": "^0.30.8"

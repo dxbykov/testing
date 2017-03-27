@@ -23,6 +23,24 @@ describe('TemplatePlaceholder', () => {
         expect(tree.find('h1').exists()).toBeTruthy();
     });
     
+    test('placeholder can accept a content render function as a child', () => {
+        const tree = mount(
+            <PluginHost>
+                <Template name="test">
+                    <span>Test content</span>
+                </Template>
+
+                <Template name="root">
+                    <TemplatePlaceholder name="test">
+                        {content => <h1>{content}</h1>}
+                    </TemplatePlaceholder>
+                </Template>
+            </PluginHost>
+        );
+
+        expect(tree.find('h1 > span').exists()).toBeTruthy();
+    });
+    
     test('template should be rendered in placeholder with params', () => {
         const tree = mount(
             <PluginHost>

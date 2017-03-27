@@ -20,7 +20,7 @@ export class TableViewBase extends React.PureComponent {
                         columns: getter('columns')(),
                     })}/>
 
-                <Template name="root">
+                <Template name="gridBody">
                     <TemplatePlaceholder name="tableView" />
                 </Template>
                 <Template name="tableViewCell">

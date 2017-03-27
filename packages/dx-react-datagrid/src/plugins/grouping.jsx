@@ -21,8 +21,8 @@ export class Grouping extends React.PureComponent {
                         grouping: getter('grouping')()
                     })}/>
 
-                <Template name="root">
-                    <div> {/* TODO: Fiber remove */}
+                <Template name="gridHeading">
+                    <div>
                         <TemplatePlaceholder name="group-panel" />
                         <TemplatePlaceholder />
                     </div>
