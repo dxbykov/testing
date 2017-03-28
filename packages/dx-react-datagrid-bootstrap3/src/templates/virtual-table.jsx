@@ -16,13 +16,42 @@ export class VirtualTable extends React.Component {
 
         this.rowHeight = (row) => row.height ? this.state.autoHeights.get(row) || DEFAULT_HEIGHT : DEFAULT_HEIGHT;
         this.columnWidth = (column) => column.width || DEFAULT_WIDTH;
-        this.colspan
     }
     render() {
         const { headerRows, bodyRows, columns, cellContentTemplate } = this.props;
         
+        const headerCell = ({ row, column }) => {
+            let template = cellContentTemplate({ row, column });
+            return (
+                <th>
+                    {template}
+                </th>
+            );
+        };
 
-        const tr = (row, TagName, position) => {
+        const cell = ({ row, column }) => {
+            let template = cellContentTemplate({ row, column });
+            if(row.height === 'auto') {
+                template = (
+                    <Sizer
+                        height={this.rowHeight(row) - 17} // TODO: paddings
+                        onHeightChange={(height) => {
+                            let { autoHeights } = this.state;
+                            autoHeights.set(row, height + 17); // TODO: paddings
+                            this.setState({ autoHeights })
+                        }}>
+                        {template}
+                    </Sizer>
+                );
+            }
+            return (
+                <td>
+                    {template}
+                </td>
+            );
+        };
+
+        const row = (row, cellTemplate, position) => {
             const colspan = row.colspan;
             const columnLength = colspan !== undefined ? colspan + 1 : columns.length;
             return (
@@ -35,35 +64,15 @@ export class VirtualTable extends React.Component {
                     itemCount={columnLength}
                     itemInfo={(columnIndex) => {
                         const size = columnIndex !== colspan
-                            ? columns[columnIndex].width || DEFAULT_WIDTH
-                            : columns.slice(colspan).reduce(((accum, column) => (accum + this.columnWidth(column))), 0);
+                            ? this.columnWidth(columns[columnIndex])
+                            : columns.slice(colspan).reduce((accum, column) => accum + this.columnWidth(column), 0);
                         
                         return {
                             size: size,
                             stick: false,
                         };
                     }}
-                    itemTemplate={(columnIndex) => {
-                        let template = cellContentTemplate({ row, column: columns[columnIndex] });
-                        if(row.height === 'auto') {
-                            template = (
-                                <Sizer
-                                    height={this.rowHeight(row) - 17} // TODO: paddings
-                                    onHeightChange={(height) => {
-                                        let { autoHeights } = this.state;
-                                        autoHeights.set(row, height + 17); // TODO: paddings
-                                        this.setState({ autoHeights })
-                                    }}>
-                                    {template}
-                                </Sizer>
-                            );
-                        }
-                        return (
-                            <TagName>
-                                {template}
-                            </TagName>
-                        );
-                    }}/>
+                    itemTemplate={(columnIndex) => cellTemplate({ row, column: columns[columnIndex] })}/>
             );
         };
 
@@ -85,7 +94,7 @@ export class VirtualTable extends React.Component {
                     size: this.rowHeight(headerRows[rowIndex]),
                     stick: false,
                 })}
-                itemTemplate={(rowIndex, position) => tr(headerRows[rowIndex], 'th', position)}/>
+                itemTemplate={(rowIndex, position) => row(headerRows[rowIndex], headerCell, position)}/>
         );
 
         const tBody = (position) => (
@@ -100,7 +109,7 @@ export class VirtualTable extends React.Component {
                     size: this.rowHeight(bodyRows[rowIndex]),
                     stick: false,
                 })}
-                itemTemplate={(rowIndex, position) => tr(bodyRows[rowIndex], 'td', position)}/>
+                itemTemplate={(rowIndex, position) => row(bodyRows[rowIndex], cell, position)}/>
         );
 
         return (
@@ -114,8 +123,8 @@ export class VirtualTable extends React.Component {
                         itemCount={2}
                         itemInfo={(rowIndex) => {
                             const size = rowIndex === 0
-                                ? headerRows.reduce(((accum, row) => (accum + this.rowHeight(row))), 0)
-                                : bodyRows.reduce(((accum, row) => (accum + this.rowHeight(row))), 0);
+                                ? headerRows.reduce((accum, row) => accum + this.rowHeight(row), 0)
+                                : bodyRows.reduce((accum, row) => accum + this.rowHeight(row), 0);
                             
                             return {
                                 size: size,

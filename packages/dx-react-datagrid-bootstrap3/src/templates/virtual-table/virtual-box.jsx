@@ -154,7 +154,6 @@ export class VirtualBox extends React.Component {
                 {
                     key: `${visibleItemMeta.index}`,
                     style: styles,
-                    position: visibleItemMeta.offset,
                 }
             );
         })
