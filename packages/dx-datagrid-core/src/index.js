@@ -11,3 +11,6 @@ export * from './plugins/grouping-state/computeds';
 
 export * from './plugins/paging-state/reducers';
 export * from './plugins/paging-state/computeds';
+
+export * from './plugins/selection-state/reducers';
+export * from './plugins/selection-state/computeds';

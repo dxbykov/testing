@@ -44,7 +44,7 @@ export class TableColumnSelection extends React.PureComponent {
                         selected: getter('selection')().indexOf(row.id) > -1,
                     })}
                     connectActions={(action, { row }) => ({
-                        toggleSelected: (rows) => action('toggleRowSelection')({ row }),
+                        toggleSelected: (rows) => action('setRowSelection')({ row }),
                     })}>
                     {({ selected, toggleSelected }) => (
                         <SelectCell selected={selected} changeSelected={toggleSelected} />

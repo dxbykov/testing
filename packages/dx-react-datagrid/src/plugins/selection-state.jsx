@@ -1,30 +1,7 @@
 import React from 'react';
 import { Getter, GetterExtender, Action } from '@devexpress/dx-react-core';
+import { setRowSelection, toggleSelectAll } from '@devexpress/dx-datagrid-core';
 
-const selectionHelpers = {
-    calcSelection: (prevSelection, row, getRowId) => {
-        let selectedRows = prevSelection.slice(),
-            rowId = getRowId(row),
-            selectedIndex = selectedRows.indexOf(rowId);
-        
-        if(selectedIndex > -1) {
-            selectedRows.splice(selectedIndex, 1);
-        } else if (selectedIndex === -1) {
-            selectedRows.push(rowId)
-        }
-
-        return selectedRows;
-    },
-    toggleSelectAll: (prevSelection, rows, getRowId) => {
-        if(prevSelection.length === rows.length) {
-            return [];
-        } else {
-            return rows.map(getRowId);
-        }
-    },
-};
-
-// UI
 export class SelectionState extends React.PureComponent {
     constructor(props) {
         super(props);
@@ -44,10 +21,10 @@ export class SelectionState extends React.PureComponent {
         
         return (
             <div>
-                <Action name="toggleRowSelection" action={({ row }) =>
-                    this.changeSelection(selectionHelpers.calcSelection(selection, row, (row) => row.id))} />
+                <Action name="setRowSelection" action={({ row }) =>
+                    this.changeSelection(setRowSelection(selection, { rowId: row.id }))} />
                 <Action name="toggleAllSelection" action={({ rows }) =>
-                    this.changeSelection(selectionHelpers.toggleSelectAll(selection, rows, (row) => row.id))} />
+                    this.changeSelection(toggleSelectAll(selection, { rows, getRowId: row => row.id }))} />
 
                 <Getter name="selection" value={selection} />
             </div>
