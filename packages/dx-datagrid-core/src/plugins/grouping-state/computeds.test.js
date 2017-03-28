@@ -29,6 +29,54 @@ describe('GroupingPlugin computeds', () => {
             expect(grouped[0].rows).toHaveLength(2);
             expect(grouped[0].rows[0]).toMatchObject(rows[0]);
             expect(grouped[0].rows[1]).toMatchObject(rows[1]);
+
+            expect(grouped[1]).toMatchObject({
+                key: '2',
+                value: '2',
+                type: 'groupRow',
+                column: 'a',
+                colspan: 0
+            });
+            expect(grouped[1].rows).toHaveLength(2);
+            expect(grouped[1].rows[0]).toMatchObject(rows[2]);
+            expect(grouped[1].rows[1]).toMatchObject(rows[3]);
+        });
+
+        test('can group by several columns', () => {
+            let groupings = [ { column: 'a' }, { column: 'b' } ],
+                grouped = groupedRows(rows, groupings);
+                
+            expect(grouped).toHaveLength(2);
+            expect(grouped[0]).toMatchObject({
+                key: '1',
+                value: '1',
+                type: 'groupRow',
+                column: 'a',
+                colspan: 0
+            });
+            expect(grouped[0].rows).toHaveLength(2);
+            expect(grouped[0].rows[0]).toMatchObject({
+                key: '1_1',
+                value: '1',
+                type: 'groupRow',
+                column: 'b',
+                colspan: 1
+            });
+            expect(grouped[0].rows[1]).toMatchObject({
+                key: '1_2',
+                value: '2',
+                type: 'groupRow',
+                column: 'b',
+                colspan: 1
+            });
+            expect(grouped[0].rows[0].rows).toHaveLength(1);
+            expect(grouped[0].rows[1].rows).toHaveLength(1);
+            expect(grouped[1].rows[0].rows).toHaveLength(1);
+            expect(grouped[1].rows[1].rows).toHaveLength(1);
+            expect(grouped[0].rows[0].rows[0]).toMatchObject(rows[0]);
+            expect(grouped[0].rows[1].rows[0]).toMatchObject(rows[1]);
+            expect(grouped[1].rows[0].rows[0]).toMatchObject(rows[2]);
+            expect(grouped[1].rows[1].rows[0]).toMatchObject(rows[3]);
         });
 
     });
