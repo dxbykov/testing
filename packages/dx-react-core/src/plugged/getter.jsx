@@ -5,7 +5,6 @@ function getterMemoize(func, onChange) {
   let lastArg = null;
   let lastResult = null;
   return function(...args) {
-    //const args;// = arguments;
     if(
       lastArg === null ||
       !argumentsShallowEqual(lastArg, args)
