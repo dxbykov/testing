@@ -67,7 +67,7 @@ export class VirtualBox extends React.Component {
         }
         
         return { 
-            visibleItemMetas: visibleItemMetas.concat(stickyItemsMetas),
+            visibleItemMetas: [...visibleItemMetas, ...stickyItemsMetas],
             fullSize: offset,
             stickyBeforeSize: stickyItemsMetas.reduce((accumulator, meta) => accumulator + meta.size, 0)
         };

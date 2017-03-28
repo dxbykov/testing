@@ -14,7 +14,7 @@ export class VirtualTable extends React.Component {
             autoHeights: new WeakMap()
         };
 
-        this.rowHeight = (row) => row.height ? this.state.autoHeights.get(row) || DEFAULT_HEIGHT : DEFAULT_HEIGHT;
+        this.rowHeight = (row) => row.height ? row.height === 'auto' ? this.state.autoHeights.get(row) || DEFAULT_HEIGHT : row.height : DEFAULT_HEIGHT;
         this.columnWidth = (column) => column.width || DEFAULT_WIDTH;
     }
     render() {
