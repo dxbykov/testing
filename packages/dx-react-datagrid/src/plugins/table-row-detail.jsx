@@ -1,20 +1,6 @@
 import React from 'react';
 import { Getter, Template } from '@devexpress/dx-react-core';
-
-const expandingHelpers = {
-    calcExpanded: (prevExpanded, rowId) => {
-        let expandedRows = prevExpanded.slice(),
-            expandedIndex = expandedRows.indexOf(rowId);
-        
-        if(expandedIndex > -1) {
-            expandedRows.splice(expandedIndex, 1);
-        } else if (expandedIndex === -1) {
-            expandedRows.push(rowId)
-        }
-
-        return expandedRows;
-    },
-}
+import { setDetailRowExpanded, expandedDetailRows, isDetailRowExpanded } from '@devexpress/dx-datagrid-core';
 
 export class TableRowDetail extends React.PureComponent {
     constructor(props) {
@@ -24,29 +10,14 @@ export class TableRowDetail extends React.PureComponent {
             expanded: props.defaultExpanded || [],
         };
 
-        this.changeExpanded = (expanded) => {
+        this._setDetailRowExpanded = ({ rowId }) => {
             let prevExpanded = this.props.expanded || this.state.expanded;
+            let expanded = setDetailRowExpanded(prevExpanded, { rowId });
             let { expandedChange } = this.props;
             this.setState({ expanded });
             expandedChange && expandedChange(expanded);
         };
         
-        this._tableBodyRows = ({ tableBodyRows, expanded }) => {
-            expanded.filter((value, index, self) => self.indexOf(value) === index).forEach(rowId => {
-                let index = tableBodyRows.findIndex(row => row.id === rowId);
-                if(index !== -1) {
-                    let rowIndex = tableBodyRows.findIndex(row => row.id === rowId);
-                    let insertIndex = rowIndex + 1
-                    let row = tableBodyRows[rowIndex];
-                    tableBodyRows = [
-                        ...tableBodyRows.slice(0, insertIndex),
-                        { type: 'detailRow', id: 'detailRow' + row.id, for: row, colspan: 0, height: 'auto' },
-                        ...tableBodyRows.slice(insertIndex)
-                    ];
-                }
-            });
-            return tableBodyRows;
-        };
         this._tableColumns = ({ tableColumns }) => [{ type: 'detail', name: 'detail', width: 20 }, ...tableColumns];
     }
     render() {
@@ -63,16 +34,16 @@ export class TableRowDetail extends React.PureComponent {
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
                     {({ row }) => detailToggleTemplate({
-                        expanded: expanded.indexOf(row.id) > -1,
-                        toggleExpanded: () => this.changeExpanded(expandingHelpers.calcExpanded(expanded, row.id))
+                        expanded: isDetailRowExpanded(expanded, row.id),
+                        toggleExpanded: () => this._setDetailRowExpanded({ rowId: row.id })
                     })}
                 </Template>
 
                 <Getter name="tableBodyRows"
-                    pureComputed={this._tableBodyRows}
+                    pureComputed={({ rows, expandedRows }) => expandedDetailRows(rows, expandedRows)}
                     connectArgs={(getter) => ({
-                        tableBodyRows: getter('tableBodyRows')(),
-                        expanded: expanded
+                        rows: getter('tableBodyRows')(),
+                        expandedRows: expanded
                     })}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'detailRow'}>
                     {({ column, row }) => template({ row: row.for })}
