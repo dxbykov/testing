@@ -1,4 +1,4 @@
-export default function shallowEqual(objA, objB) {
+export function shallowEqual(objA, objB) {
   if (objA === objB) {
     return true;
   }
@@ -22,6 +22,22 @@ export default function shallowEqual(objA, objB) {
     const valB = objB[keysA[i]];
 
     if (valA !== valB) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export function argumentsShallowEqual(prev, next) {
+  if(prev === null || next === null || prev.length !== next.length) {
+    return false;
+  }
+
+  const length = prev.length;
+
+  for(let i = 0; i < length; i++) {
+    if (prev[i] !== next[i]) {
       return false;
     }
   }

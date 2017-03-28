@@ -16,8 +16,6 @@ export class FilteringState extends React.PureComponent {
             this.setState({ filters: nextFilters });
             filtersChange && filtersChange(nextFilters);
         };
-
-        this._filteredRows = ({ rows, filters }) => filteredRows(rows, filters)
     }
     render() {
         let filters = this.props.filters || this.state.filters;
@@ -27,11 +25,11 @@ export class FilteringState extends React.PureComponent {
                 <Action name="setColumnFilter" action={({ columnName, value }) => this._setColumnFilter(filters, { columnName, value }) } />
 
                 <Getter name="rows"
-                    pureComputed={this._filteredRows}
-                    connectArgs={(getter) => ({
-                        rows: getter('rows')(),
+                    pureComputed={filteredRows}
+                    connectArgs={(getter) => [
+                        getter('rows')(),
                         filters
-                    })}/>
+                    ]}/>
 
                 <Getter name="filters" value={filters} />
             </div>

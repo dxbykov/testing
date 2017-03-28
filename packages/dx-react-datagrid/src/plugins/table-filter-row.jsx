@@ -6,16 +6,16 @@ export class TableFilterRow extends React.PureComponent {
     constructor(props) {
         super(props)
 
-        this._tableHeaderRows = ({ tableHeaderRows }) => [...tableHeaderRows, { type: 'filter', id: 'filter' }];
+        this._tableHeaderRows = (tableHeaderRows) => [...tableHeaderRows, { type: 'filter', id: 'filter' }];
     }
     render() {
         return (
             <div>
                 <Getter name="tableHeaderRows"
                     pureComputed={this._tableHeaderRows}
-                    connectArgs={(getter) => ({
-                        tableHeaderRows: getter('tableHeaderRows')(),
-                    })}/>
+                    connectArgs={(getter) => [
+                        getter('tableHeaderRows')()
+                    ]}/>
 
                 <Template
                     name="tableViewCell"

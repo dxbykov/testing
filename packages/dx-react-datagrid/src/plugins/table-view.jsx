@@ -22,15 +22,15 @@ export class TableView extends React.PureComponent {
             <div>
                 <Getter name="tableHeaderRows" value={[]}/>
                 <Getter name="tableBodyRows"
-                    pureComputed={({ rows }) => rows}
-                    connectArgs={(getter) => ({
-                        rows: getter('rows')(),
-                    })}/>
+                    pureComputed={(rows) => rows}
+                    connectArgs={(getter) => [
+                        getter('rows')()
+                    ]}/>
                 <Getter name="tableColumns"
-                    pureComputed={({ columns }) => columns}
-                    connectArgs={(getter) => ({
-                        columns: getter('columns')(),
-                    })}/>
+                    pureComputed={(columns) => columns}
+                    connectArgs={(getter) => [
+                        getter('columns')()
+                    ]}/>
 
                 <Template name="gridBody">
                     <TemplatePlaceholder name="tableView" />

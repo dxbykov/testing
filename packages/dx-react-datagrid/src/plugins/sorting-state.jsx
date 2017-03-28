@@ -16,8 +16,6 @@ export class SortingState extends React.PureComponent {
             this.setState({ sortings: nextSortings });
             sortingsChange && sortingsChange(nextSortings);
         };
-
-        this._sortedRows = ({ rows, sortings }) => sortedRows(rows, sortings);
     }
     render() {
         let sortings = this.props.sortings || this.state.sortings;
@@ -31,11 +29,11 @@ export class SortingState extends React.PureComponent {
                     )} />
 
                 <Getter name="rows"
-                    pureComputed={this._sortedRows}
-                    connectArgs={(getter) => ({
-                        rows: getter('rows')(),
+                    pureComputed={sortedRows}
+                    connectArgs={(getter) => [
+                        getter('rows')(),
                         sortings
-                    })}/>
+                    ]}/>
 
                 <Getter name="sortings" value={sortings} />
             </div>

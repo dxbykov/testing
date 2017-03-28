@@ -1,5 +1,5 @@
 import React from 'react';
-import shallowEqual from '../utils/shallowEqual.js';
+import { shallowEqual } from '../utils/shallowEqual.js';
 import { UPDATE_CONNECTION } from './getter.jsx';
 
 export class TemplateConnector extends React.PureComponent {

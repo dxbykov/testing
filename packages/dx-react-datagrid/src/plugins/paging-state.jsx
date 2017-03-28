@@ -17,8 +17,7 @@ export class PagingState extends React.PureComponent {
             onCurrentPageChange && onCurrentPageChange(currentPage);
         };
 
-        this._ensurePageHeaders = ({ rows, pageSize }) => ensurePageHeaders(rows, pageSize);
-        this._rows = ({ rows, pageSize, currentPage }) => paginate(rows, pageSize, currentPage);
+        this._totalPages = (rows, pageSize) => Math.ceil(rows.length / pageSize);
     }
     render() {
         const { pageSize } = this.props;
@@ -30,11 +29,11 @@ export class PagingState extends React.PureComponent {
 
                 <Getter name="currentPage" value={currentPage} />
                 <Getter name="totalPages"
-                    pureComputed={({ rows, pageSize }) => Math.ceil(rows.length / pageSize)}
-                    connectArgs={(getter) => ({
-                        rows: getter('rows')(),
-                        pageSize,
-                    })}
+                    pureComputed={this._totalPages}
+                    connectArgs={(getter) => [
+                        getter('rows')(),
+                        pageSize
+                    ]}
                     onChange={(totalPages) => {
                         if(totalPages - 1 < currentPage) {
                             this._setCurrentPage({ page: Math.max(totalPages - 1, 0) });
@@ -42,19 +41,19 @@ export class PagingState extends React.PureComponent {
                     }} />
 
                 <Getter name="rows"
-                    pureComputed={this._ensurePageHeaders}
-                    connectArgs={(getter) => ({
-                        rows: getter('rows')(),
+                    pureComputed={ensurePageHeaders}
+                    connectArgs={(getter) => [
+                        getter('rows')(),
                         pageSize
-                    })}/>
+                    ]}/>
 
                 <Getter name="rows"
-                    pureComputed={this._rows}
-                    connectArgs={(getter) => ({
-                        rows: getter('rows')(),
+                    pureComputed={paginate}
+                    connectArgs={(getter) => [
+                        getter('rows')(),
                         pageSize,
-                        currentPage,
-                    })}/>
+                        currentPage
+                    ]}/>
             </div>
         )
     }

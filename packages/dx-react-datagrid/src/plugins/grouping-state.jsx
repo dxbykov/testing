@@ -44,18 +44,18 @@ export class GroupingState extends React.PureComponent {
                 <Action name="groupByColumn" action={({ columnName, groupIndex }) => { this._groupByColumn(grouping, { columnName, groupIndex }); }} />
 
                 <Getter name="rows"
-                    pureComputed={({ rows, grouping }) => groupedRows(rows, grouping)}
-                    connectArgs={(getter) => ({
-                        rows: getter('rows')(),
+                    pureComputed={groupedRows}
+                    connectArgs={(getter) => [
+                        getter('rows')(),
                         grouping
-                    })}/>
+                    ]}/>
 
                 <Getter name="rows"
-                    pureComputed={({ rows, expandedGroups }) => expandedGroupRows(rows, expandedGroups)}
-                    connectArgs={(getter) => ({
-                        rows: getter('rows')(),
+                    pureComputed={expandedGroupRows}
+                    connectArgs={(getter) => [
+                        getter('rows')(),
                         expandedGroups
-                    })}/>
+                    ]}/>
 
                 <Getter name="grouping" value={grouping} />
                 <Getter name="expandedGroups" value={expandedGroups} />

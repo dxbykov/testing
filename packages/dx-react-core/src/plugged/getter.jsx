@@ -1,19 +1,20 @@
 import React from 'react';
-import shallowEqual from '../utils/shallowEqual.js';
+import { argumentsShallowEqual } from '../utils/shallowEqual.js';
 
 function getterMemoize(func, onChange) {
-  let lastArg = null
-  let lastResult = null
-  return (arg) => {
-    if (
+  let lastArg = null;
+  let lastResult = null;
+  return function(...args) {
+    //const args;// = arguments;
+    if(
       lastArg === null ||
-      !shallowEqual(lastArg, arg)
+      !argumentsShallowEqual(lastArg, args)
     ) {
-      lastResult = func(arg)
+      lastResult = func(...args);
       lastArg !== null && onChange(lastResult);
     }
-    lastArg = arg
-    return lastResult
+    lastArg = args;
+    return lastResult;
   }
 }
 
@@ -32,7 +33,7 @@ export class Getter extends React.PureComponent {
                 const { value, connectArgs } = this.props;
                 if(value !== undefined) return value;
 
-                let args = {};
+                let args = [];
                 if(connectArgs) {
                     const getter = (getterName) => {
                         if(getterName === name) return original;
@@ -41,7 +42,7 @@ export class Getter extends React.PureComponent {
                     };
                     args = connectArgs(getter);
                 }
-                return pureComputedMemoized(args);
+                return pureComputedMemoized(...args);
             }
         };
 

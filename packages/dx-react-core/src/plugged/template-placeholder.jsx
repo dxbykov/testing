@@ -1,5 +1,5 @@
 import React from 'react';
-import shallowEqual from '../utils/shallowEqual.js';
+import { shallowEqual } from '../utils/shallowEqual.js';
 import { RERENDER_TEMPLATE } from './template.jsx';
 import { TemplateConnector } from './template-connector.jsx';
 

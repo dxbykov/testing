@@ -5,7 +5,7 @@ export class TableColumnSelection extends React.PureComponent {
     constructor(props) {
         super(props);
         
-        this._tableColumns = ({ tableColumns }) => [{ type: 'select', name: 'select', width: 20 }, ...tableColumns];
+        this._tableColumns = (tableColumns) => [{ type: 'select', name: 'select', width: 20 }, ...tableColumns];
     }
     render() {
         const SelectAllCell = this.props.selectAllCellTemplate;
@@ -15,9 +15,9 @@ export class TableColumnSelection extends React.PureComponent {
             <div>
                 <Getter name="tableColumns"
                     pureComputed={this._tableColumns}
-                    connectArgs={(getter) => ({
-                        tableColumns: getter('tableColumns')(),
-                    })}/>
+                    connectArgs={(getter) => [
+                        getter('tableColumns')(),
+                    ]}/>
 
                 <Template
                     name="tableViewCell"

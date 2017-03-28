@@ -18,7 +18,7 @@ export class TableRowDetail extends React.PureComponent {
             expandedChange && expandedChange(expanded);
         };
         
-        this._tableColumns = ({ tableColumns }) => [{ type: 'detail', name: 'detail', width: 20 }, ...tableColumns];
+        this._tableColumns = (tableColumns) => [{ type: 'detail', name: 'detail', width: 20 }, ...tableColumns];
     }
     render() {
         let expanded = this.props.expanded || this.state.expanded;
@@ -28,9 +28,9 @@ export class TableRowDetail extends React.PureComponent {
             <div>
                 <Getter name="tableColumns"
                     pureComputed={this._tableColumns}
-                    connectArgs={(getter) => ({
-                        tableColumns: getter('tableColumns')(),
-                    })}/>
+                    connectArgs={(getter) => [
+                        getter('tableColumns')()
+                    ]}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
                 <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
                     {({ row }) => detailToggleTemplate({
@@ -40,11 +40,11 @@ export class TableRowDetail extends React.PureComponent {
                 </Template>
 
                 <Getter name="tableBodyRows"
-                    pureComputed={({ rows, expandedRows }) => expandedDetailRows(rows, expandedRows)}
-                    connectArgs={(getter) => ({
-                        rows: getter('tableBodyRows')(),
-                        expandedRows: expanded
-                    })}/>
+                    pureComputed={expandedDetailRows}
+                    connectArgs={(getter) => [
+                        getter('tableBodyRows')(),
+                        expanded
+                    ]}/>
                 <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'detailRow'}>
                     {({ column, row }) => template({ row: row.for })}
                 </Template>

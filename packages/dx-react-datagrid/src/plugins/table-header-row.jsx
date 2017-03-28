@@ -5,7 +5,7 @@ export class TableHeaderRow extends React.PureComponent {
     constructor(props) {
         super(props)
 
-        this._tableHeaderRows = ({ tableHeaderRows, columns }) => {
+        this._tableHeaderRows = (tableHeaderRows, columns) => {
             return [columns.reduce((accum, c) => {
                 accum[c.name] = c.title;
                 return accum;
@@ -17,10 +17,10 @@ export class TableHeaderRow extends React.PureComponent {
             <div>
                 <Getter name="tableHeaderRows"
                     pureComputed={this._tableHeaderRows}
-                    connectArgs={(getter) => ({
-                        tableHeaderRows: getter('tableHeaderRows')(),
-                        columns: getter('columns')(),
-                    })}/>
+                    connectArgs={(getter) => [
+                        getter('tableHeaderRows')(),
+                        getter('columns')()
+                    ]}/>
             </div>
         )
     }

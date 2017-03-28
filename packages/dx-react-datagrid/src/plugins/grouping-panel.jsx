@@ -5,7 +5,7 @@ export class GroupingPanel extends React.PureComponent {
     constructor(props) {
         super(props);
 
-        this._tableColumns = ({ tableColumns, grouping }) => {
+        this._tableColumns = (tableColumns, grouping) => {
             return [
                 ...tableColumns.filter(column => grouping.findIndex(g => g.column === column.name) === -1)
             ]
@@ -16,10 +16,10 @@ export class GroupingPanel extends React.PureComponent {
             <div>
                 <Getter name="tableColumns"
                     pureComputed={this._tableColumns}
-                    connectArgs={(getter) => ({
-                        tableColumns: getter('tableColumns')(),
-                        grouping: getter('grouping')()
-                    })}/>
+                    connectArgs={(getter) => [
+                        getter('tableColumns')(),
+                        getter('grouping')()
+                    ]}/>
 
                 <Template name="gridHeading">
                     <div>
