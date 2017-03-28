@@ -37,7 +37,7 @@ export class PagingState extends React.PureComponent {
                     })}
                     onChange={(totalPages) => {
                         if(totalPages - 1 < currentPage) {
-                            this.changePage(Math.max(totalPages - 1, 0));
+                            this._setCurrentPage({ page: Math.max(totalPages - 1, 0) });
                         }
                     }} />
 

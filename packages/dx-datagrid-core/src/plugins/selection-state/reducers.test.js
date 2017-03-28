@@ -23,8 +23,8 @@ describe('SelectionState reducers', () => {
             expect(nextSelection).toEqual([]);
         });
 
-        test('can select row', () => {
-            let selection = [],
+        test('does not deselect if isSelected is true', () => {
+            let selection = [ 1 ],
                 payload = { rowId: 1, isSelected: true },
                 nextSelection = setRowSelection(selection, payload);
 
@@ -34,8 +34,8 @@ describe('SelectionState reducers', () => {
             expect(nextSelection).toEqual([ 1 ]);
         });
 
-        test('can deselect row', () => {
-            let selection = [ 1 ],
+        test('does not select if isSelected is false', () => {
+            let selection = [],
                 payload = { rowId: 1, isSelected: false },
                 nextSelection = setRowSelection(selection, payload);
 

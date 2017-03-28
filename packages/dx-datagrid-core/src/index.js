@@ -13,3 +13,7 @@ export * from './plugins/paging-state/reducers';
 export * from './plugins/paging-state/computeds';
 
 export * from './plugins/selection-state/reducers';
+
+export * from './plugins/detail-row/reducers';
+export * from './plugins/detail-row/computeds';
+export * from './plugins/detail-row/helpers';
