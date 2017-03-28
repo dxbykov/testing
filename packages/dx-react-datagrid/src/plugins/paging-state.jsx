@@ -1,62 +1,34 @@
 import React from 'react';
 import { Getter, Action } from '@devexpress/dx-react-core';
+import { paginate, ensurePageHeaders, setCurrentPage } from '@devexpress/dx-datagrid-core';
 
-// Core
-const pagingHelpers = {
-    paginate: (originalRows, pageSize, page) => {
-        return originalRows.slice(pageSize * page, pageSize * (page + 1));
-    },
-    ensurePageHeaders: (originalRows, pageSize) => {
-        let result = originalRows.slice(),
-            currentIndex = pageSize;
-
-        while(result.length > currentIndex) {
-            let row = result[currentIndex],
-                parentRows = [];
-            
-            while(row._parentRow) {
-                parentRows.unshift(row._parentRow);
-                row = row._parentRow;
-            }
-            
-            if(parentRows.length) {
-                result.splice(currentIndex, 0, ...parentRows);
-            }
-
-            currentIndex += pageSize;
-        }
-
-        return result;
-    }
-};
-
-// UI
 export class PagingState extends React.PureComponent {
     constructor(props) {
         super(props);
 
         this.state = {
-            page: props.defaultPage || 0
+            currentPage: props.defaultPage || 0
         };
 
-        this.changePage = (page) => {
-            let { onPageChange } = this.props;
-            this.setState({ page });
-            onPageChange && onPageChange(page);
+        this._setCurrentPage = ({ page }) => {
+            let { onCurrentPageChange } = this.props;
+            let currentPage = setCurrentPage(this.state.currentPage, { page });
+            this.setState({ currentPage });
+            onCurrentPageChange && onCurrentPageChange(currentPage);
         };
 
-        this._ensurePageHeaders = ({ rows, pageSize }) => pagingHelpers.ensurePageHeaders(rows, pageSize);
-        this._rows = ({ rows, pageSize, page }) => pagingHelpers.paginate(rows, pageSize, page);
+        this._ensurePageHeaders = ({ rows, pageSize }) => ensurePageHeaders(rows, pageSize);
+        this._rows = ({ rows, pageSize, currentPage }) => paginate(rows, pageSize, currentPage);
     }
     render() {
         const { pageSize } = this.props;
-        const page = this.props.page || this.state.page;
+        const currentPage = this.props.currentPage || this.state.currentPage;
 
         return (
             <div>
-                <Action name="pageChange" action={({ page }) => this.changePage(page)} />
+                <Action name="setCurrentPage" action={({ page }) => this._setCurrentPage({ page })} />
 
-                <Getter name="currentPage" value={page} />
+                <Getter name="currentPage" value={currentPage} />
                 <Getter name="totalPages"
                     pureComputed={({ rows, pageSize }) => Math.ceil(rows.length / pageSize)}
                     connectArgs={(getter) => ({
@@ -64,7 +36,7 @@ export class PagingState extends React.PureComponent {
                         pageSize,
                     })}
                     onChange={(totalPages) => {
-                        if(totalPages - 1 < page) {
+                        if(totalPages - 1 < currentPage) {
                             this.changePage(Math.max(totalPages - 1, 0));
                         }
                     }} />
@@ -81,7 +53,7 @@ export class PagingState extends React.PureComponent {
                     connectArgs={(getter) => ({
                         rows: getter('rows')(),
                         pageSize,
-                        page,
+                        currentPage,
                     })}/>
             </div>
         )

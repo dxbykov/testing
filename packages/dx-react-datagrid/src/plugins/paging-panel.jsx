@@ -18,7 +18,7 @@ export class PagingPanel extends React.PureComponent {
                         totalPages: getter('totalPages')(),
                     })}
                     connectActions={(action) => ({
-                        onPageChange: (page) => action('pageChange')({ page }),
+                        onCurrentPageChange: (page) => action('setCurrentPage')({ page }),
                     })}>
                     {this.props.pagerTemplate}
                 </Template>

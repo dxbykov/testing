@@ -53,8 +53,8 @@ export class FullFeaturedControlledDemo extends React.PureComponent {
                         sortings={sortings}
                         sortingsChange={this.changeSortings}/>
                     <PagingState
-                        page={page}
-                        onPageChange={this.changePage}
+                        currectPage={page}
+                        onCurrentPageChange={this.changePage}
                         pageSize={10} />
 
                     <SelectionState
