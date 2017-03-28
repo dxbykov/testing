@@ -1,7 +1,6 @@
 import React from 'react';
 
 let isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
-
 export class WindowedScroller extends React.Component {
     constructor(props) {
         super(props);

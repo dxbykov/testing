@@ -26,7 +26,7 @@ export class UncontrolledGroupedVirtualDemo extends React.PureComponent {
         let { rows, columns } = this.state;
 
         return (
-            <div style={{ width: '500px' }}>
+            <div>
                 <h2>Uncontrolled Grouped Virtual Demo (20K rows)</h2>
 
                 <DataGrid
