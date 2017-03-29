@@ -1,26 +1,25 @@
-export const paginate = (rows, pageSize, page) => {
-    return rows.slice(pageSize * page, pageSize * (page + 1));
-};
+export const paginate = (rows, pageSize, page) =>
+  rows.slice(pageSize * page, pageSize * (page + 1));
 
 export const ensurePageHeaders = (rows, pageSize) => {
-    let result = rows.slice(),
-        currentIndex = pageSize;
+  const result = rows.slice();
+  let currentIndex = pageSize;
 
-    while(result.length > currentIndex) {
-        let row = result[currentIndex],
-            parentRows = [];
-        
-        while(row._parentRow) {
-            parentRows.unshift(row._parentRow);
-            row = row._parentRow;
-        }
-        
-        if(parentRows.length) {
-            result.splice(currentIndex, 0, ...parentRows);
-        }
+  while (result.length > currentIndex) {
+    const parentRows = [];
+    let row = result[currentIndex];
 
-        currentIndex += pageSize;
+    while (row._parentRow) {
+      parentRows.unshift(row._parentRow);
+      row = row._parentRow;
     }
 
-    return result;
+    if (parentRows.length) {
+      result.splice(currentIndex, 0, ...parentRows);
+    }
+
+    currentIndex += pageSize;
+  }
+
+  return result;
 };

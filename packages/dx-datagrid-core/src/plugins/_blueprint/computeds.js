@@ -1,7 +1,7 @@
-export const _pureComputed = (_param1, _param2) => {
+export const pureComputed = (/* param1, param2 */) => {
   let result;
 
-  //...
+  // ...
 
   return result;
 };

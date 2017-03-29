@@ -1,25 +1,21 @@
-import { 
-    getColumnFilterValue
+import {
+    getColumnFilterValue,
 } from './helpers';
 
 describe('FilteringPlugin helpers', () => {
-    
-    describe('#getColumnFilterValue', () => {
+  describe('#getColumnFilterValue', () => {
+    test('returns an empty string if no filters specified', () => {
+      const filters = [];
 
-        test('returns an empty string if no filters specified', () => {
-            let filters = [],
-                value = getColumnFilterValue(filters, 'test');
-                
-            expect(value).toBe('');
-        });
-
-        test('returns a filter value by column name', () => {
-            let filters = [ { column: 'a', value: 'test' } ],
-                value = getColumnFilterValue(filters, 'a');
-                
-            expect(value).toBe('test');
-        });
-
+      const value = getColumnFilterValue(filters, 'test');
+      expect(value).toBe('');
     });
 
+    test('returns a filter value by column name', () => {
+      const filters = [{ column: 'a', value: 'test' }];
+
+      const value = getColumnFilterValue(filters, 'a');
+      expect(value).toBe('test');
+    });
+  });
 });

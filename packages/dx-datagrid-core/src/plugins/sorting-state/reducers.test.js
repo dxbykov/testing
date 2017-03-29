@@ -1,59 +1,55 @@
-import { 
-    setColumnSorting
+import {
+    setColumnSorting,
 } from './reducers';
 
 describe('SortingState reducers', () => {
-    
-    describe('#setColumnSorting', () => {
+  describe('#setColumnSorting', () => {
+    test('can initiate sorting', () => {
+      const sortings = [];
+      const payload = { columnName: 'test' };
 
-        test('can initiate sorting', () => {
-            let sortings = [],
-                payload = { columnName: 'test' },
-                nextSortings = setColumnSorting(sortings, payload);
-                
-            expect(nextSortings).toEqual([ { column: 'test', direction: 'asc' } ]);
-        });
-
-        test('can initiate sorting with direction', () => {
-            let sortings = [],
-                payload = { columnName: 'test', direction: 'desc' },
-                nextSortings = setColumnSorting(sortings, payload);
-                
-            expect(nextSortings).toEqual([ { column: 'test', direction: 'desc' } ]);
-        });
-
-        test('can toggle sorting', () => {
-            let sortings = [ { column: 'test', direction: 'asc' } ],
-                payload = { columnName: 'test' },
-                nextSortings = setColumnSorting(sortings, payload);
-                
-            expect(nextSortings).toEqual([ { column: 'test', direction: 'desc' } ]);
-        });
-
-        test('should reset sorting if no keepOther is specified', () => {
-            let sortings = [ { column: 'test', direction: 'asc' } ],
-                payload = { columnName: 'test2' },
-                nextSortings = setColumnSorting(sortings, payload);
-                
-            expect(nextSortings).toEqual([ { column: 'test2', direction: 'asc' } ]);
-        });
-
-        test('can initiate multi-column sorting by keepOther option', () => {
-            let sortings = [ { column: 'test', direction: 'asc' } ],
-                payload = { columnName: 'test2', keepOther: true },
-                nextSortings = setColumnSorting(sortings, payload);
-                
-            expect(nextSortings).toEqual([ { column: 'test', direction: 'asc' }, { column: 'test2', direction: 'asc' } ]);
-        });
-
-        test('can toggle multi-column sorting', () => {
-            let sortings = [ { column: 'test', direction: 'asc' }, { column: 'test2', direction: 'asc' } ],
-                payload = { columnName: 'test', keepOther: true },
-                nextSortings = setColumnSorting(sortings, payload);
-                
-            expect(nextSortings).toEqual([ { column: 'test', direction: 'desc' }, { column: 'test2', direction: 'asc' } ]);
-        });
-
+      const nextSortings = setColumnSorting(sortings, payload);
+      expect(nextSortings).toEqual([{ column: 'test', direction: 'asc' }]);
     });
 
+    test('can initiate sorting with direction', () => {
+      const sortings = [];
+      const payload = { columnName: 'test', direction: 'desc' };
+
+      const nextSortings = setColumnSorting(sortings, payload);
+      expect(nextSortings).toEqual([{ column: 'test', direction: 'desc' }]);
+    });
+
+    test('can toggle sorting', () => {
+      const sortings = [{ column: 'test', direction: 'asc' }];
+      const payload = { columnName: 'test' };
+
+      const nextSortings = setColumnSorting(sortings, payload);
+      expect(nextSortings).toEqual([{ column: 'test', direction: 'desc' }]);
+    });
+
+    test('should reset sorting if no keepOther is specified', () => {
+      const sortings = [{ column: 'test', direction: 'asc' }];
+      const payload = { columnName: 'test2' };
+
+      const nextSortings = setColumnSorting(sortings, payload);
+      expect(nextSortings).toEqual([{ column: 'test2', direction: 'asc' }]);
+    });
+
+    test('can initiate multi-column sorting by keepOther option', () => {
+      const sortings = [{ column: 'test', direction: 'asc' }];
+      const payload = { columnName: 'test2', keepOther: true };
+
+      const nextSortings = setColumnSorting(sortings, payload);
+      expect(nextSortings).toEqual([{ column: 'test', direction: 'asc' }, { column: 'test2', direction: 'asc' }]);
+    });
+
+    test('can toggle multi-column sorting', () => {
+      const sortings = [{ column: 'test', direction: 'asc' }, { column: 'test2', direction: 'asc' }];
+      const payload = { columnName: 'test', keepOther: true };
+
+      const nextSortings = setColumnSorting(sortings, payload);
+      expect(nextSortings).toEqual([{ column: 'test', direction: 'desc' }, { column: 'test2', direction: 'asc' }]);
+    });
+  });
 });

@@ -1,18 +1,14 @@
-import { 
-    isDetailRowExpanded
+import {
+    isDetailRowExpanded,
 } from './helpers';
 
 describe('DetailRow helpers', () => {
-    
-    describe('#isDetailRowExpanded', () => {
+  describe('#isDetailRowExpanded', () => {
+    test('should work', () => {
+      const expandedRows = [1];
 
-        test('should work', () => {
-            let expandedRows = [ 1 ];
-                
-            expect(isDetailRowExpanded(expandedRows, 1)).toBeTruthy();
-            expect(isDetailRowExpanded(expandedRows, 2)).toBeFalsy();
-        });
-
+      expect(isDetailRowExpanded(expandedRows, 1)).toBeTruthy();
+      expect(isDetailRowExpanded(expandedRows, 2)).toBeFalsy();
     });
-
+  });
 });

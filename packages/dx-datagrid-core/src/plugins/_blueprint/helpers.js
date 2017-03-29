@@ -1,7 +1,7 @@
-export const _pureHelper = (_param1, _param2) => {
+export const pureHelper = (/* param1, param2 */) => {
   let result;
 
-  //...
+  // ...
 
   return result;
 };

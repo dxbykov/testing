@@ -1,18 +1,14 @@
-import { 
-    _pureHelper
+import {
+    pureHelper,
 } from './helpers';
 
 describe('Plugin helpers', () => {
-    
-    describe('#_pureHelper', () => {
+  describe('#_pureHelper', () => {
+    test('should work', () => {
+      const arg1 = [];
 
-        test('should work', () => {
-            let arg1 = [],
-                value = _pureHelper(arg1);
-                
-            expect(value).toBeUndefined();
-        });
-
+      const value = pureHelper(arg1);
+      expect(value).toBeUndefined();
     });
-
+  });
 });

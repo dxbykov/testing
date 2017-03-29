@@ -1,19 +1,15 @@
-import { 
-    setCurrentPage
+import {
+    setCurrentPage,
 } from './reducers';
 
 describe('PagingState reducers', () => {
-    
-    describe('#setCurrentPage', () => {
+  describe('#setCurrentPage', () => {
+    test('should work', () => {
+      const state = 0;
+      const payload = { page: 1 };
 
-        test('should work', () => {
-            let state = 0,
-                payload = { page: 1 },
-                nextState = setCurrentPage(state, payload);
-
-            expect(nextState).toBe(1);
-        });
-
+      const nextState = setCurrentPage(state, payload);
+      expect(nextState).toBe(1);
     });
-
+  });
 });

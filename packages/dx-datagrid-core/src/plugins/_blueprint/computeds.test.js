@@ -1,18 +1,14 @@
-import { 
-    _pureComputed
+import {
+    pureComputed,
 } from './computeds';
 
 describe('Plugin computeds', () => {
-    
-    describe('#_pureComputed', () => {
+  describe('#pureComputed', () => {
+    test('should work', () => {
+      const arg1 = [];
 
-        test('should work', () => {
-            let arg1 = [],
-                computed = _pureComputed(arg1);
-                
-            expect(computed).toBeUndefined();
-        });
-
+      const computed = pureComputed(arg1);
+      expect(computed).toBeUndefined();
     });
-
+  });
 });
