@@ -30,13 +30,13 @@ export function shallowEqual(objA, objB) {
 }
 
 export function argumentsShallowEqual(prev, next) {
-  if(prev === null || next === null || prev.length !== next.length) {
+  if (prev === null || next === null || prev.length !== next.length) {
     return false;
   }
 
   const length = prev.length;
 
-  for(let i = 0; i < length; i++) {
+  for (let i = 0; i < length; i += 1) {
     if (prev[i] !== next[i]) {
       return false;
     }

@@ -1,5 +1,5 @@
-export { PluginHost } from './host.jsx';
-export { Action } from './action.jsx';
-export { Getter } from './getter.jsx';
-export { Template } from './template.jsx';
-export { TemplatePlaceholder } from './template-placeholder.jsx';
+export { PluginHost } from './host';
+export { Action } from './action';
+export { Getter } from './getter';
+export { Template } from './template';
+export { TemplatePlaceholder } from './template-placeholder';

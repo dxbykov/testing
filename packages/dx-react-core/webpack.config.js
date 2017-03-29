@@ -1,3 +1,4 @@
+/* eslint-disable */
 var path = require('path');
 var webpack = require('webpack');
 
@@ -22,7 +23,7 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: [".webpack.js", ".web.js", ".js"]
+        extensions: [".webpack.js", ".web.js", ".js", ".jsx"]
     },
     externals: {
         '@devexpress/dx-core': '@devexpress/dx-core',

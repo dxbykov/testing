@@ -6,29 +6,31 @@ import { Action } from './action';
 import { Template } from './template';
 
 describe('Action', () => {
+  test('should return value', () => {
+    const Test = ({ onAction }) => (
+      <PluginHost>
+        <Action name="test" action={onAction} />
 
-    test('should return value', () => {
-        const Test = ({ onAction }) => (
-            <PluginHost>
-                <Action name="test" action={onAction} />
+        <Template
+          name="root"
+          connectActions={action => ({
+            onTest: () => action('test')(),
+          })}
+        >
+          {({ onTest }) => <button onClick={onTest}>Text</button>}
+        </Template>
+      </PluginHost>
+    );
+    Test.propTypes = {
+      onAction: React.PropTypes.func.isRequired,
+    };
 
-                <Template 
-                    name="root"
-                    connectActions={(action) => ({
-                        onTest: () => action('test')()
-                    })}>
-                    {({ onTest }) => <h1 onClick={onTest}>Text</h1>}
-                </Template>
-            </PluginHost>
+    const onAction = jest.fn();
+    const tree = mount(
+      <Test onAction={onAction} />,
         );
 
-        const onAction = jest.fn();
-        const tree = mount(
-            <Test onAction={onAction} />
-        );
-
-        tree.find('h1').simulate('click');
-        expect(onAction.mock.calls).toHaveLength(1);
-    });
-
+    tree.find('button').simulate('click');
+    expect(onAction.mock.calls).toHaveLength(1);
+  });
 });

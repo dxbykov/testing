@@ -6,140 +6,142 @@ import { Template } from './template';
 import { TemplatePlaceholder } from './template-placeholder';
 
 describe('TemplatePlaceholder', () => {
-    
-    test('template should be rendered in placeholder', () => {
-        const tree = mount(
-            <PluginHost>
-                <Template name="test">
-                    <h1>Test content</h1>
-                </Template>
+  test('template should be rendered in placeholder', () => {
+    const tree = mount(
+      <PluginHost>
+        <Template name="test">
+          <h1>Test content</h1>
+        </Template>
 
-                <Template name="root">
-                    <TemplatePlaceholder name="test" />
-                </Template>
-            </PluginHost>
-        );
+        <Template name="root">
+          <TemplatePlaceholder name="test" />
+        </Template>
+      </PluginHost>,
+    );
 
-        expect(tree.find('h1').exists()).toBeTruthy();
-    });
-    
-    test('placeholder can accept a content render function as a child', () => {
-        const tree = mount(
-            <PluginHost>
-                <Template name="test">
-                    <span>Test content</span>
-                </Template>
+    expect(tree.find('h1').exists()).toBeTruthy();
+  });
 
-                <Template name="root">
-                    <TemplatePlaceholder name="test">
-                        {content => <h1>{content}</h1>}
-                    </TemplatePlaceholder>
-                </Template>
-            </PluginHost>
-        );
+  test('placeholder can accept a content render function as a child', () => {
+    const tree = mount(
+      <PluginHost>
+        <Template name="test">
+          <span>Test content</span>
+        </Template>
 
-        expect(tree.find('h1 > span').exists()).toBeTruthy();
-    });
-    
-    test('template should be rendered in placeholder with params', () => {
-        const tree = mount(
-            <PluginHost>
-                <Template name="test">
-                    {({ text }) => (
-                        <h1>{text}</h1>
+        <Template name="root">
+          <TemplatePlaceholder name="test">
+            {content => <h1>{content}</h1>}
+          </TemplatePlaceholder>
+        </Template>
+      </PluginHost>,
+    );
+
+    expect(tree.find('h1 > span').exists()).toBeTruthy();
+  });
+
+  test('template should be rendered in placeholder with params', () => {
+    const tree = mount(
+      <PluginHost>
+        <Template name="test">
+          {({ text }) => (
+            <h1>{text}</h1>
                     )}
-                </Template>
+        </Template>
 
-                <Template name="root">
-                    <TemplatePlaceholder name="test" params={{ text: 'param' }} />
-                </Template>
-            </PluginHost>
-        );
+        <Template name="root">
+          <TemplatePlaceholder name="test" params={{ text: 'param' }} />
+        </Template>
+      </PluginHost>,
+    );
 
-        expect(tree.find('h1').text()).toBe('param');
-    });
-    
-    test('template should be updated in placeholder on params change', () => {
-        class EncapsulatedPlugin extends React.PureComponent {
-            render() {
-                return (
-                    <Template name="test">
-                        {({ text }) => (
-                            <h1>{text}</h1>
+    expect(tree.find('h1').text()).toBe('param');
+  });
+
+  test('template should be updated in placeholder on params change', () => {
+    // eslint-disable-next-line
+    class EncapsulatedPlugin extends React.PureComponent {
+      render() {
+        return (
+          <Template name="test">
+            {({ text }) => (
+              <h1>{text}</h1>
                         )}
-                    </Template>
-                );
-            }
-        };
-
-        const Test = ({ param }) => (
-            <PluginHost>
-                <EncapsulatedPlugin />
-
-                <Template name="root">
-                    <TemplatePlaceholder name="test" params={{ text: param }} />
-                </Template>
-            </PluginHost>
+          </Template>
         );
+      }
+    }
 
-        const tree = mount(
-            <Test param={'text'} />
-        );
-        tree.setProps({ param: 'new' })
+    const Test = ({ param }) => (
+      <PluginHost>
+        <EncapsulatedPlugin />
 
-        expect(tree.find('h1').text()).toBe('new');
-    });
-    
-    test('template chain should be rendered in placeholder', () => {
-        const tree = mount(
-            <PluginHost>
-                <Template name="test">
-                    <h1>Test content</h1>
-                </Template>
+        <Template name="root">
+          <TemplatePlaceholder name="test" params={{ text: param }} />
+        </Template>
+      </PluginHost>
+    );
+    Test.propTypes = {
+      param: React.PropTypes.string.isRequired,
+    };
 
-                <Template name="test">
-                    <div> {/* TODO: Wrapper required for multiple children */}
-                        <TemplatePlaceholder />
-                        <h2>Test content</h2>
-                    </div>
-                </Template>
+    const tree = mount(
+      <Test param={'text'} />,
+    );
+    tree.setProps({ param: 'new' });
 
-                <Template name="root">
-                    <TemplatePlaceholder name="test" />
-                </Template>
-            </PluginHost>
-        );
+    expect(tree.find('h1').text()).toBe('new');
+  });
 
-        expect(tree.find('h1').exists()).toBeTruthy();
-        expect(tree.find('h2').exists()).toBeTruthy();
-    });
-    
-    test('template chain should be rendered in placeholder with params', () => {
-        const tree = mount(
-            <PluginHost>
-                <Template name="test">
-                    {({ text }) => (
-                        <h1>{text}</h1>
+  test('template chain should be rendered in placeholder', () => {
+    const tree = mount(
+      <PluginHost>
+        <Template name="test">
+          <h1>Test content</h1>
+        </Template>
+
+        <Template name="test">
+          <div> {/* TODO: Wrapper required for multiple children */}
+            <TemplatePlaceholder />
+            <h2>Test content</h2>
+          </div>
+        </Template>
+
+        <Template name="root">
+          <TemplatePlaceholder name="test" />
+        </Template>
+      </PluginHost>,
+    );
+
+    expect(tree.find('h1').exists()).toBeTruthy();
+    expect(tree.find('h2').exists()).toBeTruthy();
+  });
+
+  test('template chain should be rendered in placeholder with params', () => {
+    const tree = mount(
+      <PluginHost>
+        <Template name="test">
+          {({ text }) => (
+            <h1>{text}</h1>
                     )}
-                </Template>
+        </Template>
 
-                <Template name="test">
-                    {({ text }) => (
-                        <div> {/* TODO: Wrapper required for multiple children */}
-                            <TemplatePlaceholder />
-                            <h2>{text}</h2>
-                        </div>
+        <Template name="test">
+          {({ text }) => (
+            <div> {/* TODO: Wrapper required for multiple children */}
+              <TemplatePlaceholder />
+              <h2>{text}</h2>
+            </div>
                     )}
-                </Template>
+        </Template>
 
-                <Template name="root">
-                    <TemplatePlaceholder name="test" params={{ text: 'param' }} />
-                </Template>
-            </PluginHost>
-        );
+        <Template name="root">
+          <TemplatePlaceholder name="test" params={{ text: 'param' }} />
+        </Template>
+      </PluginHost>,
+    );
 
-        expect(tree.find('h1').text()).toBe('param');
-        expect(tree.find('h2').text()).toBe('param');
-    });
-
+    expect(tree.find('h1').text()).toBe('param');
+    expect(tree.find('h2').text()).toBe('param');
+  });
 });
