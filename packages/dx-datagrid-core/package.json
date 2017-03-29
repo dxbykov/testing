@@ -8,8 +8,8 @@
     "test:watch": "jest --watch",
     "build": "webpack",
     "build:watch": "webpack --watch",
-    "lint": "eslint src",
-    "lint:fix": "eslint --fix src"
+    "lint": "eslint src/**/*",
+    "lint:fix": "eslint --fix src/**/*"
   },
   "author": "",
   "license": "ISC",

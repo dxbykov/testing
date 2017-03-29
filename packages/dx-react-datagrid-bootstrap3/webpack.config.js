@@ -1,3 +1,4 @@
+/* eslint-disable */
 var path = require('path');
 var webpack = require('webpack');
 
@@ -21,7 +22,7 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: [".webpack.js", ".web.js", ".js"]
+        extensions: [".webpack.js", ".web.js", ".js", ".jsx"]
     },
     externals: {
         '@devexpress/dx-react-datagrid': '@devexpress/dx-react-datagrid',

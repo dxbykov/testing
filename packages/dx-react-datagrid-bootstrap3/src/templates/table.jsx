@@ -1,69 +1,115 @@
 import React from 'react';
 
-export const TableCell = ({ row, column, colspan, cellContentTemplate, isHeader = false }) => {
-    const TagName = isHeader ? 'th' : 'td';
-    
-    return (
-        <TagName
-            style={{ 
-                width: column.width ? column.width + 'px' : 'auto' 
-            }}
-            colSpan={colspan}>
-            {cellContentTemplate({ row, column })}
-        </TagName>
-    )
+export const TableCell = (props) => {
+  const { row, column, colspan, cellContentTemplate, isHeader } = props;
+  const TagName = isHeader ? 'th' : 'td';
+
+  return (
+    <TagName
+      style={{
+        width: column.width ? `${column.width}px` : 'auto',
+      }}
+      colSpan={colspan}
+    >
+      {cellContentTemplate({ row, column })}
+    </TagName>
+  );
 };
 
-export const TableRow = ({ row, columns, getCellInfo, cellContentTemplate, cellTemplate, isHeader = false }) => {
-    const TableCell = cellTemplate;
-    
-    return (
-        <tr style={{ height: row.height ? row.height === 'auto' ? 'auto' : row.height + 'px' : 'auto' }}>
-            {columns.map((column, columnIndex) => {
-                let info = getCellInfo({ row, column, columnIndex, columns });
-                if(info.skip) return null;
-                return (
-                    <TableCell
-                        key={column.name}
-                        isHeader={isHeader}
-                        row={row}
-                        column={column}
-                        colspan={info.colspan}
-                        cellContentTemplate={cellContentTemplate} />
-                );
-            })}
-        </tr>
-    )
+TableCell.propTypes = {
+  row: React.PropTypes.object.isRequired,
+  column: React.PropTypes.object.isRequired,
+  colspan: React.PropTypes.number.isRequired,
+  cellContentTemplate: React.PropTypes.func.isRequired,
+  isHeader: React.PropTypes.bool,
 };
 
-export const Table = ({ headerRows, bodyRows, columns, cellContentTemplate, cellTemplate, rowTemplate, getCellInfo }) => {
-    const TableRow = rowTemplate;
+TableCell.defaultProps = {
+  isHeader: false,
+};
 
-    return (
-        <table style={{ borderCollapse: 'collapse', width: '100%' }} className="table">
-            <thead>
-                {headerRows.map((row, rowIndex) => 
-                    <TableRow
-                        key={row.id}
-                        row={row}
-                        columns={columns}
-                        cellContentTemplate={cellContentTemplate}
-                        cellTemplate={cellTemplate}
-                        getCellInfo={getCellInfo}
-                        isHeader={true} />
-                )}
-            </thead>
-            <tbody>
-                {bodyRows.map((row, rowIndex) => 
-                    <TableRow
-                        key={row.id}
-                        row={row}
-                        columns={columns}
-                        cellContentTemplate={cellContentTemplate}
-                        cellTemplate={cellTemplate}
-                        getCellInfo={getCellInfo} />
-                )}
-            </tbody>
-        </table>
-    );
+export const TableRow = (props) => {
+  const { row, columns, getCellInfo, cellContentTemplate, cellTemplate, isHeader } = props;
+  const TableCellTemplate = cellTemplate;
+
+  const height = (!row.height || row.height === 'auto') ? 'auto' : `${row.height}px`;
+
+  return (
+    <tr style={{ height }}>
+      {columns.map((column, columnIndex) => {
+        const info = getCellInfo({ row, column, columnIndex, columns });
+        if (info.skip) return null;
+        return (
+          <TableCellTemplate
+            key={column.name}
+            isHeader={isHeader}
+            row={row}
+            column={column}
+            colspan={info.colspan}
+            cellContentTemplate={cellContentTemplate}
+          />
+        );
+      })}
+    </tr>
+  );
+};
+
+TableRow.propTypes = {
+  row: React.PropTypes.object.isRequired,
+  columns: React.PropTypes.array.isRequired,
+  getCellInfo: React.PropTypes.func.isRequired,
+  cellTemplate: React.PropTypes.func.isRequired,
+  cellContentTemplate: React.PropTypes.func.isRequired,
+  isHeader: React.PropTypes.bool,
+};
+
+TableRow.defaultProps = {
+  isHeader: false,
+};
+
+export const Table = (props) => {
+  const { headerRows, bodyRows, columns, cellContentTemplate,
+        cellTemplate, rowTemplate, getCellInfo } = props;
+
+  const TableRowTemplate = rowTemplate;
+
+  return (
+    <table style={{ borderCollapse: 'collapse', width: '100%' }} className="table">
+      <thead>
+        {headerRows.map(row =>
+          <TableRowTemplate
+            key={row.id}
+            row={row}
+            columns={columns}
+            cellContentTemplate={cellContentTemplate}
+            cellTemplate={cellTemplate}
+            getCellInfo={getCellInfo}
+            isHeader
+          />,
+        )}
+      </thead>
+      <tbody>
+        {bodyRows.map(row =>
+          <TableRowTemplate
+            key={row.id}
+            row={row}
+            columns={columns}
+            cellContentTemplate={cellContentTemplate}
+            cellTemplate={cellTemplate}
+            getCellInfo={getCellInfo}
+          />,
+        )}
+      </tbody>
+    </table>
+  );
+};
+
+Table.propTypes = {
+  headerRows: React.PropTypes.array.isRequired,
+  bodyRows: React.PropTypes.array.isRequired,
+  columns: React.PropTypes.array.isRequired,
+  getCellInfo: React.PropTypes.func.isRequired,
+  rowTemplate: React.PropTypes.func.isRequired,
+  cellTemplate: React.PropTypes.func.isRequired,
+  cellContentTemplate: React.PropTypes.func.isRequired,
 };

@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { FullFeaturedControlledDemo } from './full-featured-controlled.jsx';
-import { FullFeaturedUncontrolledDemo } from './full-featured-uncontrolled.jsx';
-import { UncontrolledVirtualDemo } from './uncontrolled-virtual.jsx';
-import { UncontrolledGroupedVirtualDemo } from './uncontrolled-grouped-virtual.jsx';
+import { FullFeaturedControlledDemo } from './full-featured-controlled';
+import { FullFeaturedUncontrolledDemo } from './full-featured-uncontrolled';
+import { UncontrolledVirtualDemo } from './uncontrolled-virtual';
+import { UncontrolledGroupedVirtualDemo } from './uncontrolled-grouped-virtual';
 import './index.css';
 
 class App extends React.Component {

@@ -3,40 +3,43 @@ import { Getter, Action } from '@devexpress/dx-react-core';
 import { sortedRows, setColumnSorting } from '@devexpress/dx-datagrid-core';
 
 export class SortingState extends React.PureComponent {
-    constructor(props) {
-        super(props);
+  constructor(props) {
+    super(props);
 
-        this.state = {
-            sortings: props.defaultSortings || []
-        };
+    this.state = {
+      sortings: props.defaultSortings || [],
+    };
 
-        this._setColumnSorting = (sortings, { columnName, direction, keepOther }) => {
-            let { sortingsChange } = this.props;
-            let nextSortings = setColumnSorting(sortings, { columnName, direction, keepOther });
-            this.setState({ sortings: nextSortings });
-            sortingsChange && sortingsChange(nextSortings);
-        };
-    }
-    render() {
-        let sortings = this.props.sortings || this.state.sortings;
-        
-        return (
-            <div>
-                <Action
-                    name="setColumnSorting"
-                    action={(
+    this._setColumnSorting = (sortings, { columnName, direction, keepOther }) => {
+      const { sortingsChange } = this.props;
+      const nextSortings = setColumnSorting(sortings, { columnName, direction, keepOther });
+      this.setState({ sortings: nextSortings });
+      sortingsChange && sortingsChange(nextSortings);
+    };
+  }
+  render() {
+    const sortings = this.props.sortings || this.state.sortings;
+
+    return (
+      <div>
+        <Action
+          name="setColumnSorting"
+          action={(
                         ({ columnName, direction, keepOther }) => this._setColumnSorting(sortings, { columnName, direction, keepOther })
-                    )} />
+                    )}
+        />
 
-                <Getter name="rows"
-                    pureComputed={sortedRows}
-                    connectArgs={(getter) => [
-                        getter('rows')(),
-                        sortings
-                    ]}/>
+        <Getter
+          name="rows"
+          pureComputed={sortedRows}
+          connectArgs={getter => [
+            getter('rows')(),
+            sortings,
+          ]}
+        />
 
-                <Getter name="sortings" value={sortings} />
-            </div>
-        )
-    }
-};
+        <Getter name="sortings" value={sortings} />
+      </div>
+    );
+  }
+}
