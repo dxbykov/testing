@@ -9,7 +9,8 @@
     "rules": {
         "import/prefer-default-export": "off",
         "no-underscore-dangle": "off",
-        "react/forbid-prop-types": "off"
+        "react/forbid-prop-types": "off",
+        "jsx-a11y/no-static-element-interactions": "off"
     },
     "env": {
       "jest/globals": true

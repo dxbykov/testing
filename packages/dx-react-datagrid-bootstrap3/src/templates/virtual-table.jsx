@@ -1,3 +1,5 @@
+/* global window document */
+
 import React from 'react';
 import { Sizer } from './virtual-table/sizer';
 import { WindowedScroller } from './virtual-table/windowed-scroller';
@@ -16,11 +18,9 @@ export class VirtualTable extends React.Component {
 
     this.rowHeight = (row) => {
       let height = DEFAULT_HEIGHT;
-
       if (row.height) {
         height = row.height === 'auto' ? this.state.autoHeights.get(row) || DEFAULT_HEIGHT : row.height;
       }
-
       return height;
     };
     this.columnWidth = column => column.width || DEFAULT_WIDTH;
@@ -28,7 +28,7 @@ export class VirtualTable extends React.Component {
   render() {
     const { headerRows, bodyRows, columns, cellContentTemplate } = this.props;
 
-    const headerCell = ({ row, column }) => {
+    const tableHeaderCell = ({ row, column }) => {
       const template = cellContentTemplate({ row, column });
       return (
         <th>
@@ -37,7 +37,7 @@ export class VirtualTable extends React.Component {
       );
     };
 
-    const cell = ({ row, column }) => {
+    const tableCell = ({ row, column }) => {
       let template = cellContentTemplate({ row, column });
       if (row.height === 'auto') {
         template = (
@@ -51,7 +51,7 @@ export class VirtualTable extends React.Component {
           >
             {template}
           </Sizer>
-                );
+        );
       }
       return (
         <td>
@@ -60,7 +60,7 @@ export class VirtualTable extends React.Component {
       );
     };
 
-    const row = (row, cellTemplate, position) => {
+    const tableRow = (row, cellTemplate, position) => {
       const colspan = row.colspan;
       const columnLength = colspan !== undefined ? colspan + 1 : columns.length;
       return (
@@ -73,8 +73,11 @@ export class VirtualTable extends React.Component {
           itemCount={columnLength}
           itemInfo={(columnIndex) => {
             const size = columnIndex !== colspan
-                            ? this.columnWidth(columns[columnIndex])
-                            : columns.slice(colspan).reduce((accum, column) => accum + this.columnWidth(column), 0);
+              ? this.columnWidth(columns[columnIndex])
+              : columns.slice(colspan).reduce(
+                (accum, column) => accum + this.columnWidth(column),
+                0,
+              );
 
             return {
               size,
@@ -86,14 +89,15 @@ export class VirtualTable extends React.Component {
       );
     };
 
-    const tHead = position => (
+    const tableHead = position => (
       <VirtualBox
         key="thead"
         rootTag="thead"
 
         iref={(ref) => {
           if (!ref) return;
-          ref.style.backgroundColor = window.getComputedStyle(document.body).backgroundColor;
+          const { style } = ref;
+          style.backgroundColor = window.getComputedStyle(document.body).backgroundColor;
         }}
 
         position={position}
@@ -104,11 +108,12 @@ export class VirtualTable extends React.Component {
           size: this.rowHeight(headerRows[rowIndex]),
           stick: false,
         })}
-        itemTemplate={(rowIndex, position) => row(headerRows[rowIndex], headerCell, position)}
+        itemTemplate={(rowIndex, rowPosition) =>
+          tableRow(headerRows[rowIndex], tableHeaderCell, rowPosition)}
       />
-        );
+    );
 
-    const tBody = position => (
+    const tableBody = position => (
       <VirtualBox
         key="tbody"
         rootTag="tbody"
@@ -120,9 +125,10 @@ export class VirtualTable extends React.Component {
           size: this.rowHeight(bodyRows[rowIndex]),
           stick: false,
         })}
-        itemTemplate={(rowIndex, position) => row(bodyRows[rowIndex], cell, position)}
+        itemTemplate={(rowIndex, rowPosition) =>
+          tableRow(bodyRows[rowIndex], tableCell, rowPosition)}
       />
-        );
+    );
 
     return (
       <div style={{ height: '500px' }}>
@@ -143,10 +149,18 @@ export class VirtualTable extends React.Component {
                 stick: rowIndex === 0 ? 'before' : false,
               };
             }}
-            itemTemplate={(rowIndex, position) => rowIndex === 0 ? tHead(position) : tBody(position)}
+            itemTemplate={(rowIndex, position) =>
+              (rowIndex === 0 ? tableHead(position) : tableBody(position))}
           />
         </WindowedScroller>
       </div>
     );
   }
 }
+
+VirtualTable.propTypes = {
+  headerRows: React.PropTypes.array.isRequired,
+  bodyRows: React.PropTypes.array.isRequired,
+  columns: React.PropTypes.array.isRequired,
+  cellContentTemplate: React.PropTypes.func.isRequired,
+};

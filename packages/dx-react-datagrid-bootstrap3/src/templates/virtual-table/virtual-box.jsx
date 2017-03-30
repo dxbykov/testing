@@ -1,3 +1,5 @@
+/* global document */
+
 import React from 'react';
 
 function testCSSProp(property, value, noPrefixes) {
@@ -14,10 +16,51 @@ function testCSSProp(property, value, noPrefixes) {
 }
 const stickyProp = testCSSProp('position', 'sticky');
 
+function getVisibleItems(options) {
+  let viewportStart = options.viewport.start;
+  const viewportSize = options.viewport.size;
+
+  const visibleItemMetas = [];
+  const stickyItemsMetas = [];
+
+  let index = 0;
+  let offset = 0;
+  while (index < options.itemCount) {
+    const itemInfo = options.itemInfo(index);
+    const itemSize = itemInfo.size;
+    const itemStick = itemInfo.stick;
+
+    if (itemStick === 'before' && offset <= viewportStart) {
+      stickyItemsMetas.push({ index, offset, size: itemSize, stick: itemStick });
+      viewportStart += itemSize;
+    }
+
+    if (
+      (
+        (offset + itemSize > viewportStart && offset + itemSize < viewportStart + viewportSize) ||
+        (offset < viewportStart + viewportSize && offset > viewportStart) ||
+        (offset <= viewportStart && offset + itemSize >= viewportStart + viewportSize)
+      ) &&
+      itemSize > 0 &&
+      itemStick === false
+    ) {
+      visibleItemMetas.push({ index, offset, size: itemSize, stick: false });
+    }
+
+    index += 1;
+    offset += itemSize;
+  }
+
+  return {
+    visibleItemMetas: [...visibleItemMetas, ...stickyItemsMetas],
+    fullSize: offset,
+    stickyBeforeSize: stickyItemsMetas.reduce((accumulator, meta) => accumulator + meta.size, 0),
+  };
+}
+
 export class VirtualBox extends React.Component {
   getChildContext() {
-    let { direction, position, stick } = this.props;
-    position = position || 0;
+    const { direction, position, stick } = this.props;
     const viewport = this.context.virtualHost.viewport;
 
     const positionProp = direction === 'horizontal' ? 'left' : 'top';
@@ -30,46 +73,14 @@ export class VirtualBox extends React.Component {
         viewport: {
           [positionProp]: stick ? position : Math.max(viewport[positionProp] - position, 0),
           [crossPositionProp]: viewport[crossPositionProp],
-          [sizeProp]: stick ? viewport[sizeProp] : Math.min(viewport[positionProp] + viewport[sizeProp] - position, viewport[sizeProp]),
+          [sizeProp]: stick
+            ? viewport[sizeProp]
+            : Math.min(
+              (viewport[positionProp] + viewport[sizeProp]) - position,
+              viewport[sizeProp]),
           [crossSizeProp]: viewport[crossSizeProp],
         },
       },
-    };
-  }
-  getVisibleItems(options) {
-    let viewportStart = options.viewport.start;
-    const viewportSize = options.viewport.size;
-
-    const visibleItemMetas = [];
-    const stickyItemsMetas = [];
-
-    let index = 0;
-    let offset = 0;
-    while (index < options.itemCount) {
-      const itemInfo = options.itemInfo(index);
-      const itemSize = itemInfo.size;
-      const itemStick = itemInfo.stick;
-
-      if (itemStick === 'before' && offset <= viewportStart) {
-        stickyItemsMetas.push({ index, offset, size: itemSize, stick: itemStick });
-        viewportStart += itemSize;
-      }
-
-      if ((offset + itemSize > viewportStart && offset + itemSize < viewportStart + viewportSize ||
-                offset < viewportStart + viewportSize && offset > viewportStart ||
-                offset <= viewportStart && offset + itemSize >= viewportStart + viewportSize) &&
-                itemSize > 0 && itemStick === false) {
-        visibleItemMetas.push({ index, offset, size: itemSize, stick: false });
-      }
-
-      index += 1;
-      offset += itemSize;
-    }
-
-    return {
-      visibleItemMetas: [...visibleItemMetas, ...stickyItemsMetas],
-      fullSize: offset,
-      stickyBeforeSize: stickyItemsMetas.reduce((accumulator, meta) => accumulator + meta.size, 0),
     };
   }
   getItemStyles({ position, size, stick }) {
@@ -77,7 +88,6 @@ export class VirtualBox extends React.Component {
     const viewport = this.context.virtualHost.viewport;
 
     const positionProp = direction === 'horizontal' ? 'left' : 'top';
-    const crossPositionProp = direction === 'vertical' ? 'left' : 'top';
     const sizeProp = direction === 'horizontal' ? 'width' : 'height';
     const crossSizeProp = direction === 'vertical' ? 'width' : 'height';
 
@@ -102,20 +112,17 @@ export class VirtualBox extends React.Component {
           WebkitBackfaceVisibility: 'hidden',
           backfaceVisibility: 'hidden',
         };
-                    /* children = (
-                        <div style={{ marginLeft: -viewport[crossPositionProp] + 'px', width: '100%', height: '100%' }}>
-                            {children}
-                        </div>
-                    );*/
-      } else {
-        styles = {
-          ...styles,
-
-          [positionProp]:
-                            `${viewport[positionProp] +
-                            ((viewport[`${positionProp}Stick`] || 0) - (viewport[`${positionProp}ChildStick`] || 0)) +
-                            position}px`,
-        };
+        /* children = (
+            <div
+              style={{
+                marginLeft: -viewport[crossPositionProp] + 'px',
+                width: '100%',
+                height: '100%'
+              }}
+            >
+                {children}
+            </div>
+        );*/
       }
     }
 
@@ -132,9 +139,8 @@ export class VirtualBox extends React.Component {
 
     const positionProp = direction === 'horizontal' ? 'left' : 'top';
     const sizeProp = direction === 'horizontal' ? 'width' : 'height';
-    const crossSizeProp = direction === 'vertical' ? 'width' : 'height';
 
-    const { visibleItemMetas, fullSize, stickyBeforeSize } = this.getVisibleItems({
+    const { visibleItemMetas, fullSize } = getVisibleItems({
       viewport: { start: stick ? position : viewport[positionProp], size: viewport[sizeProp] },
       itemCount: this.props.itemCount,
       itemInfo: this.props.itemInfo,
@@ -156,7 +162,7 @@ export class VirtualBox extends React.Component {
             );
     });
 
-    const RootTag = this.props.rootTag || 'div';
+    const RootTag = this.props.rootTag;
 
     return (
       <RootTag
@@ -174,7 +180,23 @@ export class VirtualBox extends React.Component {
     );
   }
 }
+VirtualBox.defaultProps = {
+  rootTag: 'div',
+  className: '',
+  style: {},
+  position: 0,
+  stick: false,
+  crossSize: 0,
+  iref: undefined,
+};
 VirtualBox.propTypes = {
+  rootTag: React.PropTypes.string,
+  className: React.PropTypes.string,
+  style: React.PropTypes.object,
+  position: React.PropTypes.number,
+  stick: React.PropTypes.bool,
+  iref: React.PropTypes.func,
+  crossSize: React.PropTypes.number,
   direction: React.PropTypes.oneOf(['vertical', 'horizontal']).isRequired,
   itemCount: React.PropTypes.number.isRequired,
   itemInfo: React.PropTypes.func.isRequired,

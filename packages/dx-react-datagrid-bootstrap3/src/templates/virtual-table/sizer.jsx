@@ -1,3 +1,5 @@
+/* global requestAnimationFrame cancelAnimationFrame */
+
 import React from 'react';
 
 export class Sizer extends React.Component {
@@ -13,19 +15,27 @@ export class Sizer extends React.Component {
     cancelAnimationFrame(this._raf);
   }
   sizeUpdated(newWidth, newHeight) {
-    const { width, height, onWidthChange, onHeightChange } = this.props;
+    const { height, onHeightChange } = this.props;
 
     if (newHeight !== height) {
-      onHeightChange && onHeightChange(newHeight);
+      onHeightChange(newHeight);
     }
   }
   render() {
     const { children } = this.props;
 
     return (
-      <div ref={ref => this.root = ref}>
+      <div ref={(ref) => { this.root = ref; }}>
         {children}
       </div>
     );
   }
 }
+Sizer.propTypes = {
+  height: React.PropTypes.number.isRequired,
+  onHeightChange: React.PropTypes.func.isRequired,
+  children: React.PropTypes.oneOfType([
+    React.PropTypes.node,
+    React.PropTypes.arrayOf(React.PropTypes.node),
+  ]).isRequired,
+};

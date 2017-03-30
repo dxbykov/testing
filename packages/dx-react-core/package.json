@@ -9,8 +9,8 @@
     "test:coverage": "jest --coverage",
     "build": "webpack",
     "build:watch": "webpack --watch",
-    "lint": "eslint --ext .js --ext .jsx src",
-    "lint:fix": "eslint --fix --ext .js --ext .jsx src"
+    "lint": "eslint src/**/*",
+    "lint:fix": "eslint --fix src/**/*"
   },
   "author": "",
   "license": "ISC",

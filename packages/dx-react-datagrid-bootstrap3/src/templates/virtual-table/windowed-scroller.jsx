@@ -1,6 +1,9 @@
+/* global navigator requestAnimationFrame */
+
 import React from 'react';
 
 const isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
+
 export class WindowedScroller extends React.Component {
   constructor(props) {
     super(props);
@@ -12,18 +15,18 @@ export class WindowedScroller extends React.Component {
     this.updateViewport = this.updateViewport.bind(this);
   }
 
-  componentDidMount() {
-    setTimeout(() => {
-      this.updateViewport();
-    });
-  }
-
   getChildContext() {
     return {
       virtualHost: {
         viewport: this.state.viewport,
       },
     };
+  }
+
+  componentDidMount() {
+    setTimeout(() => {
+      this.updateViewport();
+    });
   }
 
   updateViewport() {
@@ -43,13 +46,20 @@ export class WindowedScroller extends React.Component {
       height: this.root.clientHeight,
     };
 
-        // Prevent iOS to flicker in bounces =(
-    if (viewport.top < 0 || viewport.left < 0 || viewport.left + viewport.width > this.root.scrollWidth || viewport.top + viewport.height > this.root.scrollHeight) {
+    // Prevent iOS to flicker in bounces =(
+    if (
+      viewport.top < 0 ||
+      viewport.left < 0 ||
+      viewport.left + viewport.width > this.root.scrollWidth ||
+      viewport.top + viewport.height > this.root.scrollHeight) {
       return;
     }
 
-        // Optimize performance
-    if (oldViewport.top !== viewport.top || oldViewport.left !== viewport.left || oldViewport.width !== viewport.width || oldViewport.height !== viewport.height) {
+    // Optimize performance
+    if (oldViewport.top !== viewport.top ||
+      oldViewport.left !== viewport.left ||
+      oldViewport.width !== viewport.width ||
+      oldViewport.height !== viewport.height) {
       this.setState({ viewport });
     }
   }
@@ -57,7 +67,7 @@ export class WindowedScroller extends React.Component {
   render() {
     return (
       <div
-        ref={ref => this.root = ref}
+        ref={(ref) => { this.root = ref; }}
         onScroll={this.updateViewport}
         style={{
           overflow: 'auto',
@@ -72,6 +82,12 @@ export class WindowedScroller extends React.Component {
     );
   }
 }
+WindowedScroller.propTypes = {
+  children: React.PropTypes.oneOfType([
+    React.PropTypes.node,
+    React.PropTypes.arrayOf(React.PropTypes.node),
+  ]).isRequired,
+};
 WindowedScroller.childContextTypes = {
   virtualHost: React.PropTypes.object.isRequired,
 };
