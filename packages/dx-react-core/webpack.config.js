@@ -1,4 +1,5 @@
 /* eslint-disable */
+
 var path = require('path');
 var webpack = require('webpack');
 
@@ -8,7 +9,6 @@ module.exports = {
         index: path.join(__dirname, 'src', 'index')
     },
     output: {
-		// publicPath: '/dist',
 		path: path.join(__dirname, 'dist'),
 		filename: '[name].js',
         libraryTarget: 'umd'
