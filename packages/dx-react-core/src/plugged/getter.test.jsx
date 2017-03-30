@@ -197,8 +197,9 @@ describe('Getter', () => {
     tree.setProps({ text: 'text' });
     tree.setProps({ text: 'new' });
 
-    expect(onChange.mock.calls).toHaveLength(1);
-    expect(onChange.mock.calls[0][0]).toBe('new_extended');
+    expect(onChange.mock.calls).toHaveLength(2);
+    expect(onChange.mock.calls[0][0]).toBe('text_extended');
+    expect(onChange.mock.calls[1][0]).toBe('new_extended');
   });
 
     // This test is not correct enough. Rewrite it in future
