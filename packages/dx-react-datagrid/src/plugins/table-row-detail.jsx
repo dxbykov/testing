@@ -7,21 +7,23 @@ export class TableRowDetail extends React.PureComponent {
     super(props);
 
     this.state = {
-      expanded: props.defaultExpanded || [],
+      expandedDetails: props.defaultExpandedDetails || [],
     };
 
     this._setDetailRowExpanded = ({ rowId }) => {
-      const prevExpanded = this.props.expanded || this.state.expanded;
-      const expanded = setDetailRowExpanded(prevExpanded, { rowId });
-      const { expandedChange } = this.props;
-      this.setState({ expanded });
-      expandedChange && expandedChange(expanded);
+      const prevExpandedDetails = this.props.expandedDetails || this.state.expandedDetails;
+      const expandedDetails = setDetailRowExpanded(prevExpandedDetails, { rowId });
+      const { expandedDetailsChange } = this.props;
+      this.setState({ expandedDetails });
+      if (expandedDetailsChange) {
+        expandedDetailsChange(expandedDetails);
+      }
     };
 
     this._tableColumns = tableColumns => [{ type: 'detail', name: 'detail', width: 20 }, ...tableColumns];
   }
   render() {
-    const expanded = this.props.expanded || this.state.expanded;
+    const expandedDetails = this.props.expandedDetails || this.state.expandedDetails;
     const { template, detailToggleTemplate } = this.props;
 
     return (
@@ -36,7 +38,7 @@ export class TableRowDetail extends React.PureComponent {
         <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && row.type === 'heading'} />
         <Template name="tableViewCell" predicate={({ column, row }) => column.type === 'detail' && !row.type}>
           {({ row }) => detailToggleTemplate({
-            expanded: isDetailRowExpanded(expanded, row.id),
+            expanded: isDetailRowExpanded(expandedDetails, row.id),
             toggleExpanded: () => this._setDetailRowExpanded({ rowId: row.id }),
           })}
         </Template>
@@ -46,13 +48,27 @@ export class TableRowDetail extends React.PureComponent {
           pureComputed={expandedDetailRows}
           connectArgs={getter => [
             getter('tableBodyRows')(),
-            expanded,
+            expandedDetails,
           ]}
         />
-        <Template name="tableViewCell" predicate={({ column, row }) => row.type === 'detailRow'}>
-          {({ column, row }) => template({ row: row.for })}
+        <Template name="tableViewCell" predicate={({ row }) => row.type === 'detailRow'}>
+          {({ column, row }) => template({ column, row: row.for })}
         </Template>
       </div>
     );
   }
 }
+
+TableRowDetail.propTypes = {
+  expandedDetails: React.PropTypes.array,
+  defaultExpandedDetails: React.PropTypes.array,
+  expandedDetailsChange: React.PropTypes.func,
+  template: React.PropTypes.func.isRequired,
+  detailToggleTemplate: React.PropTypes.func.isRequired,
+};
+
+TableRowDetail.defaultProps = {
+  expandedDetails: undefined,
+  defaultExpandedDetails: undefined,
+  expandedDetailsChange: undefined,
+};

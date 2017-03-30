@@ -1,13 +1,24 @@
 import React from 'react';
 import { Getter, Template, TemplatePlaceholder } from '@devexpress/dx-react-core';
 
-export const cellContentTemplate = ({ row, column }) => <TemplatePlaceholder name="tableViewCell" params={{ row, column }} />;
+export const CellContentTemplate = ({ row, column }) =>
+  <TemplatePlaceholder name="tableViewCell" params={{ row, column }} />;
+
+CellContentTemplate.propTypes = {
+  row: React.PropTypes.object,
+  column: React.PropTypes.object,
+};
+
+CellContentTemplate.defaultProps = {
+  row: undefined,
+  column: undefined,
+};
 
 export class TableView extends React.PureComponent {
   constructor(props) {
     super(props);
 
-    this._getCellInfo = ({ row, column, columnIndex, columns }) => {
+    this._getCellInfo = ({ row, columnIndex, columns }) => {
       if (row.colspan !== undefined && columnIndex > row.colspan) { return { skip: true }; }
       const colspan = row.colspan === columnIndex ? columns.length - row.colspan : 1;
       return { colspan };
@@ -51,15 +62,28 @@ export class TableView extends React.PureComponent {
             bodyRows={bodyRows}
             columns={columns}
             getCellInfo={this._getCellInfo}
-            cellContentTemplate={cellContentTemplate}
+            cellContentTemplate={CellContentTemplate}
             cellTemplate={cellTemplate}
             rowTemplate={rowTemplate}
           />}
         </Template>
         <Template name="tableViewCell">
-          {({ row, column }) => (row[column.name] !== undefined ? <span>{row[column.name]}</span> : null)}
+          {({ row, column }) => (
+            row[column.name] !== undefined ? <span>{row[column.name]}</span> : null
+          )}
         </Template>
       </div>
     );
   }
 }
+
+TableView.propTypes = {
+  tableTemplate: React.PropTypes.func.isRequired,
+  rowTemplate: React.PropTypes.func,
+  cellTemplate: React.PropTypes.func,
+};
+
+TableView.defaultProps = {
+  rowTemplate: undefined,
+  cellTemplate: undefined,
+};

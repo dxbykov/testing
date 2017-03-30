@@ -23,14 +23,18 @@ export class GroupingState extends React.PureComponent {
       }
 
       this.setState({ expandedGroups });
-      expandedGroupsChange && expandedGroupsChange(expandedGroups);
+      if (expandedGroupsChange) {
+        expandedGroupsChange(expandedGroups);
+      }
     };
 
     this._groupByColumn = (prevGrouping, { columnName, groupIndex }) => {
       const { groupingChange } = this.props;
       const grouping = groupByColumn(prevGrouping, { columnName, groupIndex });
       this.setState({ grouping });
-      groupingChange && groupingChange(grouping);
+      if (groupingChange) {
+        groupingChange(grouping);
+      }
     };
   }
   render() {
@@ -39,8 +43,16 @@ export class GroupingState extends React.PureComponent {
 
     return (
       <div>
-        <Action name="toggleGroupExpanded" action={({ groupKey }) => { this.toggleGroupExpanded(groupKey); }} />
-        <Action name="groupByColumn" action={({ columnName, groupIndex }) => { this._groupByColumn(grouping, { columnName, groupIndex }); }} />
+        <Action
+          name="toggleGroupExpanded"
+          action={({ groupKey }) => { this.toggleGroupExpanded(groupKey); }}
+        />
+        <Action
+          name="groupByColumn"
+          action={({ columnName, groupIndex }) => {
+            this._groupByColumn(grouping, { columnName, groupIndex });
+          }}
+        />
 
         <Getter
           name="rows"
@@ -66,3 +78,22 @@ export class GroupingState extends React.PureComponent {
     );
   }
 }
+
+GroupingState.propTypes = {
+  grouping: React.PropTypes.array,
+  defaultGrouping: React.PropTypes.array,
+  groupingChange: React.PropTypes.func,
+  expandedGroups: React.PropTypes.array,
+  defaultExpandedGroups: React.PropTypes.object,
+  expandedGroupsChange: React.PropTypes.func,
+};
+
+GroupingState.defaultProps = {
+  grouping: undefined,
+  defaultGrouping: undefined,
+  groupingChange: undefined,
+  expandedGroups: undefined,
+  defaultExpandedGroups: undefined,
+  expandedGroupsChange: undefined,
+};
+

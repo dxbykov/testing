@@ -32,21 +32,24 @@ export class TableGroupRow extends React.PureComponent {
         <Template
           name="tableViewCell"
           predicate={({ column, row }) => row.type === 'groupRow'
-                            && column.type === 'groupColumn'
-                            && row.column === column.group.column}
+            && column.type === 'groupColumn'
+            && row.column === column.group.column}
           connectGetters={getter => ({ expandedGroups: getter('expandedGroups')() })}
           connectActions={action => ({ toggleGroupExpanded: action('toggleGroupExpanded') })}
         >
-
-          {({ column, row, expandedGroups, toggleGroupExpanded }) => (
+          {({ row, expandedGroups, toggleGroupExpanded }) => (
             <GroupRowCell
               row={row}
               isExpanded={expandedGroups[row.key]}
               toggleGroupExpanded={() => toggleGroupExpanded({ groupKey: row.key })}
             />
-                    )}
+          )}
         </Template>
       </div>
     );
   }
 }
+
+TableGroupRow.propTypes = {
+  groupRowCellTemplate: React.PropTypes.func.isRequired,
+};

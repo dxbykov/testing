@@ -5,9 +5,10 @@ export class TableHeaderRow extends React.PureComponent {
   constructor(props) {
     super(props);
 
-    this._tableHeaderRows = (tableHeaderRows, columns) => [columns.reduce((accum, c) => {
-      accum[c.name] = c.title;
-      return accum;
+    this._tableHeaderRows = (tableHeaderRows, columns) => [columns.reduce((accumulator, c) => {
+      const headerRow = accumulator;
+      headerRow[c.name] = c.title;
+      return headerRow;
     }, { type: 'heading' }), ...tableHeaderRows];
   }
   render() {

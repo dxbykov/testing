@@ -2,25 +2,28 @@ import React from 'react';
 import { TableRowDetail as TableRowDetailBase } from '@devexpress/dx-react-datagrid';
 import { TableDetailToggle } from '../templates/table-detail-toggle';
 
-export const TableRowDetail = ({ expanded, defaultExpanded, expandedChange, template }) => (
-  <TableRowDetailBase
-    detailToggleTemplate={TableDetailToggle}
-    expanded={expanded}
-    defaultExpanded={defaultExpanded}
-    expandedChange={expandedChange}
-    template={template}
-  />
-);
+export const TableRowDetail = (props) => {
+  const { expandedDetails, defaultExpandedDetails, expandedDetailsChange, template } = props;
+  return (
+    <TableRowDetailBase
+      detailToggleTemplate={TableDetailToggle}
+      expandedDetails={expandedDetails}
+      defaultExpandedDetails={defaultExpandedDetails}
+      expandedDetailsChange={expandedDetailsChange}
+      template={template}
+    />
+  );
+};
 
 TableRowDetail.propTypes = {
-  expanded: React.PropTypes.array,
-  defaultExpanded: React.PropTypes.array,
-  expandedChange: React.PropTypes.func,
+  expandedDetails: React.PropTypes.array,
+  defaultExpandedDetails: React.PropTypes.array,
+  expandedDetailsChange: React.PropTypes.func,
   template: React.PropTypes.func.isRequired,
 };
 
 TableRowDetail.defaultProps = {
-  expanded: undefined,
-  defaultExpanded: undefined,
-  expandedChange: undefined,
+  expandedDetails: undefined,
+  defaultExpandedDetails: undefined,
+  expandedDetailsChange: undefined,
 };

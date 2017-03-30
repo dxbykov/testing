@@ -7,14 +7,16 @@ export class PagingState extends React.PureComponent {
     super(props);
 
     this.state = {
-      currentPage: props.defaultPage || 0,
+      currentPage: props.defaultCurrentPage || 0,
     };
 
     this._setCurrentPage = ({ page }) => {
-      const { onCurrentPageChange } = this.props;
+      const { currentPageChange } = this.props;
       const currentPage = setCurrentPage(this.state.currentPage, { page });
       this.setState({ currentPage });
-      onCurrentPageChange && onCurrentPageChange(currentPage);
+      if (currentPageChange) {
+        currentPageChange(currentPage);
+      }
     };
 
     this._totalPages = (rows, pageSize) => Math.ceil(rows.length / pageSize);
@@ -64,3 +66,17 @@ export class PagingState extends React.PureComponent {
     );
   }
 }
+
+PagingState.propTypes = {
+  pageSize: React.PropTypes.number,
+  currentPage: React.PropTypes.number,
+  defaultCurrentPage: React.PropTypes.number,
+  currentPageChange: React.PropTypes.func,
+};
+
+PagingState.defaultProps = {
+  pageSize: undefined,
+  currentPage: undefined,
+  defaultCurrentPage: undefined,
+  currentPageChange: undefined,
+};

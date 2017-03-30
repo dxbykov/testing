@@ -14,7 +14,9 @@ export class SortingState extends React.PureComponent {
       const { sortingsChange } = this.props;
       const nextSortings = setColumnSorting(sortings, { columnName, direction, keepOther });
       this.setState({ sortings: nextSortings });
-      sortingsChange && sortingsChange(nextSortings);
+      if (sortingsChange) {
+        sortingsChange(nextSortings);
+      }
     };
   }
   render() {
@@ -24,9 +26,9 @@ export class SortingState extends React.PureComponent {
       <div>
         <Action
           name="setColumnSorting"
-          action={(
-                        ({ columnName, direction, keepOther }) => this._setColumnSorting(sortings, { columnName, direction, keepOther })
-                    )}
+          action={({ columnName, direction, keepOther }) => {
+            this._setColumnSorting(sortings, { columnName, direction, keepOther });
+          }}
         />
 
         <Getter
@@ -43,3 +45,15 @@ export class SortingState extends React.PureComponent {
     );
   }
 }
+
+SortingState.propTypes = {
+  sortings: React.PropTypes.array,
+  defaultSortings: React.PropTypes.array,
+  sortingsChange: React.PropTypes.func,
+};
+
+SortingState.defaultProps = {
+  sortings: undefined,
+  defaultSortings: undefined,
+  sortingsChange: undefined,
+};

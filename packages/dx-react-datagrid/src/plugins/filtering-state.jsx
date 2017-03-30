@@ -14,7 +14,9 @@ export class FilteringState extends React.PureComponent {
       const { filtersChange } = this.props;
       const nextFilters = setColumnFilter(filters, { columnName, value });
       this.setState({ filters: nextFilters });
-      filtersChange && filtersChange(nextFilters);
+      if (filtersChange) {
+        filtersChange(nextFilters);
+      }
     };
   }
   render() {
@@ -22,7 +24,10 @@ export class FilteringState extends React.PureComponent {
 
     return (
       <div>
-        <Action name="setColumnFilter" action={({ columnName, value }) => this._setColumnFilter(filters, { columnName, value })} />
+        <Action
+          name="setColumnFilter"
+          action={({ columnName, value }) => this._setColumnFilter(filters, { columnName, value })}
+        />
 
         <Getter
           name="rows"
@@ -38,3 +43,15 @@ export class FilteringState extends React.PureComponent {
     );
   }
 }
+
+FilteringState.propTypes = {
+  filters: React.PropTypes.array,
+  defaultFilters: React.PropTypes.array,
+  filtersChange: React.PropTypes.func,
+};
+
+FilteringState.defaultProps = {
+  filters: undefined,
+  defaultFilters: undefined,
+  filtersChange: undefined,
+};

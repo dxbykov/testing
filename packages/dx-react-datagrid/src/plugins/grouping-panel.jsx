@@ -43,3 +43,7 @@ export class GroupingPanel extends React.PureComponent {
     );
   }
 }
+
+GroupingPanel.propTypes = {
+  groupPanelTemplate: React.PropTypes.func.isRequired,
+};

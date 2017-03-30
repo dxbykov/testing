@@ -45,7 +45,7 @@ export class UncontrolledGroupedVirtualDemo extends React.PureComponent {
                         defaultSelection={[1, 3, 18]}/>
 
                     <VirtualTableView/>
-                    
+
                     <TableHeaderRow/>
                     <TableHeaderRowSorting/>
                     <TableHeaderRowGrouping/>
@@ -55,9 +55,9 @@ export class UncontrolledGroupedVirtualDemo extends React.PureComponent {
                     <TableColumnSelection/>
 
                     <TableRowDetail
-                        defaultExpanded={[3]}
+                        defaultExpandedDetails={[3]}
                         template={this.rowTemplate}/>
-                    
+
                     <TableGroupRow/>
                     <GroupingPanel />
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Getter, GetterExtender, Action } from '@devexpress/dx-react-core';
+import { Getter, Action } from '@devexpress/dx-react-core';
 import { setRowSelection, toggleSelectAll } from '@devexpress/dx-datagrid-core';
 
 export class SelectionState extends React.PureComponent {
@@ -13,7 +13,9 @@ export class SelectionState extends React.PureComponent {
     this.changeSelection = (selection) => {
       const { selectionChange } = this.props;
       this.setState({ selection });
-      selectionChange && selectionChange(selection);
+      if (selectionChange) {
+        selectionChange(selection);
+      }
     };
   }
   render() {
@@ -22,12 +24,15 @@ export class SelectionState extends React.PureComponent {
     return (
       <div>
         <Action
-          name="setRowSelection" action={({ row }) =>
-                    this.changeSelection(setRowSelection(selection, { rowId: row.id }))}
+          name="setRowSelection" action={({ row }) => {
+            this.changeSelection(setRowSelection(selection, { rowId: row.id }));
+          }}
         />
         <Action
-          name="toggleAllSelection" action={({ rows }) =>
-                    this.changeSelection(toggleSelectAll(selection, { rows, getRowId: row => row.id }))}
+          name="toggleAllSelection"
+          action={({ rows }) => {
+            this.changeSelection(toggleSelectAll(selection, { rows, getRowId: row => row.id }));
+          }}
         />
 
         <Getter name="selection" value={selection} />
@@ -35,3 +40,15 @@ export class SelectionState extends React.PureComponent {
     );
   }
 }
+
+SelectionState.propTypes = {
+  selection: React.PropTypes.array,
+  defaultSelection: React.PropTypes.array,
+  selectionChange: React.PropTypes.func,
+};
+
+SelectionState.defaultProps = {
+  selection: undefined,
+  defaultSelection: undefined,
+  selectionChange: undefined,
+};

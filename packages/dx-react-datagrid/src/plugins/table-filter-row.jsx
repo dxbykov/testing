@@ -35,3 +35,12 @@ export class TableFilterRow extends React.PureComponent {
     );
   }
 }
+
+TableFilterRow.propTypes = {
+  rowHeight: React.PropTypes.any,
+  filterCellTemplate: React.PropTypes.func.isRequired,
+};
+
+TableFilterRow.defaultProps = {
+  rowHeight: undefined,
+};

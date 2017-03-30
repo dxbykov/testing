@@ -1,32 +1,27 @@
 import React from 'react';
 import { PluginHost, Getter } from '@devexpress/dx-react-core';
 
-export class DataGrid extends React.PureComponent {
-  render() {
-    const { rows, columns, children } = this.props;
+export const DataGridBase = ({ rows, columns }) => (
+  <div>
+    <Getter name="rows" value={rows} />
+    <Getter name="columns" value={columns} />
+  </div>
+);
 
-    return (
-      <PluginHost>
-        <DataGridBase rows={rows} columns={columns} />
-        {children}
-      </PluginHost>
-    );
-  }
-}
-DataGrid.propTypes = {
+DataGridBase.propTypes = {
   rows: React.PropTypes.array.isRequired,
   columns: React.PropTypes.array.isRequired,
 };
 
-class DataGridBase extends React.PureComponent {
-  render() {
-    const { rows, columns } = this.props;
+export const DataGrid = ({ rows, columns, children }) => (
+  <PluginHost>
+    <DataGridBase rows={rows} columns={columns} />
+    {children}
+  </PluginHost>
+);
 
-    return (
-      <div>
-        <Getter name="rows" value={rows} />
-        <Getter name="columns" value={columns} />
-      </div>
-    );
-  }
-}
+DataGrid.propTypes = {
+  rows: React.PropTypes.array.isRequired,
+  columns: React.PropTypes.array.isRequired,
+  children: React.PropTypes.array.isRequired,
+};

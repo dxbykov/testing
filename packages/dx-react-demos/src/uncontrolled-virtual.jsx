@@ -42,7 +42,7 @@ export class UncontrolledVirtualDemo extends React.PureComponent {
                         defaultSelection={[1, 3, 18]}/>
 
                     <VirtualTableView/>
-                    
+
                     <TableHeaderRow/>
                     <TableHeaderRowSorting/>
 
@@ -51,7 +51,7 @@ export class UncontrolledVirtualDemo extends React.PureComponent {
                     <TableColumnSelection/>
 
                     <TableRowDetail
-                        defaultExpanded={[3]}
+                        defaultExpandedDetails={[3]}
                         template={this.rowTemplate}/>
 
                 </DataGrid>

@@ -38,10 +38,10 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
 
                     <SortingState
                         defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
-                    
+
                     <FilteringState
                         defaultFilters={[{ column: 'name', value: 'j' }]}/>
-                    
+
 
                     <GroupingState
                         defaultGrouping={[ { column: 'sex' }/*, { column: 'city' }, { column: 'car' }*/ ]}
@@ -49,26 +49,26 @@ export class FullFeaturedUncontrolledDemo extends React.PureComponent {
                         />
 
                     <PagingState
-                        defaultPage={0}
+                        defaultCurrentPage={0}
                         pageSize={10} />
 
                     <SelectionState
                         defaultSelection={[1, 3, 18]}/>
 
                     <TableView/>
-                    
+
                     <TableHeaderRow/>
                     <TableHeaderRowSorting/>
                     <TableHeaderRowGrouping/>
 
                     <TableFilterRow/>
-                        
+
                     <PagingPanel />
 
                     <TableColumnSelection/>
 
                     <TableRowDetail
-                        defaultExpanded={[3]}
+                        defaultExpandedDetails={[3]}
                         template={this.rowTemplate}/>
 
                     <TableGroupRow />

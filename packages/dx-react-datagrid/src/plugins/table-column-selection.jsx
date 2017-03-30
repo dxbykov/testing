@@ -38,7 +38,11 @@ export class TableColumnSelection extends React.PureComponent {
           })}
         >
           {({ allSelected, someSelected, toggleAll, rows }) =>
-            <SelectAllCell allSelected={allSelected} someSelected={someSelected} toggleAll={() => toggleAll(rows)} />}
+            <SelectAllCell
+              allSelected={allSelected}
+              someSelected={someSelected}
+              toggleAll={() => toggleAll(rows)}
+            />}
         </Template>
         <Template
           name="tableViewCell"
@@ -47,14 +51,19 @@ export class TableColumnSelection extends React.PureComponent {
             selected: getter('selection')().indexOf(row.id) > -1,
           })}
           connectActions={(action, { row }) => ({
-            toggleSelected: rows => action('setRowSelection')({ row }),
+            toggleSelected: () => action('setRowSelection')({ row }),
           })}
         >
           {({ selected, toggleSelected }) => (
             <SelectCell selected={selected} changeSelected={toggleSelected} />
-                    )}
+          )}
         </Template>
       </div>
     );
   }
 }
+
+TableColumnSelection.propTypes = {
+  selectAllCellTemplate: React.PropTypes.func.isRequired,
+  selectCellTemplate: React.PropTypes.func.isRequired,
+};
