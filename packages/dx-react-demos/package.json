@@ -6,7 +6,9 @@
   "scripts": {
     "watch": "webpack-dev-server",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.{js,jsx}",
+    "lint:fix": "eslint --fix src/**/*.{js,jsx}"
   },
   "author": "",
   "license": "ISC",
@@ -32,6 +34,11 @@
     "babel-preset-react": "^6.16.0",
     "babel-runtime": "^6.20.0",
     "babel-plugin-transform-object-rest-spread": "^6.22.0",
+    "eslint": "^3.18.0",
+    "eslint-config-airbnb": "^14.1.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^4.0.0",
+    "eslint-plugin-react": "^6.10.3",
     "webpack-dev-server": "^2.3.0",
     "style-loader": "^0.13.1",
     "webpack": "^2.2.1"

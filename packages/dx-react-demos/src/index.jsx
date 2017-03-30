@@ -1,3 +1,5 @@
+/* global document */
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -7,26 +9,18 @@ import { UncontrolledVirtualDemo } from './uncontrolled-virtual';
 import { UncontrolledGroupedVirtualDemo } from './uncontrolled-grouped-virtual';
 import './index.css';
 
-class App extends React.Component {
-    constructor() {
-        super();
-    }
+const App = () => (
+  <div>
+    <h1>Demo Index</h1>
 
-    render() {
-        return (
-            <div>
-                <h1>Demo Index</h1>
-                
-                <FullFeaturedControlledDemo />
-                <FullFeaturedUncontrolledDemo />
-                <UncontrolledVirtualDemo />
-                <UncontrolledGroupedVirtualDemo />
-            </div>
-        );
-    }
-};
+    <FullFeaturedControlledDemo />
+    <FullFeaturedUncontrolledDemo />
+    <UncontrolledVirtualDemo />
+    <UncontrolledGroupedVirtualDemo />
+  </div>
+);
 
 ReactDOM.render(
-  <App/>,
-  document.getElementById('app')
+  <App />,
+  document.getElementById('app'),
 );

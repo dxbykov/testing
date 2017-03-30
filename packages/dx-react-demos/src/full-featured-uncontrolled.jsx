@@ -1,82 +1,85 @@
 import React from 'react';
 import {
-    Template, TemplatePlaceholder
-} from '@devexpress/dx-react-core';
-import {
     DataGrid,
     SortingState, SelectionState, FilteringState, PagingState, GroupingState,
-    TableHeaderRow
+    TableHeaderRow,
 } from '@devexpress/dx-react-datagrid';
 import {
     TableView, TableRowDetail, TableHeaderRowSorting, TableHeaderRowGrouping,
-    TableFilterRow, TableColumnSelection, PagingPanel, GroupingPanel, TableGroupRow
+    TableFilterRow, TableColumnSelection, PagingPanel, GroupingPanel, TableGroupRow,
 } from '@devexpress/dx-react-datagrid-bootstrap3';
 
 import { generateColumns, generateRows } from './demoData';
 
 export class FullFeaturedUncontrolledDemo extends React.PureComponent {
-    constructor(props) {
-        super(props)
+  constructor(props) {
+    super(props);
 
-        this.state = {
-            columns: generateColumns(),
-            rows: generateRows(105),
-        };
+    this.state = {
+      columns: generateColumns(),
+      rows: generateRows(105),
+    };
 
-        this.rowTemplate = ({ row }) => <div>Detail for {row.name} from {row.city}</div>
-    }
-    render() {
-        let { rows, columns } = this.state;
+    this.rowTemplate = ({ row }) => <div>Detail for {row.name} from {row.city}</div>;
+  }
+  render() {
+    const { rows, columns } = this.state;
 
-        return (
-            <div style={{ width: '100%' }}>
-                <h2>Full Featured Uncontrolled Demo</h2>
+    return (
+      <div style={{ width: '100%' }}>
+        <h2>Full Featured Uncontrolled Demo</h2>
 
-                <DataGrid
-                    rows={rows}
-                    columns={columns}>
+        <DataGrid
+          rows={rows}
+          columns={columns}
+        >
 
-                    <SortingState
-                        defaultSortings={[{ column: 'name', direction: 'asc' }]}/>
+          <SortingState
+            defaultSortings={[{ column: 'name', direction: 'asc' }]}
+          />
 
-                    <FilteringState
-                        defaultFilters={[{ column: 'name', value: 'j' }]}/>
+          <FilteringState
+            defaultFilters={[{ column: 'name', value: 'j' }]}
+          />
 
 
-                    <GroupingState
-                        defaultGrouping={[ { column: 'sex' }/*, { column: 'city' }, { column: 'car' }*/ ]}
-                        defaultExpandedGroups={{ 'Female': true }}
-                        />
+          <GroupingState
+            defaultGrouping={[{ column: 'sex' }]}
+            defaultExpandedGroups={{ Female: true }}
+          />
 
-                    <PagingState
-                        defaultCurrentPage={0}
-                        pageSize={10} />
+          <PagingState
+            defaultCurrentPage={0}
+            pageSize={10}
+          />
 
-                    <SelectionState
-                        defaultSelection={[1, 3, 18]}/>
+          <SelectionState
+            defaultSelection={[1, 3, 18]}
+          />
 
-                    <TableView/>
+          <TableView />
 
-                    <TableHeaderRow/>
-                    <TableHeaderRowSorting/>
-                    <TableHeaderRowGrouping/>
+          <TableHeaderRow />
+          <TableHeaderRowSorting />
+          <TableHeaderRowGrouping />
 
-                    <TableFilterRow/>
+          <TableFilterRow />
 
-                    <PagingPanel />
+          <PagingPanel />
 
-                    <TableColumnSelection/>
+          <TableColumnSelection />
 
-                    <TableRowDetail
-                        defaultExpandedDetails={[3]}
-                        template={this.rowTemplate}/>
+          <TableRowDetail
+            defaultExpandedDetails={[3]}
+            template={this.rowTemplate}
+          />
 
-                    <TableGroupRow />
+          <TableGroupRow />
 
-                    <GroupingPanel />
+          <GroupingPanel />
 
-                </DataGrid>
-            </div>
-        )
-    }
-};
+        </DataGrid>
+      </div>
+    );
+  }
+}
